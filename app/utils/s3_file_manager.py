@@ -1,4 +1,5 @@
 # External imports
+from pathlib import Path
 import os
 import boto3
 import tempfile
@@ -64,6 +65,31 @@ class S3FileManager:
             aws_secret_access_key=self.aws_secret_access_key
         )
 
+    def upload_file_obj(self, file_obj, key):
+        """
+        Upload a file object to S3
+
+        Args:
+        file_obj: file object - file object to be uploaded
+        key: str - key to be used in the S3 bucket
+
+        Returns:
+        bool: True if the file was uploaded successfully, False otherwise
+        """
+        try:
+            self.s3_client.upload_fileobj(file_obj, self.bucket_name, key)
+            self.make_object_public(key)
+            return True
+        except FileNotFoundError:
+            logging.error("The file was not found")
+            return False
+        except NoCredentialsError:
+            logging.error("Credentials not available")
+            return False
+        except ClientError as e:
+            logging.error(e)
+            return False
+
     def upload_file(self, file_path, key):
         """
         Upload a file to S3
@@ -77,6 +103,7 @@ class S3FileManager:
         """
         try:
             self.s3_client.upload_file(file_path, self.bucket_name, key)
+            self.make_object_public(key)
             return True
         except FileNotFoundError:
             logging.error("The file was not found")
@@ -105,6 +132,45 @@ class S3FileManager:
                 temp_file.close()
                 self.upload_file(temp_file.name, key)
                 os.unlink(temp_file.name)
+            return True
+        except NoCredentialsError:
+            logging.error("Credentials not available")
+            return False
+        except ClientError as e:
+            logging.error(e)
+            return False
+        
+    def make_object_public(self, s3_file_name):
+        s3_file_name = str(Path(s3_file_name).as_posix())
+        try:
+            self.s3_client.put_object_acl(
+                ACL='public-read', Bucket=self.bucket_name, Key=s3_file_name)
+            logging.info(
+                f"Object '{s3_file_name}' made public in S3 bucket '{self.bucket_name}'")
+            return True
+        except NoCredentialsError:
+            logging.error("AWS credentials not available or incorrect.")
+            print("AWS credentials not available or incorrect.")
+            return False
+        except Exception as e:
+            logging.error(f"An error occurred: make_object_public: {e}")
+            print(f"An error occurred: make_object_public: {e}")
+            return False
+        
+    def copy_file(self, source_key, destination_key):
+        """
+        Copy a file in S3
+
+        Args:
+        source_key: str - key of the source file in the S3 bucket
+        destination_key: str - key of the destination file in the S3 bucket
+
+        Returns:
+        bool: True if the file was copied successfully, False otherwise
+        """
+        try:
+            self.s3_client.copy_object(
+                Bucket=self.bucket_name, CopySource=f"{self.bucket_name}/{source_key}", Key=destination_key)
             return True
         except NoCredentialsError:
             logging.error("Credentials not available")
@@ -297,3 +363,5 @@ class S3FileManager:
         except ClientError as e:
             logging.error(e)
             return False
+        
+    
