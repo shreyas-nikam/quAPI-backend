@@ -10,6 +10,8 @@ import json
 import ast
 from langchain_core.prompts import PromptTemplate
 from bson.objectid import ObjectId
+from openai import OpenAI
+import os
 
 COURSE_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -113,31 +115,93 @@ def _get_response(llm, prompt, inputs, output_type="json"):
 
     raise Exception("Something went wrong. Please try again later.")
 
-def get_courses():
+async def get_courses():
     atlas_client = AtlasClient()
     courses = atlas_client.find("course_design")
     return courses
     
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
-# TBD: Use Assistants api
-def generate_course_outline(payload):
-    input_file = payload['input_file']
-    instructions = payload['instructions']
-    llm = LLM("chatgpt")
-    _get_prompt("COURSE_OUTLINE_PROMPT")
-    inputs = {
-        "INPUT_FILE": input_file,
-        "INSTRUCTIONS": instructions
-    }
-    prompt = PromptTemplate(template=_get_prompt("COURSE_OUTLINE_PROMPT"), 
-                            input_variables = ["INPUT_FILE", "INSTRUCTIONS"])
+async def generate_course_outline(files, instructions):
 
-    response = _get_response(llm, prompt, inputs, output_type="string")
+    course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
+    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+
+    assistant_files_streams = []
+    for file in files:
+        file_content = file.file.read()
+
+        file.file.seek(0)
+
+        assistant_files_streams.append((file.filename, file_content))
+
+    # Track created resources
+    created_assistant_id = None
+    created_vector_store_id = None
+    created_thread_id = None
+
+    try:
+        assistant = client.beta.assistants.create(
+            name="Course outline creator",
+            instructions=course_outline_instructions,
+            model=os.getenv("OPENAI_MODEL"),
+            tools=[{"type": "file_search"}]
+        )
+        created_assistant_id = assistant.id  # Track the assistant
+
+        vector_store = client.beta.vector_stores.create(
+            name="Course Resources",
+            expires_after={"days": 1, "anchor": "last_active_at"},
+        )
+        created_vector_store_id = vector_store.id  # Track the vector store
+
+        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            vector_store_id=vector_store.id, files=assistant_files_streams
+        )
+
+        assistant = client.beta.assistants.update(
+            assistant_id=assistant.id,
+            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+        )
+
+        thread = client.beta.threads.create(
+            messages=[{
+                "role": "user",
+                "content": "Create the course outline based on the instructions provided and the following user's instructions: " + instructions,
+            }]
+        )
+        created_thread_id = thread.id  # Track the thread
+
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id, assistant_id=assistant.id
+        )
+
+        messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+        message_content = messages[0].content[0].text
+        annotations = message_content.annotations
+        citations = []
+
+        for index, annotation in enumerate(annotations):
+            message_content.value = message_content.value.replace(annotation.text, f"[{index}]")
+            if file_citation := getattr(annotation, "file_citation", None):
+                cited_file = client.files.retrieve(file_citation.file_id)
+                citations.append(f"[{index}] {cited_file.filename}")
+
+        response = message_content.value
+
+    finally:
+        # Clean up all created resources to avoid charges
+        if created_assistant_id:
+            client.beta.assistants.delete(created_assistant_id)
+        if created_vector_store_id:
+            client.beta.vector_stores.delete(created_vector_store_id)
+        if created_thread_id:
+            client.beta.threads.delete(created_thread_id)
 
     return response
 
+
 # clone_course -> takes in the course_id and clones the course
-def clone_course(payload):
+async def clone_course(payload):
     course_id = payload['course_id']
     
     atlas_client = AtlasClient()
@@ -156,7 +220,7 @@ def clone_course(payload):
     return new_course_id
 
 # delete_course -> takes in the course_id and deletes the course
-def delete_course(payload):
+async def delete_course(payload):
     try:
         course_id = payload['course_id']
     except Exception as e:
@@ -175,7 +239,7 @@ def delete_course(payload):
     
     return "Course deleted"
     
-def _get_file_type(file):
+async def _get_file_type(file):
     if file.endswith(".md"):
         return "note"
     elif file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
@@ -185,13 +249,7 @@ def _get_file_type(file):
 
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-def create_course(payload):
-    
-    course_name = payload['course_name']
-    course_image = payload['course_image']
-    course_description = payload['course_description']
-    files = payload['files']
-    course_outline = payload['course_outline']
+async def create_course(course_name, course_image, course_description, course_outline, files):
     course_status = "In Design"
 
     # upload the course image to s3 and get the link
@@ -271,7 +329,7 @@ def create_course(payload):
     return course_id
 
 # add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
-def add_module(payload):
+async def add_module(payload):
     course_id = payload['course_id']
     module_name = payload['module_name']
     module_description = payload['module_description']
@@ -299,7 +357,7 @@ def add_module(payload):
     return course
 
 # get_course -> takes in the course_id and returns the course object
-def get_course(payload):
+async def get_course(payload):
     course_id = payload['course_id']
 
     atlas_client = AtlasClient()
@@ -311,7 +369,7 @@ def get_course(payload):
     return course[0]
 
 # add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
-def add_resources_to_module(payload, resource_id=""):
+async def add_resources_to_module(payload, resource_id=""):
     course_id = payload['course_id']
     module_id = payload['module_id']
     resource_type = payload['resource_type']
@@ -382,7 +440,7 @@ def add_resources_to_module(payload, resource_id=""):
 
 
 # delete_resource_from_module -> takes in the course_id, module_id, resource_id, and deletes the resource from the module and from s3
-def delete_resource_from_module(payload):
+async def delete_resource_from_module(payload):
     course_id = payload['course_id']
     module_id = payload['module_id']
     resource_id = payload['resource_id']
@@ -414,7 +472,7 @@ def delete_resource_from_module(payload):
     return course
 
 
-def replace_resources_in_module(payload):
+async def replace_resources_in_module(payload):
     resource_id = payload['resource_id']
 
     # delete the resource with the resource id, and add the new resource with the same id
@@ -423,14 +481,14 @@ def replace_resources_in_module(payload):
     # add the new resource
     add_resources_to_module(payload, resource_id)
 
-def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_directory, resources):
+async def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_directory, resources):
     s3_file_manager = S3FileManager()
     for resource in resources:
         next_step_key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource.get('resource_name')}"
         prev_step_key = f"qu-course-design/{course_id}/{module_id}/{prev_step_directory}/{resource.get('resource_name')}"
         s3_file_manager.copy_file(prev_step_key, next_step_key)
 
-def submit_module_for_step(payload, course_design_step, queue_name_suffix):
+async def submit_module_for_step(payload, course_design_step, queue_name_suffix):
     course_id = payload['course_id']
     module_id = payload['module_id']
     instructions = payload.get("instructions", "")
@@ -461,7 +519,7 @@ def submit_module_for_step(payload, course_design_step, queue_name_suffix):
 
     return course
 
-def save_changes_after_step(payload, course_design_step):
+async def save_changes_after_step(payload, course_design_step):
     course_id = payload['course_id']
     module_id = payload['module_id']
     reviewed_files = payload['reviewed_files']
