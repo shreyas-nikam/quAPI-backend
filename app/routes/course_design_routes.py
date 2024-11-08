@@ -12,18 +12,18 @@ async def generate_course_outline_api(files: List[UploadFile] = File(...),
 
 # /clone_course -> takes in the course_id, course_name, course_image, course_description, and clones the course
 @router.post("/clone_course")
-async def clone_course_api(payload: dict):
-    return await clone_course(payload)
+async def clone_course_api(course_id: str = Form(...)):
+    return await clone_course(course_id)
 
 # /delete_course -> takes in the course_id and deletes the course
 @router.post("/delete_course")
-async def delete_course_api(payload: dict):
-    return await delete_course(payload)
+async def delete_course_api(course_id: str = Form(...)):
+    return await delete_course(course_id)
 
 # /create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
 @router.post("/create_course")
-async def create_course_api(course_name: str, course_image: UploadFile = File(...), course_description: str = Form(...), course_outline: str = Form(...), files: List[UploadFile] = File(...)):
-    return await create_course(course_name, course_image, course_description, course_outline, files)
+async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: List[UploadFile] = File(...), course_image: UploadFile = File(...)):
+    return await create_course(course_name, course_description, course_outline, files, course_image)
 
 # /courses -> returns all the courses
 @router.get("/courses")

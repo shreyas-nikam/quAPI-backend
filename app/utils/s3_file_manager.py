@@ -8,6 +8,7 @@ import logging
 import tempfile
 from dotenv import load_dotenv
 import os
+from fastapi import UploadFile
 
 # Load the environment variables
 load_dotenv()
@@ -89,6 +90,23 @@ class S3FileManager:
         except ClientError as e:
             logging.error(e)
             return False
+        
+    async def upload_file_from_frontend(self, file: UploadFile, key):
+        try:
+            file_content = await file.read()
+            self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=file_content)
+            self.make_object_public(key)
+            return True
+        except FileNotFoundError:
+            logging.error("The file was not found")
+            return False
+        except NoCredentialsError:
+            logging.error("Credentials not available")
+            return False
+        except ClientError as e:
+            logging.error(e)
+            return False
+        
 
     def upload_file(self, file_path, key):
         """
@@ -140,13 +158,12 @@ class S3FileManager:
             logging.error(e)
             return False
         
-    def make_object_public(self, s3_file_name):
-        s3_file_name = str(Path(s3_file_name).as_posix())
+    def make_object_public(self, key):
         try:
             self.s3_client.put_object_acl(
-                ACL='public-read', Bucket=self.bucket_name, Key=s3_file_name)
+                ACL='public-read', Bucket=self.bucket_name, Key=key)
             logging.info(
-                f"Object '{s3_file_name}' made public in S3 bucket '{self.bucket_name}'")
+                f"Object '{key}' made public in S3 bucket '{self.bucket_name}'")
             return True
         except NoCredentialsError:
             logging.error("AWS credentials not available or incorrect.")
