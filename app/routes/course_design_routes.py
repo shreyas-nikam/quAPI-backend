@@ -1,4 +1,4 @@
-from app.services.course_design_services import get_courses, generate_course_outline, clone_course, delete_course, create_course, add_module, add_resources_to_module, get_course, save_changes_after_step, submit_module_for_step
+from app.services.course_design_services import *
 from fastapi import APIRouter, UploadFile, File, Form
 from typing import List, Optional
 
@@ -36,7 +36,7 @@ async def add_module_api(course_id: str = Form(...), module_name: str = Form(...
     print(course_id, module_name, module_description)
     return await add_module(course_id, module_name, module_description)
 
-# /add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_link, and adds a resource to the module and to s3
+# done
 @router.post("/add_resources_to_module")
 async def add_resources_to_module_api(course_id: str = Form(...), 
                                       module_id: str = Form(...), 
@@ -51,12 +51,12 @@ async def add_resources_to_module_api(course_id: str = Form(...),
 async def replace_resources_in_module_api(payload: dict):
     pass
 
-# /delete_resources_from_module -> takes in the course_id, module_id, resource_id, and deletes the resource from the module and s3
+# done - yet to test with frontend
 @router.post("/delete_resources_from_module")
-async def delete_resources_from_module_api(payload: dict):
-    pass
+async def delete_resources_from_module_api(course_id: str = Form(...), module_id: str = Form(...), resource_id: str = Form(...)):
+    delete_resources_from_module(course_id, module_id, resource_id)
 
-# /get_course -> takes in the course_id and returns the course object
+# done
 @router.get("/get_course/{course_id}")
 async def get_course_api(course_id: str):
     return await get_course(course_id)

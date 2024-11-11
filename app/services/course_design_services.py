@@ -508,10 +508,7 @@ async def add_resources_to_module(course_id, module_id, resource_type, resource_
 
 
 # delete_resource_from_module -> takes in the course_id, module_id, resource_id, and deletes the resource from the module and from s3
-async def delete_resource_from_module(payload):
-    course_id = payload['course_id']
-    module_id = payload['module_id']
-    resource_id = payload['resource_id']
+async def delete_resources_from_module(course_id, module_id, resource_id):
     course_design_step = 0
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
 
@@ -524,10 +521,10 @@ async def delete_resource_from_module(payload):
     course = course[0]
     modules = course.get("modules", [])
     for module in modules:
-        if module.get("_id") == ObjectId(module_id):
+        if module.get("module_id") == ObjectId(module_id):
             resources = module.get(step_directory, [])
             for resource in resources:
-                if resource.get("_id") == ObjectId(resource_id):
+                if resource.get("resource_id") == ObjectId(resource_id):
                     resources.remove(resource)
                     break
             module[step_directory] = resources
@@ -549,7 +546,7 @@ async def replace_resources_in_module(payload):
     resource_id = payload['resource_id']
 
     # delete the resource with the resource id, and add the new resource with the same id
-    delete_resource_from_module(payload)
+    delete_resources_from_module(payload['course_id'], payload['module_id'], resource_id)
 
     # add the new resource
     add_resources_to_module(payload, resource_id)
