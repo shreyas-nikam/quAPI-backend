@@ -431,49 +431,45 @@ async def get_course(course_id):
     return course
 
 # add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
-async def add_resources_to_module(payload, resource_id=""):
-    course_id = payload['course_id']
-    module_id = payload['module_id']
-    resource_type = payload['resource_type']
-    resource_name = payload['resource_name']
-    resource_description = payload['resource_description']
-    resource_file = payload['resource_file']
+async def add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file, resource_id=None):
     s3_file_manager = S3FileManager()
     course_design_step = 0
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
 
-    # if resource_type is file, then upload the file to s3 and get the link
-    # if resource type is link, then use the link as the resource link
-    # if the resource type is note, the write it in an md file and upload it to s3 and get the link
-    # if the resource_type is an image, then upload the image to s3 and get the link
-    if(resource_type == "file"):
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
-        s3_file_manager.upload_file_obj(resource_file, key)
+    if(resource_type == "File"):
+        # resource file is the file
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file.filename}"
+        await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
-    elif(resource_type == "link"):
-        resource_link = resource_file
-
-    elif(resource_type == "note"):
-        s3_file_manager = S3FileManager()
-        # create a temp md file with the resource description as the content
-        resource_file = resource_file + ".md"
-        with open(resource_file, "w") as file:
-            file.write(resource_description)
-
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
-        s3_file_manager.upload_file_obj(resource_file, key)
+    elif(resource_type == "Image"):
+        # resource file is the image
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file.filename}"
+        await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
+    elif(resource_type == "Link"):
+        # resource file is the resource link
+        resource_description, resource_link = resource_description.split("###LINK###")
 
-    elif(resource_type == "image"):
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
-        s3_file_manager.upload_file_obj(resource_file, key)
+    elif(resource_type == "Note"):
+        # resource file is the description of the note
+        print(resource_description)
+        resource_description, resource_note = resource_description.split("###NOTE###")
+        note_id = ObjectId()
+        resource_file_name = str(note_id) + ".md"
+        with open(resource_file_name, "w") as file:
+            file.write(resource_note)
+
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file_name}"
+        s3_file_manager.upload_file(resource_file_name, key)
         key = quote(key)
-        resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
+        # remove the temp file
+        os.remove(resource_file_name)
+        resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
     atlas_client = AtlasClient()
     course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
@@ -483,8 +479,8 @@ async def add_resources_to_module(payload, resource_id=""):
     course = course[0]
     modules = course.get("modules", [])
 
-    for module in modules:
-        if module.get("_id") == ObjectId(module_id):
+    for index, module in enumerate(modules):
+        if module.get("module_id") == ObjectId(module_id):
             resources = module.get(f"{step_directory}", [])
             resource = {
                 "resource_id": ObjectId() if not resource_id else ObjectId(resource_id),
@@ -494,7 +490,7 @@ async def add_resources_to_module(payload, resource_id=""):
                 "resource_link": resource_link
             }
             resources.append(resource)
-            module[f"{step_directory}"] = resources
+            modules[index][step_directory] = resources
             break
 
     course["modules"] = modules
@@ -505,6 +501,8 @@ async def add_resources_to_module(payload, resource_id=""):
         }
     }
     )
+
+    course = _convert_object_ids_to_strings(course)
 
     return course
 

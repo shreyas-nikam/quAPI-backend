@@ -1,10 +1,10 @@
 from app.services.course_design_services import get_courses, generate_course_outline, clone_course, delete_course, create_course, add_module, add_resources_to_module, get_course, save_changes_after_step, submit_module_for_step
 from fastapi import APIRouter, UploadFile, File, Form
-from typing import List
+from typing import List, Optional
 
 router = APIRouter()
 
-# /generate_course_outline -> take in the input as the file and the instructions and generate the course outline
+# done
 @router.post("/generate_course_outline")
 async def generate_course_outline_api(files: List[UploadFile] = File(...),
                                   instructions: str = Form(...)):
@@ -15,23 +15,22 @@ async def generate_course_outline_api(files: List[UploadFile] = File(...),
 async def clone_course_api(course_id: str = Form(...)):
     return await clone_course(course_id)
 
-# /delete_course -> takes in the course_id and deletes the course
+# done
 @router.post("/delete_course")
 async def delete_course_api(course_id: str = Form(...)):
     return await delete_course(course_id)
 
-# /create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
+# done
 @router.post("/create_course")
 async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: List[UploadFile] = File(...), course_image: UploadFile = File(...)):
     return await create_course(course_name, course_description, course_outline, files, course_image)
 
-# /courses -> returns all the courses
+# done
 @router.get("/courses")
 async def courses_api():
     return await get_courses()
 
-
-# /add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
+# done
 @router.post("/add_module")
 async def add_module_api(course_id: str = Form(...), module_name: str = Form(...), module_description: str = Form(...)):
     print(course_id, module_name, module_description)
@@ -39,8 +38,13 @@ async def add_module_api(course_id: str = Form(...), module_name: str = Form(...
 
 # /add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_link, and adds a resource to the module and to s3
 @router.post("/add_resources_to_module")
-async def add_resources_to_module_api(payload: dict):
-    return await add_resources_to_module(payload)
+async def add_resources_to_module_api(course_id: str = Form(...), 
+                                      module_id: str = Form(...), 
+                                      resource_type: str = Form(...), 
+                                      resource_name: str = Form(...), 
+                                      resource_description: str = Form(...), 
+                                      resource_file: Optional[UploadFile] = File(None) ):
+    return await add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file)
 
 # /replace_resources_in_module -> takes in the course_id, module_id, resource_id, resource_type, resource_name, resource_description, resource_link, and replaces the resource in the module and s3
 @router.post("/replace_resources_in_module")
