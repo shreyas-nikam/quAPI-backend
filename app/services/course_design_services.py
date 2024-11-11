@@ -13,7 +13,7 @@ from bson.objectid import ObjectId
 from openai import OpenAI
 import os
 from fastapi import UploadFile
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 
 COURSE_DESIGN_STEPS = [
@@ -261,13 +261,9 @@ async def delete_course(course_id):
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
 async def create_course(course_name, course_description, course_outline, files, course_image):
-
-
-    course_status = "In Design"
-
+    course_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
-    
     atlas_client = AtlasClient()
 
     # convert the course outline to modules
@@ -298,16 +294,33 @@ async def create_course(course_name, course_description, course_outline, files, 
         "course_outline": course_outline,
         "status": course_status
     }
-
     step_directory = COURSE_DESIGN_STEPS[0]
-
 
     modules = response.get("modules", []) 
 
+    raw_resources = []
+    for file in files:
+        resource_type = _get_file_type(file)
+
+        key = f"qu-course-design/{course_id}/{step_directory}/{file.filename}"  
+        await s3_file_manager.upload_file_from_frontend(file, key)
+        key = quote(key)
+        resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"    
+            
+        raw_resources += [{
+            "resource_id": ObjectId(),
+            "resource_type": resource_type,
+            "resource_name": file.filename,
+            "resource_description": "",
+            "resource_link": resource_link
+        }]
+    
+    course[step_directory] = raw_resources
     
     for index, module in enumerate(modules):
         module_id = ObjectId()
         modules[index]["module_id"] = module_id
+        modules[index]["status"] = "In Design Phase"
 
         raw_resources = []
 
@@ -336,12 +349,16 @@ async def create_course(course_name, course_description, course_outline, files, 
     course = _convert_object_ids_to_strings(course)
     return course
 
-# add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
-async def add_module(payload):
-    course_id = payload['course_id']
-    module_name = payload['module_name']
-    module_description = payload['module_description']
 
+def _get_resource_key_from_link(resource_link):
+    resource_prefix = resource_link.split("aws.com/")[1]
+    # unquote the key
+    resource_key = unquote(resource_prefix)
+    return resource_key
+
+
+# add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
+async def add_module(course_id, module_name, module_description):
     atlas_client = AtlasClient()
     course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
 
@@ -349,28 +366,58 @@ async def add_module(payload):
         return "Course not found"
     
     course = course[0]
+    raw_resources = course.get("raw_resources", [])
+
+
+    module_id = ObjectId()
+
+    raw_resources_added_to_module = []
+    # add the raw_resources to the module
+    for resource in raw_resources:
+        resource_type = resource.get("resource_type")
+        resource_name = resource.get("resource_name")
+        resource_description = resource.get("resource_description")
+        resource_link = resource.get("resource_link")
+        resource_id = ObjectId()
+
+        resource_key = _get_resource_key_from_link(resource_link)
+        key = f"qu-course-design/{course_id}/{str(module_id)}/raw_resources/{resource_name}"
+        s3_file_manager = S3FileManager()
+        s3_file_manager.copy_file(resource_key, key)
+        key = quote(key)
+        resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
+
+        raw_resources_added_to_module.append({
+            "resource_id": resource_id,
+            "resource_type": resource_type,
+            "resource_name": resource_name,
+            "resource_description": resource_description,
+            "resource_link": resource_link
+        })
+    
     modules = course.get("modules", [])
     module = {
-        "module_id": ObjectId(),
+        "module_id": module_id,
         "module_name": module_name,
         "module_description": module_description,
-        "status": "Not Submitted"
+        "status": "In Design Phase",
+        "raw_resources": raw_resources_added_to_module
     }
+
     modules.append(module)
     course["modules"] = modules
 
-    # add all files as resources to modules
     atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={
         "$set": {
             "modules": modules
         }
     })
 
+    course = _convert_object_ids_to_strings(course)
     return course
 
 # get_course -> takes in the course_id and returns the course object
-async def get_course(payload):
-    course_id = payload['course_id']
+async def get_course(course_id):
 
     atlas_client = AtlasClient()
     course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
@@ -378,7 +425,10 @@ async def get_course(payload):
     if not course:
         return {}
     
-    return course[0]
+    course = course[0]
+    course = _convert_object_ids_to_strings(course)
+    
+    return course
 
 # add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
 async def add_resources_to_module(payload, resource_id=""):
@@ -399,6 +449,7 @@ async def add_resources_to_module(payload, resource_id=""):
     if(resource_type == "file"):
         key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
         s3_file_manager.upload_file_obj(resource_file, key)
+        key = quote(key)
         resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
     elif(resource_type == "link"):
@@ -413,12 +464,14 @@ async def add_resources_to_module(payload, resource_id=""):
 
         key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
         s3_file_manager.upload_file_obj(resource_file, key)
+        key = quote(key)
         resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
 
     elif(resource_type == "image"):
         key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file}"
         s3_file_manager.upload_file_obj(resource_file, key)
+        key = quote(key)
         resource_link = f"https://qucoursify.s3.amazonaws.com/{key}"
 
 

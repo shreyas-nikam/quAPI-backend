@@ -33,8 +33,9 @@ async def courses_api():
 
 # /add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
 @router.post("/add_module")
-async def add_module_api(payload: dict):
-    return await add_module(payload)
+async def add_module_api(course_id: str = Form(...), module_name: str = Form(...), module_description: str = Form(...)):
+    print(course_id, module_name, module_description)
+    return await add_module(course_id, module_name, module_description)
 
 # /add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_link, and adds a resource to the module and to s3
 @router.post("/add_resources_to_module")
@@ -52,8 +53,8 @@ async def delete_resources_from_module_api(payload: dict):
     pass
 
 # /get_course -> takes in the course_id and returns the course object
-@router.get("/get_course")
-async def get_course_api(course_id: int):
+@router.get("/get_course/{course_id}")
+async def get_course_api(course_id: str):
     return await get_course(course_id)
 
 # /submit_module_for_content_generation -> takes in the course_id, module_id, and submits the module for content generation to the content_generation_queue

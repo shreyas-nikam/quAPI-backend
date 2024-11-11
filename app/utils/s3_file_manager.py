@@ -188,6 +188,7 @@ class S3FileManager:
         try:
             self.s3_client.copy_object(
                 Bucket=self.bucket_name, CopySource=f"{self.bucket_name}/{source_key}", Key=destination_key)
+            self.make_object_public(destination_key)
             return True
         except NoCredentialsError:
             logging.error("Credentials not available")
