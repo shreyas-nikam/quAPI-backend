@@ -323,14 +323,13 @@ class S3FileManager:
         try:
             response = self.s3_client.get_object(
                 Bucket=self.bucket_name, Key=key)
-            content = response['Body'].read()
-            return content
+            return response
         except NoCredentialsError:
             logging.error("Credentials not available")
-            return False
+            return None
         except ClientError as e:
             logging.error(e)
-            return False
+            return None
 
     def upload_directory(self, directory_path, key):
         """

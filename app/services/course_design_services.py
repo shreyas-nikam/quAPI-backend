@@ -1,5 +1,8 @@
 # generate_course_outline, clone_course, delete_course, create_course, add_module, add_resources_to_module, get_course, submit_module_for_content_generation, save_changes_post_content_generation, submit_module_for_structure_generation, save_changes_post_structure_generation, submit_module_for_deliverables_generation, save_changes_post_deliverables_generation, submit_for_publishing_pipeline
 # the stages of the course design pipeline are: raw_resources, in_content_generation_queue, pre_processed_content, post_processed_content, in_structure_generation_queue, pre_processed_structure, post_processed_structure, in_deliverables_generation_queue, pre_processed_deliverables, post_processed_deliverables, in_publishing_queue, published
+from fastapi import HTTPException
+from urllib.parse import urlparse
+import mimetypes
 from app.utils.llm import LLM
 from app.utils.s3_file_manager import S3FileManager
 from app.utils.atlas_client import AtlasClient
@@ -19,16 +22,16 @@ from urllib.parse import quote, unquote
 COURSE_DESIGN_STEPS = [
     "raw_resources", #automatic
     "in_content_generation_queue", #automatic
-    "pre_processed_content", #manual
+    "pre_processed_content", #expert-review-step
     "post_processed_content", #automatic
     "in_structure_generation_queue", #automatic
-    "pre_processed_structure", #manual
+    "pre_processed_structure", #expert-review-step
     "post_processed_structure", #automatic
     "in_deliverables_generation_queue", #automatic
-    "pre_processed_deliverables", #manual
+    "pre_processed_deliverables", #expert-review-step
     "post_processed_deliverables", #automatic
     "in_publishing_queue", #automatic
-    "published" #manual
+    "published" #expert-review-step
 ]
 
 
@@ -39,7 +42,7 @@ def _get_course_and_module(course_id, module_id):
         return "Course not found", None
     
     course = course[0]
-    module = next((m for m in course.get("modules", []) if m.get("_id") == ObjectId(module_id)), None)
+    module = next((m for m in course.get("modules", []) if m.get("module_id") == ObjectId(module_id)), None)
     if not module:
         return None, "Module not found"
     
@@ -431,9 +434,8 @@ async def get_course(course_id):
     return course
 
 # add_resources_to_module -> takes in the course_id, module_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
-async def add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file, resource_id=None):
+async def add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file, resource_id=None, course_design_step=0):
     s3_file_manager = S3FileManager()
-    course_design_step = 0
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
 
     if(resource_type == "File"):
@@ -508,8 +510,7 @@ async def add_resources_to_module(course_id, module_id, resource_type, resource_
 
 
 # delete_resource_from_module -> takes in the course_id, module_id, resource_id, and deletes the resource from the module and from s3
-async def delete_resources_from_module(course_id, module_id, resource_id):
-    course_design_step = 0
+async def delete_resources_from_module(course_id, module_id, resource_id, course_design_step=0):
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
 
     atlas_client = AtlasClient()
@@ -539,17 +540,18 @@ async def delete_resources_from_module(course_id, module_id, resource_id):
     }
     )
 
+    course = _convert_object_ids_to_strings(course)
+
     return course
 
 
-async def replace_resources_in_module(payload):
-    resource_id = payload['resource_id']
+async def replace_resources_in_module(course_id, module_id, resource_id, resource_name, resource_type, resource_description, resource_file, course_design_step=0):
 
     # delete the resource with the resource id, and add the new resource with the same id
-    delete_resources_from_module(payload['course_id'], payload['module_id'], resource_id)
+    delete_resources_from_module(course_id, module_id, resource_id, course_design_step)
 
     # add the new resource
-    add_resources_to_module(payload, resource_id)
+    add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file, resource_id, course_design_step)
 
 def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_directory, resources):
     s3_file_manager = S3FileManager()
@@ -558,21 +560,21 @@ def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_dir
         prev_step_key = f"qu-course-design/{course_id}/{module_id}/{prev_step_directory}/{resource.get('resource_name')}"
         s3_file_manager.copy_file(prev_step_key, next_step_key)
 
-async def submit_module_for_step(payload, course_design_step, queue_name_suffix):
-    course_id = payload['course_id']
-    module_id = payload['module_id']
-    instructions = payload.get("instructions", "")
+async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
+    print(course_id, module_id, course_design_step, queue_name_suffix, instructions)
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
     prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
 
     course, module = _get_course_and_module(course_id, module_id)
+
+    print(course, module)
     if not course:
         return "Course not found"
     if not module:
         return "Module not found"
 
-    module["status"] = f"In {queue_name_suffix.replace('_', ' ').title()}"
-    course["modules"] = [module if m.get("_id") == module_id else m for m in course.get("modules", [])]
+    module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
+    course["modules"] = [module if m.get("module_id") == module_id else m for m in course.get("modules", [])]
 
     atlas_client = AtlasClient()
     atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={
@@ -580,7 +582,6 @@ async def submit_module_for_step(payload, course_design_step, queue_name_suffix)
             "modules": course.get("modules", [])
         }
     })
-
 
     prev_step_resources = module.get(prev_step_directory, [])
     _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_directory, prev_step_resources)
@@ -588,32 +589,62 @@ async def submit_module_for_step(payload, course_design_step, queue_name_suffix)
     queue_payload = {
         "course_id": course_id,
         "module_id": module_id,
-        "instructions": instructions
     }
+
+    if instructions:
+        queue_payload["instructions"] = instructions
+
+    print(step_directory)
     atlas_client.insert(step_directory, queue_payload)
 
+    course = _convert_object_ids_to_strings(course)
+
     return course
 
-async def save_changes_after_step(payload, course_design_step):
-    course_id = payload['course_id']
-    module_id = payload['module_id']
-    reviewed_files = payload['reviewed_files']
-    step_directory = COURSE_DESIGN_STEPS[course_design_step]
+import mimetypes
+from urllib.parse import urlparse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+import requests
 
-    course, module = _get_course_and_module(course_id, module_id)
-    if not course:
-        return "Course not found"
-    if not module:
-        return "Module not found"
 
-    module[step_directory] = reviewed_files
-    course["modules"] = [module if m.get("_id") == module_id else m for m in course.get("modules", [])]
+def parse_s3_url(url: str):
+    parsed_url = urlparse(url)
+    if parsed_url.netloc.endswith("s3.amazonaws.com"):
+        # Extract bucket and key from AWS S3 URL format: https://bucket-name.s3.amazonaws.com/object-key
+        bucket_name = parsed_url.netloc.split(".")[0]
+        key = parsed_url.path.lstrip("/")
+    else:
+        raise ValueError("Invalid S3 URL format")
+    return bucket_name, key
 
-    atlas_client = AtlasClient()
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={
-        "$set": {
-            "modules": course.get("modules", [])
+
+async def fetch_note(url):
+    s3_file_manager = S3FileManager()
+    try:
+        bucket_name, key = parse_s3_url(url)
+
+        print(key)
+
+        # Get the file from S3
+        response = s3_file_manager.get_object(key=key)
+
+        print(response)
+
+        if response is None:
+            return {"content": "", "content_type": "text/plain"}
+        
+        file_content = response["Body"].read()
+
+        print(file_content)
+
+        # Infer content type
+        content_type = response.get("ContentType") or mimetypes.guess_type(key)[0] or "application/octet-stream"
+
+        return {
+            "content": file_content.decode("utf-8"),
+            "content_type": content_type,
         }
-    })
 
-    return course
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

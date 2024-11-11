@@ -48,13 +48,20 @@ async def add_resources_to_module_api(course_id: str = Form(...),
 
 # /replace_resources_in_module -> takes in the course_id, module_id, resource_id, resource_type, resource_name, resource_description, resource_link, and replaces the resource in the module and s3
 @router.post("/replace_resources_in_module")
-async def replace_resources_in_module_api(payload: dict):
-    pass
+async def replace_resources_in_module_api(course_id: str = Form(...), 
+                                          module_id: str = Form(...), 
+                                          resource_id: str = Form(...), 
+                                          resource_type: str = Form(...), 
+                                          resource_name: str = Form(...), 
+                                          resource_description: str = Form(...), 
+                                          resource_file: Optional[UploadFile] = File(None),
+                                          course_design_step: Optional[int] = Form(None)):
+    return await replace_resources_in_module(course_id, module_id, resource_id, resource_type, resource_name, resource_description, resource_file, course_design_step)
 
 # done - yet to test with frontend
 @router.post("/delete_resources_from_module")
 async def delete_resources_from_module_api(course_id: str = Form(...), module_id: str = Form(...), resource_id: str = Form(...)):
-    delete_resources_from_module(course_id, module_id, resource_id)
+    return await delete_resources_from_module(course_id, module_id, resource_id)
 
 # done
 @router.get("/get_course/{course_id}")
@@ -63,35 +70,24 @@ async def get_course_api(course_id: str):
 
 # /submit_module_for_content_generation -> takes in the course_id, module_id, and submits the module for content generation to the content_generation_queue
 @router.post("/submit_module_for_content_generation")
-async def submit_module_for_content_generation_api(payload: dict):
-    return await submit_module_for_step(payload, 1, "in_content_generation_queue")
-
-# /save_changes_post_content_generation -> takes in the course_id, module_id, reviewed files, and saves the changes to the module
-@router.post("/save_changes_post_content_generation")
-async def save_changes_post_content_generation_api(payload: dict):
-    return await save_changes_after_step(payload, 3)
+async def submit_module_for_content_generation_api(course_id: str = Form(...), module_id: str = Form(...), instructions: str = Form(...)):
+    return await submit_module_for_step(course_id, module_id, 1, "in_content_generation_queue", instructions)
 
 # /submit_module_for_structure_generation -> takes in the course_id, module_id and the reviewed files and submits them for structure generation to the structure_generation_queue
 @router.post("/submit_module_for_structure_generation")
-async def submit_module_for_structure_generation_api(payload: dict):
-    return await submit_module_for_step(payload, 4, "in_structure_generation_queue")
-
-# /save_changes_post_structure_generation -> takes in the course_id, module_id, reviewed files, and saves the changes to the module
-@router.post("/save_changes_post_structure_generation")
-async def save_changes_post_structure_generation_api(payload: dict):
-    return await save_changes_after_step(payload, 6)
+async def submit_module_for_structure_generation_api(course_id, module_id):
+    return await submit_module_for_step(course_id, module_id, 4, "in_structure_generation_queue")
 
 # /submit_module_for_deliverables_generation -> takes in the course_id, module_id and the reviewed files and submits them for final generation to the deliverables_generation_queue
 @router.post("/submit_module_for_deliverables_generation")
-async def submit_module_for_deliverables_generation_api(payload: dict):
-    return await submit_module_for_step(payload, 7, "in_deliverables_generation_queue")
-
-# /save_changes_post_deliverables_generation -> takes in the course_id, module_id, reviewed files, and saves the changes to the module
-@router.post("/save_changes_post_deliverables_generation")
-async def save_changes_post_deliverables_generation_api(payload: dict):
-    return await save_changes_after_step(payload, 8)
+async def submit_module_for_deliverables_generation_api(course_id, module_id):
+    return await submit_module_for_step(course_id, module_id, 7, "in_deliverables_generation_queue")
 
 # /submit_for_publishing_pipeline -> takes in the course_id and submits the course for the publishing pipeline
 @router.post("/submit_for_publishing_pipeline")
-async def submit_for_publishing_pipeline_api(payload: dict):
-    return await submit_module_for_step(payload, 9, "in_publishing_queue")
+async def submit_for_publishing_pipeline_api(course_id, module_id):
+    return await submit_module_for_step(course_id, module_id, 9, "in_publishing_queue")
+
+@router.post("/fetch_note")
+async def fetch_note_api(url: str = Form(...)):
+    return await fetch_note(url)
