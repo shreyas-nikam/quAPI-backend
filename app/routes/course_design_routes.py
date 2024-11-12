@@ -91,3 +91,7 @@ async def submit_for_publishing_pipeline_api(course_id, module_id):
 @router.post("/fetch_note")
 async def fetch_note_api(url: str = Form(...)):
     return await fetch_note(url)
+
+@router.post("/fetch_quizdata")
+async def fetch_quizdata_api(url: str = Form(...)):
+    return await fetch_quizdata(url)
