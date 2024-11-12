@@ -624,6 +624,10 @@ def parse_s3_url(url: str):
         # Extract bucket and key from AWS S3 URL format: https://bucket-name.s3.amazonaws.com/object-key
         bucket_name = parsed_url.netloc.split(".")[0]
         key = parsed_url.path.lstrip("/")
+    elif parsed_url.netloc.endswith("s3.us-east-1.amazonaws.com"):
+        # Extract bucket and key from AWS S3 URL format: https://bucket-name.s3.us-east-1   .amazonaws.com/object-key
+        bucket_name = parsed_url.netloc.split(".")[0]
+        key = parsed_url.path.lstrip("/")
     else:
         raise ValueError("Invalid S3 URL format")
     return bucket_name, key

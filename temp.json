@@ -12,28 +12,28 @@
             "resource_id": {
                 "$oid": "673277717a469de58e0efa97"
             },
-            "resource_type": "file",
+            "resource_type": "File",
             "resource_name": "ai-and-big-data-in-investments.pdf",
-            "resource_description": "",
-            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-big-data-in-investments.pdf"
+            "resource_description": "Reference file for the course",
+            "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-big-data-in-investments.pdf"
         },
         {
             "resource_id": {
                 "$oid": "673277717a469de58e0efa98"
             },
-            "resource_type": "image",
+            "resource_type": "Image",
             "resource_name": "ai-big-data-in-investment.jpg",
-            "resource_description": "",
-            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-big-data-in-investment.jpg"
+            "resource_description": "Reference image for the course",
+            "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-big-data-in-investment.jpg"
         },
         {
             "resource_id": {
                 "$oid": "673277717a469de58e0efa99"
             },
-            "resource_type": "image",
+            "resource_type": "Image",
             "resource_name": "ai-and-investing.png",
-            "resource_description": "",
-            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-investing.png"
+            "resource_description": "Reference image for the course",
+            "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-investing.png"
         }
     ],
     "modules": [
@@ -44,77 +44,141 @@
                 "$oid": "673277717a469de58e0efa9a"
             },
             "status": "Published",
+            "instructions": "Create a professional module tailored for AI professionals based on the resources provided. The module should consist of 8 slides, each containing no more than 5 bullet points. Focus on concepts and applications of AI in financial or strategic contexts, while maintaining a professional and technical tone. For each slide, provide speaker notes that expand on the bullet points without any introductory or closing remarks (e.g., avoid 'hello' or 'thank you').\nModule Requirements:\nEmphasize key trends, models, and applications of AI within financial or data-driven domains in concise bullet points.\nExpand on each bullet point in the speaker notes with detailed context, offering insights relevant to AI professionals' technical expertise.\nAvoid expanding acronyms in the speaker notes, maintaining a specialized tone appropriate for AI practitioners.",
             "raw_resources": [
                 {
                     "resource_id": {
                         "$oid": "673277717a469de58e0efa9b"
                     },
-                    "resource_type": "file",
+                    "resource_type": "File",
                     "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_description": "Reference file for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efa9c"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-big-data-in-investment.jpg",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-big-data-in-investment.jpg"
+                    "resource_description": "Reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-big-data-in-investment.jpg"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efa9d"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-and-investing.png",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-investing.png"
+                    "resource_description": "Another reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_deliverables": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db29f40aea6b4c2d106f"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for On Machine Learning Applications in Investments",
+                    "resource_description": "Makrdown for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/note1.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc1f7619a2f7a8444119"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "1_On_Machine_Learning_Applications_In_Investments.pptx ",
+                    "resource_description": "Slides Generated for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/1_On_Machine_Learning_Applications_In_Investments.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732ddb40bb1d1244acc745a"
+                    },
+                    "resource_type": "Video",
+                    "resource_name": "1 On Machine Learning Applications In Investments.mp4",
+                    "resource_description": "Video for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/video_1.mp4"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732df6db4c77c82c5af37dc"
+                    },
+                    "resource_type": "Assessment",
+                    "resource_name": "assessment 1",
+                    "resource_description": "Assessment for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/questions-1.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d8b20f59cc3fe688f22f"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter1_Predicting_Stock_Returns_with_Visuals.ipynb",
+                    "resource_description": "Code Lab link for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://colab.research.google.com/drive/1EazReLz7-VWolWWTWsYPqBSoMGXBYl-e?usp=sharing"
                 }
             ],
             "pre_processed_content": [
                 {
                     "resource_id": {
-                        "$oid": "673285a04f61a44f26df5d38"
+                        "$oid": "6732db29f40aea6b4c2d106f"
                     },
-                    "resource_type": "generated_slide",
-                    "resource_name": "On Machine Learning Applications In Investments",
-                    "resource_description": "Final Deliverable Slide Created for On Machine Learning Applications In Investments",
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for On Machine Learning Applications in Investments",
+                    "resource_description": "Makrdown for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/note1.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e584ae4765ee43f72862"
+                    },
+                    "resource_type": "Slide_Content",
+                    "resource_name": "Slide content",
+                    "resource_description": "Slide Content for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_content/slide1.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d8b20f59cc3fe688f22f"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter1_Predicting_Stock_Returns_with_Visuals.ipynb",
+                    "resource_description": "Code Lab link for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://colab.research.google.com/drive/1EazReLz7-VWolWWTWsYPqBSoMGXBYl-e?usp=sharing"
+                }
+            ],
+            "pre_processed_structure": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db29f40aea6b4c2d106f"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for On Machine Learning Applications in Investments",
+                    "resource_description": "Makrdown for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/note1.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc1f7619a2f7a8444119"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "1_On_Machine_Learning_Applications_In_Investments.pptx ",
+                    "resource_description": "Slides Generated for the On Machine Learning Applications in Investments module",
                     "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/1_On_Machine_Learning_Applications_In_Investments.pptx"
                 },
                 {
                     "resource_id": {
-                        "$oid": "673285a6fd29bc896b60f452"
+                        "$oid": "6732d8b20f59cc3fe688f22f"
                     },
-                    "resource_type": "generated_video",
-                    "resource_name": "On Machine Learning Applications In Investments",
-                    "resource_description": "Final Deliverable Video Created for On Machine Learning Applications In Investments",
-                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/1+On+Machine+Learning+Applications+In+Investments.mp4"
-                },
-                // assessment
-                {
-                    "resource_id": {
-                        "$oid": "673285abfd77bc58b8d19f96"
-                    },
-                    "resource_type": "questions_file",
-                    "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
-                },
-                // lab
-                {
-                    "resource_id": {
-                        "$oid": "673285af6304c8257f8832a8"
-                    },
-                    "resource_type": "file",
-                    "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_type": "Link",
+                    "resource_name": "Chapter1_Predicting_Stock_Returns_with_Visuals.ipynb",
+                    "resource_description": "Code Lab link for the On Machine Learning Applications in Investments module",
+                    "resource_link": "https://colab.research.google.com/drive/1EazReLz7-VWolWWTWsYPqBSoMGXBYl-e?usp=sharing"
                 }
-            ],
-            "pre_processed_structure": [],
-            "pre_processed_deliverables": []
+            ]
         },
         {
             "module_name": "Alternative Data and AI in Investment Research",
@@ -123,38 +187,141 @@
                 "$oid": "673277727a469de58e0efa9e"
             },
             "status": "Published",
+            "instructions": "Create a professional module tailored for AI professionals based on the resources provided. The module should consist of 8 slides, each containing no more than 5 bullet points. Focus on concepts and applications of AI in financial or strategic contexts, while maintaining a professional and technical tone. For each slide, provide speaker notes that expand on the bullet points without any introductory or closing remarks (e.g., avoid 'hello' or 'thank you').\nModule Requirements:\nEmphasize key trends, models, and applications of AI within financial or data-driven domains in concise bullet points.\nExpand on each bullet point in the speaker notes with detailed context, offering insights relevant to AI professionals' technical expertise.\nAvoid expanding acronyms in the speaker notes, maintaining a specialized tone appropriate for AI practitioners.",
             "raw_resources": [
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efa9f"
                     },
-                    "resource_type": "file",
+                    "resource_type": "File",
                     "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_description": "Reference file for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-big-data-in-investments.pdf"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa0"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-big-data-in-investment.jpg",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-big-data-in-investment.jpg"
+                    "resource_description": "Reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-big-data-in-investment.jpg"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa1"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-and-investing.png",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-investing.png"
+                    "resource_description": "Another reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-investing.png"
                 }
             ],
-            "pre_processed_content": [],
-            "pre_processed_structure": [],
-            "pre_processed_deliverables": []
+            "pre_processed_deliverables": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db311b5f3cf2e184ddc7"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Alternative Data and AI in Investment Research",
+                    "resource_description": "Markdown for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/note2.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc5b915bd3ce36d2fded"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "2_Alternative_Data_and_AI_in_Investment_Research.pptx",
+                    "resource_description": "Slides Generated for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/2_Alternative_Data_and_AI_in_Investment_Research.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dddd02958f7b74d030ed"
+                    },
+                    "resource_type": "Video",
+                    "resource_name": "2 Alternative Data and AI in Investment Research.mp4",
+                    "resource_description": "Video for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/video_2.mp4"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732df91aac2f238d1042a1d"
+                    },
+                    "resource_type": "Assessment",
+                    "resource_name": "assessment 2",
+                    "resource_description": "Assessment for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/questions-2.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d8fcd4f8c9effe353c03"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter2_Alternative_Data_Investment_Research_Notebook.ipynb",
+                    "resource_description": "Code Lab link for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://colab.research.google.com/drive/17LocJV5AxgXfkR4oUfOc_ryv6kAzd1vB?usp=sharing"
+                }
+            ],
+            "pre_processed_content": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db311b5f3cf2e184ddc7"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Alternative Data and AI in Investment Research",
+                    "resource_description": "Markdown for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/note2.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e5ad32b51f77caab9a74"
+                    },
+                    "resource_type": "Slide_Content",
+                    "resource_name": "Slide content",
+                    "resource_description": "Slide Content for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_content/slide2.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d8fcd4f8c9effe353c03"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter2_Alternative_Data_Investment_Research_Notebook.ipynb",
+                    "resource_description": "Code Lab link for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://colab.research.google.com/drive/17LocJV5AxgXfkR4oUfOc_ryv6kAzd1vB?usp=sharing"
+                }
+            ],
+            "pre_processed_structure": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db311b5f3cf2e184ddc7"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Alternative Data and AI in Investment Research",
+                    "resource_description": "Markdown for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/note2.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e5c769fa73e7dc8ad8db"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "2_Alternative_Data_and_AI_in_Investment_Research.pptx",
+                    "resource_description": "Slides Generated for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/pre_processed_deliverables/2_Alternative_Data_and_AI_in_Investment_Research.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d8fcd4f8c9effe353c03"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter2_Alternative_Data_Investment_Research_Notebook.ipynb",
+                    "resource_description": "Code Lab link for the Alternative Data and AI in Investment Research module",
+                    "resource_link": "https://colab.research.google.com/drive/17LocJV5AxgXfkR4oUfOc_ryv6kAzd1vB?usp=sharing"
+                }
+            ]
         },
         {
             "module_name": "Data Science for Active and Long-Term Fundamental Investing",
@@ -163,38 +330,141 @@
                 "$oid": "673277727a469de58e0efaa2"
             },
             "status": "Published",
+            "instructions": "Create a professional module tailored for AI professionals based on the resources provided. The module should consist of 8 slides, each containing no more than 5 bullet points. Focus on concepts and applications of AI in financial or strategic contexts, while maintaining a professional and technical tone. For each slide, provide speaker notes that expand on the bullet points without any introductory or closing remarks (e.g., avoid 'hello' or 'thank you').\nModule Requirements:\nEmphasize key trends, models, and applications of AI within financial or data-driven domains in concise bullet points.\nExpand on each bullet point in the speaker notes with detailed context, offering insights relevant to AI professionals' technical expertise.\nAvoid expanding acronyms in the speaker notes, maintaining a specialized tone appropriate for AI practitioners.",
             "raw_resources": [
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa3"
                     },
-                    "resource_type": "file",
+                    "resource_type": "File",
                     "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_description": "Reference file for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-big-data-in-investments.pdf"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa4"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-big-data-in-investment.jpg",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-big-data-in-investment.jpg"
+                    "resource_description": "Reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-big-data-in-investment.jpg"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa5"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-and-investing.png",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-investing.png"
+                    "resource_description": "Another reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-investing.png"
                 }
             ],
-            "pre_processed_content": [],
-            "pre_processed_structure": [],
-            "pre_processed_deliverables": []
+            "pre_processed_deliverables": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db536fb2cf319e1f6717"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Data Science for Active and Long-Term Fundamental Investing",
+                    "resource_description": "Markdown for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/note3.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc7f7988cd53f299e1ad"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "3_Data_Science_for_Active_and_Long_Term_Fundamental_Investing.pptx",
+                    "resource_description": "Slides Generated for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/3_Data_Science_for_Active_and_Long_Term_Fundamental_Investing.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732deb1ad500756c2893257"
+                    },
+                    "resource_type": "Video",
+                    "resource_name": "3 Data Science for Active and Long-Term Fundamental Investing.mp4",
+                    "resource_description": "Video for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/video_3.mp4"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277717a469de58e0efa9b"
+                    },
+                    "resource_type": "Assessment",
+                    "resource_name": "Assessment 3",
+                    "resource_description": "Assessment for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/questions-3.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d9262af130462dc6d3d7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter3_Alternative_and_Traditional_Data_Integration.ipynb",
+                    "resource_description": "Code Lab link for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://colab.research.google.com/drive/1uc-K09Wrg6QZmS5l3eY2C5YNVlL7CdWz?usp=sharing"
+                }
+            ],
+            "pre_processed_content": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db536fb2cf319e1f6717"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Data Science for Active and Long-Term Fundamental Investing",
+                    "resource_description": "Markdown for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/note3.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e63df901c2999ec278a3"
+                    },
+                    "resource_type": "Slide_Content",
+                    "resource_name": "Slide content",
+                    "resource_description": "Slide Content for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_content/slide3.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d9262af130462dc6d3d7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter3_Alternative_and_Traditional_Data_Integration.ipynb",
+                    "resource_description": "Code Lab link for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://colab.research.google.com/drive/1uc-K09Wrg6QZmS5l3eY2C5YNVlL7CdWz?usp=sharing"
+                }
+            ],
+            "pre_processed_structure": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db536fb2cf319e1f6717"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Data Science for Active and Long-Term Fundamental Investing",
+                    "resource_description": "Markdown for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/note3.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc7f7988cd53f299e1ad"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "3_Data_Science_for_Active_and_Long_Term_Fundamental_Investing.pptx",
+                    "resource_description": "Slides Generated for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/pre_processed_deliverables/3_Data_Science_for_Active_and_Long_Term_Fundamental_Investing.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d9262af130462dc6d3d7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter3_Alternative_and_Traditional_Data_Integration.ipynb",
+                    "resource_description": "Code Lab link for the Data Science for Active and Long-Term Fundamental Investing module",
+                    "resource_link": "https://colab.research.google.com/drive/1uc-K09Wrg6QZmS5l3eY2C5YNVlL7CdWz?usp=sharing"
+                }
+            ]
         },
         {
             "module_name": "Unlocking Insights and Opportunities",
@@ -203,38 +473,141 @@
                 "$oid": "673277727a469de58e0efaa6"
             },
             "status": "Published",
+            "instructions": "Create a professional module tailored for AI professionals based on the resources provided. The module should consist of 8 slides, each containing no more than 5 bullet points. Focus on concepts and applications of AI in financial or strategic contexts, while maintaining a professional and technical tone. For each slide, provide speaker notes that expand on the bullet points without any introductory or closing remarks (e.g., avoid 'hello' or 'thank you').\nModule Requirements:\nEmphasize key trends, models, and applications of AI within financial or data-driven domains in concise bullet points.\nExpand on each bullet point in the speaker notes with detailed context, offering insights relevant to AI professionals' technical expertise.\nAvoid expanding acronyms in the speaker notes, maintaining a specialized tone appropriate for AI practitioners.",
             "raw_resources": [
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa7"
                     },
-                    "resource_type": "file",
+                    "resource_type": "File",
                     "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_description": "Reference file for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-big-data-in-investments.pdf"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa8"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-big-data-in-investment.jpg",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-big-data-in-investment.jpg"
+                    "resource_description": "Reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-big-data-in-investment.jpg"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277727a469de58e0efaa9"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-and-investing.png",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-investing.png"
+                    "resource_description": "Another reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-investing.png"
                 }
             ],
-            "pre_processed_content": [],
-            "pre_processed_structure": [],
-            "pre_processed_deliverables": []
+            "pre_processed_deliverables": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db6c342d210cb0da82bc"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Unlocking Insights and Opportunities",
+                    "resource_description": "Markdown for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/note4.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc9fe85fc81e7c52e5e1"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "4_Unlocking_Insights_and_Opportunities.pptx",
+                    "resource_description": "Slides Generated for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/4_Unlocking_Insights_and_Opportunities.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732ded016c0750862bc0ed2"
+                    },
+                    "resource_type": "Video",
+                    "resource_name": "4 Unlocking Insights and Opportunities.mp4",
+                    "resource_description": "Video for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/video_4.mp4"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dfd254ec1eb418531385"
+                    },
+                    "resource_type": "Assessment",
+                    "resource_name": "Assessment 4",
+                    "resource_description": "Assessment for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/questions-4.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dfe7b751a01f2f5258e7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter4_NLP_Sentiment_Trading.ipynb",
+                    "resource_description": "Code Lab link for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://colab.research.google.com/drive/1twxTwDhrMmrDmxPpPpSANJss58-MfHc7?usp=sharing"
+                }
+            ],
+            "pre_processed_content": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db6c342d210cb0da82bc"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Unlocking Insights and Opportunities",
+                    "resource_description": "Markdown for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/note4.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e66efccb99f700e1718c"
+                    },
+                    "resource_type": "Slide_Content",
+                    "resource_name": "Slide content",
+                    "resource_description": "Slide Content for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_content/slide4.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dfe7b751a01f2f5258e7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter4_NLP_Sentiment_Trading.ipynb",
+                    "resource_description": "Code Lab link for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://colab.research.google.com/drive/1twxTwDhrMmrDmxPpPpSANJss58-MfHc7?usp=sharing"
+                }
+            ],
+            "pre_processed_structure": [
+                {
+                    "resource_id": {
+                        "$oid": "6732db6c342d210cb0da82bc"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Unlocking Insights and Opportunities",
+                    "resource_description": "Markdown for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/note4.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dc9fe85fc81e7c52e5e1"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "4_Unlocking_Insights_and_Opportunities.pptx",
+                    "resource_description": "Slides Generated for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/pre_processed_deliverables/4_Unlocking_Insights_and_Opportunities.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dfe7b751a01f2f5258e7"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter4_NLP_Sentiment_Trading.ipynb",
+                    "resource_description": "Code Lab link for the Unlocking Insights and Opportunities module",
+                    "resource_link": "https://colab.research.google.com/drive/1twxTwDhrMmrDmxPpPpSANJss58-MfHc7?usp=sharing"
+                }
+            ]
         },
         {
             "module_name": "Advances in Natural Language Understanding for Investment Management",
@@ -243,38 +616,141 @@
                 "$oid": "673277727a469de58e0efaaa"
             },
             "status": "Published",
+            "instructions": "Create a professional module tailored for AI professionals based on the resources provided. The module should consist of 8 slides, each containing no more than 5 bullet points. Focus on concepts and applications of AI in financial or strategic contexts, while maintaining a professional and technical tone. For each slide, provide speaker notes that expand on the bullet points without any introductory or closing remarks (e.g., avoid 'hello' or 'thank you').\nModule Requirements:\nEmphasize key trends, models, and applications of AI within financial or data-driven domains in concise bullet points.\nExpand on each bullet point in the speaker notes with detailed context, offering insights relevant to AI professionals' technical expertise.\nAvoid expanding acronyms in the speaker notes, maintaining a specialized tone appropriate for AI practitioners.",
             "raw_resources": [
                 {
                     "resource_id": {
                         "$oid": "673277737a469de58e0efaab"
                     },
-                    "resource_type": "file",
+                    "resource_type": "File",
                     "resource_name": "ai-and-big-data-in-investments.pdf",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-big-data-in-investments.pdf"
+                    "resource_description": "Reference file for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-big-data-in-investments.pdf"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277737a469de58e0efaac"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-big-data-in-investment.jpg",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-big-data-in-investment.jpg"
+                    "resource_description": "Reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-big-data-in-investment.jpg"
                 },
                 {
                     "resource_id": {
                         "$oid": "673277737a469de58e0efaad"
                     },
-                    "resource_type": "image",
+                    "resource_type": "Image",
                     "resource_name": "ai-and-investing.png",
-                    "resource_description": "",
-                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-investing.png"
+                    "resource_description": "Another reference image for the course",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-investing.png"
                 }
             ],
-            "pre_processed_content": [],
-            "pre_processed_structure": [],
-            "pre_processed_deliverables": []
+            "pre_processed_deliverables": [
+                {
+                    "resource_id": {
+                        "$oid": "6732dbab5038c5636d523f0b"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Advances in Natural Language Understanding for Investment Management",
+                    "resource_description": "Markdown for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/note5.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dcbdcb8a05dc95560af4"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "5_Advances_in_Natural_Language_Understanding_for_Investment_Management.pptx",
+                    "resource_description": "Slides Generated for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/5_Advances_in_Natural_Language_Understanding_for_Investment_Management.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732deefe2f0b32f18a62456"
+                    },
+                    "resource_type": "Video",
+                    "resource_name": "5 Advances in Natural Language Understanding for Investment Management.mp4",
+                    "resource_description": "Video for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/video_5.mp4"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e008295936baa35aaafc"
+                    },
+                    "resource_type": "Assessment",
+                    "resource_name": "Assessment 5",
+                    "resource_description": "Assessment for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/questions-5.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d97dc5f7fa28015605b6"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter5_Advanced_NLP_Earnings_Calls.ipynb",
+                    "resource_description": "Code Lab link for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://colab.research.google.com/drive/1OIbsFhDV8dgC-L2uqfgJmlnqAxu2nstW?usp=sharing"
+                }
+            ],
+            "pre_processed_content": [
+                {
+                    "resource_id": {
+                        "$oid": "6732dbab5038c5636d523f0b"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Advances in Natural Language Understanding for Investment Management",
+                    "resource_description": "Markdown for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/note5.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732e68f0d8d08f7fd0b8fba"
+                    },
+                    "resource_type": "Slide_Content",
+                    "resource_name": "Slide content",
+                    "resource_description": "Slide Content for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_content/slide5.json"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d97dc5f7fa28015605b6"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter5_Advanced_NLP_Earnings_Calls.ipynb",
+                    "resource_description": "Code Lab link for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://colab.research.google.com/drive/1OIbsFhDV8dgC-L2uqfgJmlnqAxu2nstW?usp=sharing"
+                }
+            ],
+            "pre_processed_structure": [
+                {
+                    "resource_id": {
+                        "$oid": "6732dbab5038c5636d523f0b"
+                    },
+                    "resource_type": "Note",
+                    "resource_name": "Module Information for Advances in Natural Language Understanding for Investment Management",
+                    "resource_description": "Markdown for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/note5.md"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732dcbdcb8a05dc95560af4"
+                    },
+                    "resource_type": "Slide_Generated",
+                    "resource_name": "5_Advances_in_Natural_Language_Understanding_for_Investment_Management.pptx",
+                    "resource_description": "Slides Generated for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/pre_processed_deliverables/5_Advances_in_Natural_Language_Understanding_for_Investment_Management.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "6732d97dc5f7fa28015605b6"
+                    },
+                    "resource_type": "Link",
+                    "resource_name": "Chapter5_Advanced_NLP_Earnings_Calls.ipynb",
+                    "resource_description": "Code Lab link for the Advances in Natural Language Understanding for Investment Management module",
+                    "resource_link": "https://colab.research.google.com/drive/1OIbsFhDV8dgC-L2uqfgJmlnqAxu2nstW?usp=sharing"
+                }
+            ]
         }
     ]
 }
