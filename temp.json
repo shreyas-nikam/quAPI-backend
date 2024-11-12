@@ -1,0 +1,280 @@
+{
+    "_id": {
+        "$oid": "673277707a469de58e0efa96"
+    },
+    "course_name": "AI and Big Data Applications in Investments",
+    "course_description": "Delve into the transformative impact of AI and big data on the investment landscape, covering key concepts, applications, and practical strategies for implementing AI-driven solutions in investment management.",
+    "course_image": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/course_image/ai-big-data-in-investment.jpg",
+    "course_outline": "# Module 1: **On Machine Learning Applications in Investments**\r\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\r\n\r\n**Learning Outcomes**:\r\n- Understand the motivations behind using ML in investment strategies.\r\n- Recognize the challenges and solutions in applying ML to finance.\r\n- Explore practical applications of ML for predicting equity returns and corporate performance.\r\n### Module 2: **Alternative Data and AI in Investment Research**\r\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\r\n\r\n**Learning Outcomes**:\r\n- Identify key sources of alternative data and their relevance in investment research.\r\n- Understand how AI can process and derive actionable insights from alternative data.\r\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\r\n### Module 3: **Data Science for Active and Long-Term Fundamental Investing**\r\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\r\n\r\n**Learning Outcomes**:\r\n- Learn the foundational role of data science in long-term investment strategies.\r\n- Understand the benefits of combining data science with active investing.\r\n- Evaluate case studies on the effective use of data science to support investment decisions.\r\n### Module 4: **Unlocking Insights and Opportunities**\r\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\r\n\r\n**Learning Outcomes**:\r\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\r\n- Understand how to apply insights derived from data to optimize investment outcomes.\r\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\r\n### Module 5: **Advances in Natural Language Understanding for Investment Management**\r\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\r\n\r\n**Learning Outcomes**:\r\n- Recognize advancements in NLU and their integration into investment strategies.\r\n- Explore trends and applications of NLU in financial data analysis.\r\n- Understand the technical challenges and solutions associated with implementing NLU tools.\r\n###",
+    "status": "Published",
+    "raw_resources": [
+        {
+            "resource_id": {
+                "$oid": "673277717a469de58e0efa97"
+            },
+            "resource_type": "file",
+            "resource_name": "ai-and-big-data-in-investments.pdf",
+            "resource_description": "",
+            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-big-data-in-investments.pdf"
+        },
+        {
+            "resource_id": {
+                "$oid": "673277717a469de58e0efa98"
+            },
+            "resource_type": "image",
+            "resource_name": "ai-big-data-in-investment.jpg",
+            "resource_description": "",
+            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-big-data-in-investment.jpg"
+        },
+        {
+            "resource_id": {
+                "$oid": "673277717a469de58e0efa99"
+            },
+            "resource_type": "image",
+            "resource_name": "ai-and-investing.png",
+            "resource_description": "",
+            "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/raw_resources/ai-and-investing.png"
+        }
+    ],
+    "modules": [
+        {
+            "module_name": "On Machine Learning Applications in Investments",
+            "module_description": "This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.",
+            "module_id": {
+                "$oid": "673277717a469de58e0efa9a"
+            },
+            "status": "Published",
+            "raw_resources": [
+                {
+                    "resource_id": {
+                        "$oid": "673277717a469de58e0efa9b"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efa9c"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-big-data-in-investment.jpg",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-big-data-in-investment.jpg"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efa9d"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-and-investing.png",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_content": [
+                {
+                    "resource_id": {
+                        "$oid": "673285a04f61a44f26df5d38"
+                    },
+                    "resource_type": "generated_slide",
+                    "resource_name": "On Machine Learning Applications In Investments",
+                    "resource_description": "Final Deliverable Slide Created for On Machine Learning Applications In Investments",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/1_On_Machine_Learning_Applications_In_Investments.pptx"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673285a6fd29bc896b60f452"
+                    },
+                    "resource_type": "generated_video",
+                    "resource_name": "On Machine Learning Applications In Investments",
+                    "resource_description": "Final Deliverable Video Created for On Machine Learning Applications In Investments",
+                    "resource_link": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/pre_processed_deliverables/1+On+Machine+Learning+Applications+In+Investments.mp4"
+                },
+                // assessment
+                {
+                    "resource_id": {
+                        "$oid": "673285abfd77bc58b8d19f96"
+                    },
+                    "resource_type": "questions_file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                // lab
+                {
+                    "resource_id": {
+                        "$oid": "673285af6304c8257f8832a8"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277717a469de58e0efa9a/raw_resources/ai-and-big-data-in-investments.pdf"
+                }
+            ],
+            "pre_processed_structure": [],
+            "pre_processed_deliverables": []
+        },
+        {
+            "module_name": "Alternative Data and AI in Investment Research",
+            "module_description": "This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.",
+            "module_id": {
+                "$oid": "673277727a469de58e0efa9e"
+            },
+            "status": "Published",
+            "raw_resources": [
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efa9f"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa0"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-big-data-in-investment.jpg",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-big-data-in-investment.jpg"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa1"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-and-investing.png",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efa9e/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_content": [],
+            "pre_processed_structure": [],
+            "pre_processed_deliverables": []
+        },
+        {
+            "module_name": "Data Science for Active and Long-Term Fundamental Investing",
+            "module_description": "This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.",
+            "module_id": {
+                "$oid": "673277727a469de58e0efaa2"
+            },
+            "status": "Published",
+            "raw_resources": [
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa3"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa4"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-big-data-in-investment.jpg",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-big-data-in-investment.jpg"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa5"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-and-investing.png",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa2/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_content": [],
+            "pre_processed_structure": [],
+            "pre_processed_deliverables": []
+        },
+        {
+            "module_name": "Unlocking Insights and Opportunities",
+            "module_description": "This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.",
+            "module_id": {
+                "$oid": "673277727a469de58e0efaa6"
+            },
+            "status": "Published",
+            "raw_resources": [
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa7"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa8"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-big-data-in-investment.jpg",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-big-data-in-investment.jpg"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277727a469de58e0efaa9"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-and-investing.png",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaa6/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_content": [],
+            "pre_processed_structure": [],
+            "pre_processed_deliverables": []
+        },
+        {
+            "module_name": "Advances in Natural Language Understanding for Investment Management",
+            "module_description": "This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.",
+            "module_id": {
+                "$oid": "673277727a469de58e0efaaa"
+            },
+            "status": "Published",
+            "raw_resources": [
+                {
+                    "resource_id": {
+                        "$oid": "673277737a469de58e0efaab"
+                    },
+                    "resource_type": "file",
+                    "resource_name": "ai-and-big-data-in-investments.pdf",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-big-data-in-investments.pdf"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277737a469de58e0efaac"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-big-data-in-investment.jpg",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-big-data-in-investment.jpg"
+                },
+                {
+                    "resource_id": {
+                        "$oid": "673277737a469de58e0efaad"
+                    },
+                    "resource_type": "image",
+                    "resource_name": "ai-and-investing.png",
+                    "resource_description": "",
+                    "resource_link": "https://qucoursify.s3.amazonaws.com/qu-course-design/673277707a469de58e0efa96/673277727a469de58e0efaaa/raw_resources/ai-and-investing.png"
+                }
+            ],
+            "pre_processed_content": [],
+            "pre_processed_structure": [],
+            "pre_processed_deliverables": []
+        }
+    ]
+}

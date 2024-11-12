@@ -236,13 +236,23 @@ async def clone_course(course_id):
     course = course[0]
     course.pop("_id")
 
-    new_course = course.copy()
-    
-    new_course_id = atlas_client.insert("course_design", new_course)
+    # iterate through course and for each object if it contains _id in the key, change it to a new id and for all the resources, create copis in s3 with the new ids
+    for key, value in course.items():
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        if isinstance(v, ObjectId):
+                            item[k] = ObjectId()
+        elif isinstance(value, ObjectId):
+            course[key] = ObjectId()
 
-    new_course = _convert_object_ids_to_strings(new_course)
-    
-    return new_course
+    atlas_client.insert("course_design", course)
+
+    course = _convert_object_ids_to_strings(course)
+
+    return course
+
 
 # delete_course -> takes in the course_id and deletes the course
 async def delete_course(course_id):

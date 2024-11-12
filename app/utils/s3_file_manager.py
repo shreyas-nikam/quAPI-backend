@@ -194,6 +194,7 @@ class S3FileManager:
             logging.error("Credentials not available")
             return False
         except ClientError as e:
+            print(source_key)
             logging.error(e)
             return False
 
