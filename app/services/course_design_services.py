@@ -658,3 +658,15 @@ async def fetch_note(url):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+async def fetch_quizdata(url):
+    try:
+        # Fetch quiz data from the URL (e.g., using requests or an async method)
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception if the request fails
+        quiz_data = response.json()  # Parse the response as JSON
+        return quiz_data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
+
+    
