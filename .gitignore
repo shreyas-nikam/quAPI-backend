@@ -8,6 +8,8 @@ __pycache__/
 # Environment
 venv/
 .env
+.env.production
+.env.development
 
 # Logs
 *.log
@@ -26,3 +28,5 @@ venv/
 
 # temp test files
 temp.py
+
+
