@@ -56,7 +56,14 @@ async def replace_resources_in_module_api(course_id: str = Form(...),
                                           resource_description: str = Form(...), 
                                           resource_file: Optional[UploadFile] = File(None),
                                           course_design_step: Optional[int] = Form(None)):
-    return await replace_resources_in_module(course_id, module_id, resource_id, resource_type, resource_name, resource_description, resource_file, course_design_step)
+    return await replace_resources_in_module(course_id=course_id, 
+                                             module_id=module_id, 
+                                             resource_id=resource_id, 
+                                             resource_type=resource_type, 
+                                             resource_name=resource_name, 
+                                             resource_description=resource_description, 
+                                             resource_file=resource_file if resource_file else None, 
+                                             course_design_step=course_design_step if course_design_step else 0)
 
 # done - yet to test with frontend
 @router.post("/delete_resources_from_module")
@@ -88,10 +95,12 @@ async def submit_module_for_deliverables_generation_api(course_id, module_id):
 async def submit_for_publishing_pipeline_api(course_id, module_id):
     return await submit_module_for_step(course_id, module_id, 9, "in_publishing_queue")
 
+# done
 @router.post("/fetch_note")
 async def fetch_note_api(url: str = Form(...)):
     return await fetch_note(url)
 
+# done
 @router.post("/fetch_quizdata")
 async def fetch_quizdata_api(url: str = Form(...)):
     return await fetch_quizdata(url)
