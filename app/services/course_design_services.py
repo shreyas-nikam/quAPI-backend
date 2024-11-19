@@ -11,7 +11,7 @@ import time
 import random
 import json
 import ast
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplater
 from bson.objectid import ObjectId
 from openai import OpenAI
 import os
