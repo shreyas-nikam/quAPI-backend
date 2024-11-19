@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.routes.example import router
 from app.routes.course_design_routes import router as course_design_router
 from app.routes.lecture_design_routes import router as lecture_design_router
+from app.routes.user_routes import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(course_design_router)
 app.include_router(lecture_design_router)
+app.include_router(user_router)
 
 @app.get("/")
 async def read_root():
