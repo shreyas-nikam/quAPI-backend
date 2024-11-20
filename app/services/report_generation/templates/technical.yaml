@@ -4,7 +4,7 @@ css: |
     body {
         font-family: 'Courier New', monospace;
         line-height: 1.6;
-        margin: 2cm;
+        margin: 1cm;
         background-color: #f9f9f9; /* Light background for technical documents */
     }
     .document {

@@ -108,7 +108,7 @@ class S3FileManager:
             return False
         
 
-    def upload_file(self, file_path, key):
+    async def upload_file(self, file_path, key):
         """
         Upload a file to S3
 

@@ -46,18 +46,18 @@ class ReportOutput(BaseModel):
 
     def render(self) -> None:
         """Render as HTML on the page."""
-        for b in self.blocks:
-            if isinstance(b, TextBlock):
-                 display(Markdown(b.text))
-            elif isinstance(b, ImageBlock):
-                 display(Image(filename=b.file_path))
-            elif isinstance(b, IntroBlock):
-                 display(Markdown(b.title))
-                 display(Markdown(b.description))
-            elif isinstance(b, SummaryBlock):
-                 display(Markdown(b.summary))
-            elif isinstance(b, ConclusionBlock):
-                 display(Markdown(b.conclusion))
+        # for b in self.blocks:
+        #     if isinstance(b, TextBlock):
+        #          display(Markdown(b.text))
+        #     elif isinstance(b, ImageBlock):
+        #          display(Image(filename=b.file_path))
+        #     elif isinstance(b, IntroBlock):
+        #          display(Markdown(b.title))
+        #          display(Markdown(b.description))
+        #     elif isinstance(b, SummaryBlock):
+        #          display(Markdown(b.summary))
+        #     elif isinstance(b, ConclusionBlock):
+        #          display(Markdown(b.conclusion))
 
 
     # blocks: List[TextBlock | ImageBlock] = Field(

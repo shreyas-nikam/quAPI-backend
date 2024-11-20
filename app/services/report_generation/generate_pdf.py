@@ -5,9 +5,12 @@ import jinja2
 from weasyprint import HTML, CSS
 import yaml
 from typing import Dict, Any
+import logging
+
+logging.basicConfig(level=logging.WARN)
 
 class MarkdownPDFConverter:
-    def __init__(self, template_dir='templates'):
+    def __init__(self, template_dir='app/services/report_generation/templates'):
         """
         Initialize the Markdown to PDF converter
         
@@ -50,7 +53,7 @@ class MarkdownPDFConverter:
         {{ styles }}
         @page {
             size: A4;
-            margin: 1cm;
+            margin: 0.5cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
                 font-size: 12px;
@@ -58,7 +61,7 @@ class MarkdownPDFConverter:
             }
            
             @bottom-left {
-                content: "QuantUniversity | © 2024 | https://www.quantuniversity.com";
+                content: "QuSkillBridge.AI is powered by QuantUniversity | Contact info@qusandbox.com for more info";
                 font-size: 12px;
                 color: #666;
             }
@@ -99,7 +102,7 @@ class MarkdownPDFConverter:
         return html
 
     
-    def convert(self, markdown_path: str, template_name: str, output_path: str = None):
+    def convert(self, markdown: str, markdown_path: str, template_name: str, output_path: str = None):
         """
         Convert Markdown file to PDF using specified template
         
@@ -111,9 +114,13 @@ class MarkdownPDFConverter:
         if template_name not in self.templates:
             raise ValueError(f"Template '{template_name}' not found")
         
-        # Read markdown content
-        with open(markdown_path, 'r') as f:
-            markdown_content = f.read()
+        if markdown_path:
+            # Read markdown content
+            with open(markdown_path, 'r') as f:
+                markdown_content = f.read()
+            
+        elif markdown:
+            markdown_content = markdown
         
         # Get template configuration
         template_config = self.templates[template_name]
@@ -124,6 +131,9 @@ class MarkdownPDFConverter:
         # Generate PDF
         if not output_path:
             output_path = os.path.splitext(markdown_path)[0] + '.pdf'
+
+        # create a blank pdf file
+        open(output_path, 'w').close()
         
         HTML(string=html_content).write_pdf(
             output_path, 
@@ -131,16 +141,62 @@ class MarkdownPDFConverter:
         )
         
         return output_path
-
-# Example usage
-if __name__ == '__main__':
-    converter = MarkdownPDFConverter()
     
-    # academic
+
+converter = MarkdownPDFConverter()
+
+# # # Example usage
+# if __name__ == '__main__':
+    
+#     # academic
+#     output = converter.convert(
+#         markdown=None,
+#         markdown_path='document.md', 
+#         template_name='academic',
+#         output_path='output-academic.pdf'
+#     )
+
+#     # technical
+#     # output = converter.convert(
+#     #     markdown=None,
+#     #     markdown_path='document.md', 
+#     #     template_name='technical',
+#     #     output_path='output-technical.pdf'
+#     # )
+
+#     # business
+#     output = converter.convert(
+#         markdown=None,
+#         markdown_path='document.md', 
+#         template_name='business',
+#         output_path='output-business.pdf'
+#     )
+
+#     # whitepaper
+#     # output = converter.convert(
+#     #     markdown=None,
+#     #     markdown_path='document.md', 
+#     #     template_name='whitepaper',
+#     #     output_path='output-whitepaper.pdf'
+#     # )
+
+#     # presentation
+#     output = converter.convert(
+#         markdown=None,
+#         markdown_path='document.md', 
+#         template_name='presentation',
+#         output_path='output-presentation.pdf'
+#     )
+
+
+#     print(f"PDF generated: {output}")
+
+
+def convert_markdown_to_pdf(markdown, file_id, template_name):
     output = converter.convert(
-        markdown_path='document.md', 
-        template_name='academic', #technical, business, whitepaper, presentation
-        output_path='output-academic.pdf'
+        markdown=markdown,
+        markdown_path=None,
+        template_name=template_name,
+        output_path=f'app/services/report_generation/outputs/{file_id}.pdf'
     )
 
-    

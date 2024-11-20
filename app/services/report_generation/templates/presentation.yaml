@@ -4,7 +4,7 @@ css: |
     body {
         font-family: 'Arial', sans-serif;
         line-height: 1.5;
-        margin: 3cm;
+        margin: 2cm;
         color: #333333;
         background-color: #ffffff; /* Clean white for professional presentations */
     }

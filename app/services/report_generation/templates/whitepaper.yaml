@@ -4,7 +4,7 @@ css: |
     body {
         font-family: 'Georgia', serif;
         line-height: 1.8;
-        margin: 2.5cm;
+        margin: 1cm;
         background-color: #f5f5f5;
     }
     .document {
