@@ -646,6 +646,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 import requests
 
+async def fetch_pdf(url):
+    try:
+        # Fetch the PDF from the provided URL
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+
+        # Return the PDF as a StreamingResponse
+        return StreamingResponse(response.raw, media_type="application/pdf")
+    except Exception as e:
+        print("Error fetching PDF:", e)
+        raise HTTPException(status_code=400, detail=f"Failed to fetch PDF: {str(e)}")
 
 def parse_s3_url(url: str):
     parsed_url = urlparse(url)
