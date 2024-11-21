@@ -22,7 +22,7 @@ async def delete_lecture_api(lecture_id: str = Form(...)):
 
 # done
 @router.post("/create_lecture")
-async def create_lecture_api(lecture_name: str = Form(...),  lecture_description: str = Form(...), lecture_outline: str = Form(...), files: List[UploadFile] = File(...), lecture_image: UploadFile = File(...)):
+async def create_lecture_api(lecture_name: str = Form(...),  lecture_description: str = Form(...), lecture_outline: str = Form(...), files: Optional[UploadFile] = File(None), lecture_image: UploadFile = File(...)):
     return await create_lecture(lecture_name, lecture_description, lecture_outline, files, lecture_image)
 
 # done

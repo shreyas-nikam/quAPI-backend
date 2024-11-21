@@ -298,21 +298,22 @@ async def create_lecture(lecture_name, lecture_description, lecture_outline, fil
 
 
     raw_resources = []
-    for file in files:
-        resource_type = _get_file_type(file)
+    if files:
+        for file in files:
+            resource_type = _get_file_type(file)
 
-        key = f"qu-lecture-design/{lecture_id}/{step_directory}/{file.filename}"  
-        await s3_file_manager.upload_file_from_frontend(file, key)
-        key = quote(key)
-        resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
-            
-        raw_resources += [{
-            "resource_id": ObjectId(),
-            "resource_type": resource_type,
-            "resource_name": file.filename,
-            "resource_description": "",
-            "resource_link": resource_link
-        }]
+            key = f"qu-lecture-design/{lecture_id}/{step_directory}/{file.filename}"  
+            await s3_file_manager.upload_file_from_frontend(file, key)
+            key = quote(key)
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
+                
+            raw_resources += [{
+                "resource_id": ObjectId(),
+                "resource_type": resource_type,
+                "resource_name": file.filename,
+                "resource_description": "",
+                "resource_link": resource_link
+            }]
     
     lecture[step_directory] = raw_resources
 
