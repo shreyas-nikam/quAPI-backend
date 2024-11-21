@@ -104,3 +104,7 @@ async def fetch_note_api(url: str = Form(...)):
 @router.post("/fetch_quizdata")
 async def fetch_quizdata_api(url: str = Form(...)):
     return await fetch_quizdata(url)
+
+@router.post("/fetch_pdf")
+async def fetch_pdf_api(url: str = Form(...)):
+    return await fetch_pdf(url)
