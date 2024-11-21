@@ -30,3 +30,5 @@ venv/
 temp.py
 
 
+app/services/report_generation/outputs
+

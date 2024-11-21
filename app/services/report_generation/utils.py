@@ -7,11 +7,6 @@ import os
 import pickle
 from llama_index.core import SummaryIndex, VectorStoreIndex, StorageContext, load_index_from_storage
 
-
-
-
-
-
 # function tools
 def chunk_retriever_fn(index, query: str) -> List[NodeWithScore]:
     """Retrieves a small set of relevant document chunks from the corpus.
@@ -25,7 +20,6 @@ def chunk_retriever_fn(index, query: str) -> List[NodeWithScore]:
     return nodes
 
 
-
 def _get_document_nodes(
     summary_indexes: dict,
     nodes: List[NodeWithScore], 
@@ -36,7 +30,6 @@ def _get_document_nodes(
     Given chunk nodes, "de-reference" into a set of documents, with a simple weighting function (cumulative total) to determine ordering.
 
     Cutoff by top_n.
-
     """
     file_paths = {n.metadata["file_path"] for n in nodes}
     file_path_scores = {f: 0 for f in file_paths}

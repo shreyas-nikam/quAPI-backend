@@ -1,0 +1,45 @@
+# Academic Template Configuration
+name: Academic Template
+logo: 'https://www.quantuniversity.com/assets/img/logo5.jpg'
+css: |
+    body {
+        font-family: 'Times New Roman', serif;
+        line-height: 1.5;
+        margin: 1cm;
+    }
+    .document {
+        max-width: 210mm;
+        margin: 0 auto;
+        position: relative;
+    }
+    .logo {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 80px; /* Adjust size as needed */
+        height: 80px;
+    }
+    h1, h2, h3 {
+        color: #1a5f7a;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+header_template: |
+    @page {
+        @top-center {
+            content: '{{ title }}';
+            font-size: 10pt;
+        }
+        @bottom-center {
+            content: 'Page ' counter(page) ' of ' counter(pages);
+        }
+    }

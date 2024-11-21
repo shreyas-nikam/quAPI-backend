@@ -1,0 +1,59 @@
+name: Technical Report Template
+logo: 'https://www.quantuniversity.com/assets/img/logo5.jpg'
+css: |
+    body {
+        font-family: 'Courier New', monospace;
+        line-height: 1.6;
+        margin: 1cm;
+        background-color: #f9f9f9; /* Light background for technical documents */
+    }
+    .document {
+        max-width: 210mm;
+        margin: 0 auto;
+        position: relative;
+    }
+    .logo {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 10px; /* Smaller logo for technical reports */
+        height: 10px;
+    }
+    h1, h2, h3 {
+        color: #003366; /* Dark blue for headers */
+        border-bottom: 1px solid #cccccc;
+    }
+    code {
+        font-family: 'Courier New', monospace;
+        background-color: #eeeeee;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    pre {
+        background-color: #eeeeee;
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+    th, td {
+        border: 1px solid #cccccc;
+        padding: 8px;
+        text-align: left;
+        font-size: 0.9em;
+    }
+header_template: |
+    @page {
+        @top-center {
+            content: '{{ title }}';
+            font-size: 12pt;
+            font-weight: bold;
+        }
+        @bottom-center {
+            content: 'Page ' counter(page) ' of ' counter(pages);
+        }
+    }
