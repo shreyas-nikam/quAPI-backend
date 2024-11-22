@@ -27,9 +27,7 @@ def validate_date(date_str: str) -> bool:
         return False
 
 async def add_user_to_project_waitlist(user_id, user_email, project_id, project_name, date):
-    print(f"Received Parameters: user_id={user_id}, user_email={user_email}, project_id={project_id}, project_name={project_name}, date={date}")
     
-    print("In add_user_to_project_waitlist")
     atlas_client = AtlasClient()
 
     # Validate email format
@@ -80,9 +78,7 @@ async def add_user_to_project_waitlist(user_id, user_email, project_id, project_
         status_code=status.HTTP_201_CREATED,
         content={"message": "User successfully added to the waitlist."}
     )
-    print(f"Received Parameters: user_id={user_id}, user_email={user_email}, project_id={project_id}, project_name={project_name}, date={date}")
     
-    print("In add_user_to_project_waitlist")
     atlas_client = AtlasClient()
     # Validate email format
     # if not validate_email(user_email):

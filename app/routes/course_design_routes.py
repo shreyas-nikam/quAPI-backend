@@ -33,7 +33,6 @@ async def courses_api():
 # done
 @router.post("/add_module")
 async def add_module_api(course_id: str = Form(...), module_name: str = Form(...), module_description: str = Form(...)):
-    print(course_id, module_name, module_description)
     return await add_module(course_id, module_name, module_description)
 
 # done

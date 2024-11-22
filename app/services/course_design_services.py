@@ -561,15 +561,6 @@ async def delete_resources_from_module(course_id, module_id, resource_id, course
 async def replace_resources_in_module(course_id, module_id, resource_id, resource_name, resource_type, resource_description, resource_file, course_design_step=0):
 
 
-    print("Course ID: ", course_id)
-    print("Module ID: ", module_id)
-    print("Resource ID: ", resource_id)
-    print("Resource Name: ", resource_name)
-    print("Resource Type: ", resource_type)
-    print("Resource Description: ", resource_description)
-    print("Resource File: ", resource_file)
-    print("Course Design Step: ", course_design_step)
-    
     # delete the resource with the resource id, and add the new resource with the same id
     course = await delete_resources_from_module(course_id=course_id, 
                                                 module_id=module_id, 
@@ -598,13 +589,11 @@ def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_dir
         s3_file_manager.copy_file(prev_step_key, next_step_key)
 
 async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
-    print(course_id, module_id, course_design_step, queue_name_suffix, instructions)
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
     prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
 
     course, module = _get_course_and_module(course_id, module_id)
 
-    print(course, module)
     if not course:
         return "Course not found"
     if not module:
@@ -633,7 +622,6 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
     if instructions:
         queue_payload["instructions"] = instructions
 
-    print(step_directory)
     atlas_client.insert(step_directory, queue_payload)
 
     course = _convert_object_ids_to_strings(course)
@@ -655,7 +643,6 @@ async def fetch_pdf(url):
         # Return the PDF as a StreamingResponse
         return StreamingResponse(response.raw, media_type="application/pdf")
     except Exception as e:
-        print("Error fetching PDF:", e)
         raise HTTPException(status_code=400, detail=f"Failed to fetch PDF: {str(e)}")
 
 def parse_s3_url(url: str):
@@ -678,19 +665,16 @@ async def fetch_note(url):
     try:
         bucket_name, key = parse_s3_url(url)
 
-        print(key)
 
         # Get the file from S3
         response = s3_file_manager.get_object(key=key)
 
-        print(response)
 
         if response is None:
             return {"content": "", "content_type": "text/plain"}
         
         file_content = response["Body"].read()
 
-        print(file_content)
 
         # Infer content type
         content_type = response.get("ContentType") or mimetypes.guess_type(key)[0] or "application/octet-stream"

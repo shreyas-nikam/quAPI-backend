@@ -189,7 +189,6 @@ converter = MarkdownPDFConverter()
 #     )
 
 
-#     print(f"PDF generated: {output}")
 
 
 def convert_markdown_to_pdf(markdown, file_id, template_name):

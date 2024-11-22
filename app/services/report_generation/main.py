@@ -101,7 +101,6 @@ async def get_response(agent, input):
 
 def render_report(input):
     # TODO: Implement report rendering
-    print(input)
 
 
 def main(user_id, project_id, input):

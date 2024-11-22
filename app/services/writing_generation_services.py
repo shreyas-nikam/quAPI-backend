@@ -194,7 +194,6 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
         "status": "In Design Phase",
         "identifier": identifier
     }
-    print("Writing id", writing_id)
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": writing
     })
@@ -300,7 +299,6 @@ async def convert_to_pdf(writing_id, markdown, template_name):
     )
 
     # remove file from os
-    print(output_path)
     os.remove(output_path)
 
     # return file url in s3
