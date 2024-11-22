@@ -2,12 +2,16 @@ import os
 import markdown2
 import pdfkit
 import jinja2
-from weasyprint import HTML, CSS
-import yaml
 from typing import Dict, Any
 import logging
+import yaml
 
-logging.basicConfig(level=logging.WARN)
+logger = logging.getLogger("weasyprint")
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
+
+from weasyprint import HTML, CSS
+
 
 class MarkdownPDFConverter:
     def __init__(self, template_dir='app/services/report_generation/templates'):
@@ -89,7 +93,6 @@ class MarkdownPDFConverter:
 </html>
 
         """
-        
         template = jinja2.Template(template_str)
         
         # Render the template
@@ -144,51 +147,6 @@ class MarkdownPDFConverter:
     
 
 converter = MarkdownPDFConverter()
-
-# # # Example usage
-# if __name__ == '__main__':
-    
-#     # academic
-#     output = converter.convert(
-#         markdown=None,
-#         markdown_path='document.md', 
-#         template_name='academic',
-#         output_path='output-academic.pdf'
-#     )
-
-#     # technical
-#     # output = converter.convert(
-#     #     markdown=None,
-#     #     markdown_path='document.md', 
-#     #     template_name='technical',
-#     #     output_path='output-technical.pdf'
-#     # )
-
-#     # business
-#     output = converter.convert(
-#         markdown=None,
-#         markdown_path='document.md', 
-#         template_name='business',
-#         output_path='output-business.pdf'
-#     )
-
-#     # whitepaper
-#     # output = converter.convert(
-#     #     markdown=None,
-#     #     markdown_path='document.md', 
-#     #     template_name='whitepaper',
-#     #     output_path='output-whitepaper.pdf'
-#     # )
-
-#     # presentation
-#     output = converter.convert(
-#         markdown=None,
-#         markdown_path='document.md', 
-#         template_name='presentation',
-#         output_path='output-presentation.pdf'
-#     )
-
-
 
 
 def convert_markdown_to_pdf(markdown, file_id, template_name):
