@@ -47,14 +47,14 @@ async def replace_resources_in_lecture_api(lecture_id: str = Form(...),
                                           resource_name: str = Form(...), 
                                           resource_description: str = Form(...), 
                                           resource_file: Optional[UploadFile] = File(None),
-                                          course_design_step: Optional[int] = Form(None)):
+                                          lecture_design_step: Optional[int] = Form(None)):
     return await replace_resources_in_lecture(lecture_id=lecture_id, 
                                              resource_id=resource_id, 
                                              resource_type=resource_type, 
                                              resource_name=resource_name, 
                                              resource_description=resource_description, 
                                              resource_file=resource_file if resource_file else None, 
-                                             course_design_step=course_design_step if course_design_step else 0)
+                                             lecture_design_step=lecture_design_step if lecture_design_step else 0)
 
 # done - yet to test with frontend
 @router.post("/delete_resources_from_lecture")

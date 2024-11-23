@@ -417,7 +417,7 @@ async def delete_resources_from_lecture(lecture_id, resource_id, lecture_design_
     step_directory = LECTURE_DESIGN_STEPS[lecture_design_step]
 
     atlas_client = AtlasClient()
-    course = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
 
     if not lecture:
         return "Lecture not found"
