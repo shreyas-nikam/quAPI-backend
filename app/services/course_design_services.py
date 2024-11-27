@@ -152,12 +152,13 @@ async def generate_course_outline(files, instructions):
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
-    for file in files:
-        file_content = file.file.read()
+    if files:
+        for file in files:
+            file_content = file.file.read()
 
-        file.file.seek(0)
+            file.file.seek(0)
 
-        assistant_files_streams.append((file.filename, file_content))
+            assistant_files_streams.append((file.filename, file_content))
 
     # Track created resources
     created_assistant_id = None
@@ -178,15 +179,20 @@ async def generate_course_outline(files, instructions):
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
+        if files:
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=assistant_files_streams
+            )
 
-        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-            vector_store_id=vector_store.id, files=assistant_files_streams
-        )
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
 
-        assistant = client.beta.assistants.update(
-            assistant_id=assistant.id,
-            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
-        )
+        else: 
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+            )
 
         thread = client.beta.threads.create(
             messages=[{
@@ -277,22 +283,25 @@ async def delete_course(course_id):
     
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-async def create_course(course_name, course_description, course_outline, files, course_image):
+async def create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation):
+    print("ModulesAtCreation: ", modulesAtCreation)
     course_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
-
-    # convert the course outline to modules
-    course_outline_to_modules_prompt = _get_prompt("COURSE_OUTLINE_TO_MODULES_PROMPT")
-    inputs = {
-        "COURSE_OUTLINE": course_outline
-    }
-    prompt = PromptTemplate(template=course_outline_to_modules_prompt, 
-                            input_variables = ["COURSE_OUTLINE"])
-    
-    llm = LLM("chatgpt")
-    response = _get_response(llm, prompt, inputs, output_type="json")
+    modules = []
+    if modulesAtCreation:
+        # convert the course outline to modules
+        course_outline_to_modules_prompt = _get_prompt("COURSE_OUTLINE_TO_MODULES_PROMPT")
+        inputs = {
+            "COURSE_OUTLINE": course_outline
+        }
+        prompt = PromptTemplate(template=course_outline_to_modules_prompt, 
+                                input_variables = ["COURSE_OUTLINE"])
+        
+        llm = LLM("chatgpt")
+        response = _get_response(llm, prompt, inputs, output_type="json")
+        modules = response.get("modules", []) 
 
 
     # upload the course image to s3 and get the link
@@ -301,7 +310,6 @@ async def create_course(course_name, course_description, course_outline, files, 
     await s3_file_manager.upload_file_from_frontend(course_image, key)
     key = quote(key)
     course_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
-
 
     course = {
         "_id": course_id,
@@ -313,38 +321,14 @@ async def create_course(course_name, course_description, course_outline, files, 
     }
     step_directory = COURSE_DESIGN_STEPS[0]
 
-    modules = response.get("modules", []) 
+    
 
     raw_resources = []
-    for file in files:
-        resource_type = _get_file_type(file)
-
-        key = f"qu-course-design/{course_id}/{step_directory}/{file.filename}"  
-        await s3_file_manager.upload_file_from_frontend(file, key)
-        key = quote(key)
-        resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
-            
-        raw_resources += [{
-            "resource_id": ObjectId(),
-            "resource_type": resource_type,
-            "resource_name": file.filename,
-            "resource_description": "",
-            "resource_link": resource_link
-        }]
-    
-    course[step_directory] = raw_resources
-    
-    for index, module in enumerate(modules):
-        module_id = ObjectId()
-        modules[index]["module_id"] = module_id
-        modules[index]["status"] = "In Design Phase"
-
-        raw_resources = []
-
+    if files:
         for file in files:
             resource_type = _get_file_type(file)
 
-            key = f"qu-course-design/{course_id}/{str(module_id)}/{step_directory}/{file.filename}"  
+            key = f"qu-course-design/{course_id}/{step_directory}/{file.filename}"  
             await s3_file_manager.upload_file_from_frontend(file, key)
             key = quote(key)
             resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
@@ -356,8 +340,35 @@ async def create_course(course_name, course_description, course_outline, files, 
                 "resource_description": "",
                 "resource_link": resource_link
             }]
-        
-        modules[index][step_directory] = raw_resources
+    
+    course[step_directory] = raw_resources
+
+    if modulesAtCreation:
+        for index, module in enumerate(modules):
+            module_id = ObjectId()
+            modules[index]["module_id"] = module_id
+            modules[index]["status"] = "In Design Phase"
+
+            raw_resources = []
+
+            if files:
+                for file in files:
+                    resource_type = _get_file_type(file)
+
+                    key = f"qu-course-design/{course_id}/{str(module_id)}/{step_directory}/{file.filename}"  
+                    await s3_file_manager.upload_file_from_frontend(file, key)
+                    key = quote(key)
+                    resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
+                        
+                    raw_resources += [{
+                        "resource_id": ObjectId(),
+                        "resource_type": resource_type,
+                        "resource_name": file.filename,
+                        "resource_description": "",
+                        "resource_link": resource_link
+                    }]
+                
+                modules[index][step_directory] = raw_resources
 
     course["modules"] = modules
 

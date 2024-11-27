@@ -6,7 +6,7 @@ router = APIRouter()
 
 # done
 @router.post("/generate_course_outline")
-async def generate_course_outline_api(files: List[UploadFile] = File(...),
+async def generate_course_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...)):
     return await generate_course_outline(files, instructions) 
 
@@ -22,8 +22,8 @@ async def delete_course_api(course_id: str = Form(...)):
 
 # done
 @router.post("/create_course")
-async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: List[UploadFile] = File(...), course_image: UploadFile = File(...)):
-    return await create_course(course_name, course_description, course_outline, files, course_image)
+async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), course_image: UploadFile = File(...), modulesAtCreation: bool = Form(True)):
+    return await create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation)
 
 # done
 @router.get("/courses")
