@@ -25,7 +25,7 @@ PHOENIX_API_KEY = os.getenv("PHOENENIX_API_KEY")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 OUT_IMAGE_DIR = "output_images"
-REPORT_GENERATION_PROMPT = json.load(open("app/data/prompts.json" , "r"))["REPORT_GENERATION_PROMPT"]
+REPORT_OUTLINE_PROMPT = json.load(open("app/data/prompts.json" , "r"))["REPORT_OUTLINE_PROMPT"]
 os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"api_key={PHOENIX_API_KEY}"
 
 # Set global handler
@@ -36,7 +36,7 @@ llama_index.core.set_global_handler(
 # Set OpenAI models
 embed_model = OpenAIEmbedding(model="text-embedding-3-large", api_key=OPENAI_KEY)
 llm = OpenAI(model=OPENAI_MODEL, api_key=OPENAI_KEY)
-report_gen_llm = OpenAI(model=OPENAI_MODEL, system_prompt=REPORT_GENERATION_PROMPT, api_key=OPENAI_KEY)
+report_gen_llm = OpenAI(model=OPENAI_MODEL, system_prompt=REPORT_OUTLINE_PROMPT, api_key=OPENAI_KEY)
 
 # Set settings
 Settings.embed_model = embed_model
@@ -47,7 +47,7 @@ parser = LlamaParse(
     result_type="markdown",
     use_vendor_multimodal_model=True,
     vendor_multimodal_model_name="anthropic-sonnet-3.5",
-    api_key=OPENAI_KEY,
+    api_key=LLAMA_KEY,
 )
 
 report_gen_sllm = report_gen_llm.as_structured_llm(output_cls=ReportOutput)
@@ -101,6 +101,8 @@ async def get_response(agent, input):
 
 def render_report(input):
     # TODO: Implement report rendering
+    print(input)
+    pass
 
 
 def main(user_id, project_id, input):

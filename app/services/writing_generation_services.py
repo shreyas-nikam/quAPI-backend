@@ -331,4 +331,3 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     return True
 
 
-

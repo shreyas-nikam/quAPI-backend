@@ -81,6 +81,10 @@ class MarkdownPDFConverter:
             text-decoration: none;
             color: #0073e6; /* Blue link color */
         }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
