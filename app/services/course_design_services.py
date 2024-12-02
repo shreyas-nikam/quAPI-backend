@@ -709,3 +709,24 @@ async def fetch_quizdata(url):
         raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
 
     
+async def add_external_entity_to_course(course_id, entity_type, entity_id):
+    atlas_client = AtlasClient()
+    course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+    if not course:
+        return "Course not found"
+    course = course[0]
+    external_entities = course.get("external_entities", [])
+
+    external_entities.append({
+        "entity_type": entity_type,
+        "entity_id": entity_id
+    })
+
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={
+        "$set": {
+            "external_entities": external_entities
+        }
+    })
+
+    course = _convert_object_ids_to_strings(course)
+    return course

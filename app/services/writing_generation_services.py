@@ -4,10 +4,10 @@ from app.utils.s3_file_manager import S3FileManager
 from urllib.parse import quote, unquote
 from app.utils.atlas_client import AtlasClient
 from openai import OpenAI
-
 import os
 import json
 import logging
+import datetime
 
 
 
@@ -331,3 +331,31 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     return True
 
 
+async def save_writing(writing_id, writing_outline):
+    atlas_client = AtlasClient()
+    
+    history = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
+    if not history:
+        history={
+                "writing_outline": writing_outline,
+                "version": 1.0,
+                "timestamp": datetime.datetime.now()
+            }
+    else:
+        latest_version = history[-1]
+        history={
+                "writing_outline": writing_outline,
+                "version": latest_version["version"] + 1.0,
+                "timestamp": datetime.datetime.now()
+            }
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$push": {
+                "history": history
+            }
+        }
+    )
+       
+    return True

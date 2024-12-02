@@ -57,3 +57,8 @@ async def add_resources_to_writing_api(writing_id: str = Form(...),
                                       resource_description: str = Form(...), 
                                       resource_file: Optional[UploadFile] = File(None) ):
     return await add_resources_to_writing(writing_id, resource_type, resource_name, resource_description, resource_file)
+
+@router.post("/save_writing")
+async def save_writing_api(writing_id: str = Form(...), 
+                           writing_outline: str = Form(...)):
+    return await save_writing(writing_id, writing_outline)
