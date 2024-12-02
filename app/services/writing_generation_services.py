@@ -334,7 +334,11 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
 async def save_writing(writing_id, writing_outline):
     atlas_client = AtlasClient()
     
-    history = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
+    writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
+    if not writing:
+        return False
+    writing = writing[0]
+    history = writing.get("history", [])
     if not history:
         history={
                 "writing_outline": writing_outline,
@@ -354,6 +358,15 @@ async def save_writing(writing_id, writing_outline):
         update={
             "$push": {
                 "history": history
+            }
+        }
+    )
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$set": {
+                "writing_outline": writing_outline
             }
         }
     )
