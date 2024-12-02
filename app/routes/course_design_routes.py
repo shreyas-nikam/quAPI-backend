@@ -107,3 +107,9 @@ async def fetch_quizdata_api(url: str = Form(...)):
 @router.post("/fetch_pdf")
 async def fetch_pdf_api(url: str = Form(...)):
     return await fetch_pdf(url)
+
+@router.post("/add_artifact_to_course")
+async def add_artifact_to_course_api(course_id: str = Form(...), 
+                                            artifact_type: str = Form(...), 
+                                            artifact_id: str = Form(...)):
+    return await add_artifact_to_course(course_id, artifact_type, artifact_id)

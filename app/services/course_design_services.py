@@ -284,7 +284,6 @@ async def delete_course(course_id):
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
 async def create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation):
-    print("ModulesAtCreation: ", modulesAtCreation)
     course_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
@@ -454,7 +453,26 @@ async def get_course(course_id):
         return {}
     
     course = course[0]
+
+    # populate the additional artifacts
+    artifacts = []
+    for artifact in course.get("additional_artifacts", []):
+        artifact_type = artifact.get("artifact_type")
+        artifact_id = artifact.get("artifact_id")
+
+        if artifact_type == "Lecture":
+            writing = atlas_client.find("lecture_design", filter={"_id": ObjectId(artifact_id)})
+            if writing:
+                artifacts.append(writing[0])
+        else:
+            lecture = atlas_client.find("writing_design", filter={"_id": ObjectId(artifact_id)})
+            if lecture:
+                artifacts.append(lecture[0])
+
+    course['additional_artifacts'] = artifacts
+
     course = _convert_object_ids_to_strings(course)
+
     
     return course
 
@@ -709,24 +727,24 @@ async def fetch_quizdata(url):
         raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
 
     
-async def add_external_entity_to_course(course_id, entity_type, entity_id):
+async def add_artifact_to_course(course_id, artifact_type, artifact_id):
     atlas_client = AtlasClient()
     course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
     if not course:
         return "Course not found"
     course = course[0]
-    external_entities = course.get("external_entities", [])
+    additional_artifacts = course.get("additional_artifacts", [])
 
-    external_entities.append({
-        "entity_type": entity_type,
-        "entity_id": entity_id
+    additional_artifacts.append({
+        "artifact_type": artifact_type,
+        "artifact_id": artifact_id
     })
 
     atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={
         "$set": {
-            "external_entities": external_entities
+            "additional_artifacts": additional_artifacts
         }
     })
-
+    course = await get_course(course_id)
     course = _convert_object_ids_to_strings(course)
     return course
