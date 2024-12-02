@@ -357,5 +357,16 @@ async def save_writing(writing_id, writing_outline):
             }
         }
     )
+
+    # also update the writing_outline to be the latest one
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$set": {
+                "writing_outline": writing_outline
+            }
+        }
+    )
        
     return True
