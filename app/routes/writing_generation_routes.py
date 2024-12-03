@@ -18,7 +18,7 @@ async def delete_writing_api(writing_id: str = Form(...)):
 
 # generate markdown from files
 @router.post("/writing_outline")
-async def writing_outline_api(files: List[UploadFile] = File(...),
+async def writing_outline_api(files: Optional[UploadFile] = File(None),
                                   instructions: str = Form(...),
                                   identifier: str = Form(...)):
     return await writing_outline(files, instructions, identifier) 
