@@ -6,6 +6,13 @@ from app.routes.lab_design_routes import router as lab_design_router
 from app.routes.user_routes import router as user_router
 from app.routes.writing_generation_routes import router as writing_generation_router
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+
+logger = logging.getLogger("weasyprint")
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
+logger.setLevel(logging.ERROR)
 
 app = FastAPI()
 

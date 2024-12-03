@@ -7,10 +7,6 @@ from typing import Dict, Any
 import logging
 import yaml
 
-logger = logging.getLogger("weasyprint")
-if not logger.handlers:
-    logger.addHandler(logging.NullHandler())
-logger.setLevel(logging.ERROR)
 
 
 class MarkdownPDFConverter:

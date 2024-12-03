@@ -626,11 +626,20 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
 
     await convert_to_pdf_for_lab(lab_id, response, "business", 1)
 
-    lab["business_use_case_history"] = [{
-        "business_use_case": response,
-        "timestamp": datetime.datetime.now(),
-        "version": 1.0
-    }]
+    if not lab.get("business_use_case_history"):
+        lab["business_use_case_history"] = [{
+            "business_use_case": response,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = lab["business_use_case_history"][-1]
+        new_version = {
+            "business_use_case": response,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        lab["business_use_case_history"].append(new_version)
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
@@ -675,11 +684,20 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     await convert_to_pdf_for_lab(lab_id, response, "technical", 2)
 
-    lab["technical_specifications_history"] = [{
-        "technical_specifications": response,
-        "timestamp": datetime.datetime.now(),
-        "version": 1.0
-    }]
+    if not lab.get("technical_specifications_history"):
+        lab["technical_specifications_history"] = [{
+            "technical_specifications": response,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = lab["technical_specifications_history"][-1]
+        new_version = {
+            "technical_specifications": response,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        lab["technical_specifications_history"].append(new_version)
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
@@ -791,6 +809,7 @@ async def save_technical_specifications(lab_id, technical_specifications):
 
 
 async def save_lab_instructions(lab_id, instructions):
+    instructions = json.loads(instructions)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
