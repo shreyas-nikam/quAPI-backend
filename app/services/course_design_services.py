@@ -484,14 +484,14 @@ async def add_resources_to_module(course_id, module_id, resource_type, resource_
 
     if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video"}:
         # resource file is the file
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
     elif resource_type == "Image":
         # resource file is the image
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
