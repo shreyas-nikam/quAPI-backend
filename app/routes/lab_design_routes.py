@@ -67,10 +67,32 @@ async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
 
 
-
 @router.post("/generate_business_use_case_for_lab")
-async def generate_business_use_case_for_lab_api(lab_id: str = Form(...)):
-    return await generate_business_use_case_for_lab(lab_id)
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
+    return await generate_business_use_case_for_lab(lab_id, instructions)
+
+@router.post("/generate_technical_specifications_for_lab")
+async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...)):
+    return await generate_technical_specifications_for_lab(lab_id)
+
+@router.post("/regenerate_with_feedback")
+async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...)):
+    return await regenerate_with_feedback(content, feedback)
+
+
+@router.post("/save_business_use_case")
+async def save_business_use_case_api(lab_id: str = Form(...), 
+                           business_use_case: str = Form(...)):
+    return await save_business_use_case(lab_id, business_use_case)
+
+@router.post("/save_technical_specifications")
+async def save_technical_specifications_api(lab_id: str = Form(...), 
+                           technical_specifications: str = Form(...)):
+    return await save_technical_specifications(lab_id, technical_specifications)
+
+@router.post("/convert_to_pdf_for_lab")
+async def convert_to_pdf_for_lab_api(lab_id: str = Form(...), markdown: str = Form(...), template_name: str = Form(...), lab_design_step: Optional[int] = Form(None)):
+    return await convert_to_pdf_for_lab(lab_id=lab_id, markdown=markdown, template_name=template_name, lab_design_step=lab_design_step if lab_design_step else 0)
 
 # done
 @router.post("/submit_lab_for_content_generation")

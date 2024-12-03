@@ -1,4 +1,5 @@
-
+from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
+import datetime
 import mimetypes
 import requests
 from fastapi import HTTPException
@@ -20,15 +21,10 @@ from urllib.parse import quote, unquote
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
-    "in_content_generation_queue", #automatic
-    "pre_processed_content", #expert-review-step
-    "post_processed_content", #automatic
-    "in_structure_generation_queue", #automatic
-    "pre_processed_structure", #expert-review-step
-    "post_processed_structure", #automatic
-    "in_deliverables_generation_queue", #automatic
-    "pre_processed_deliverables", #expert-review-step
-    "post_processed_deliverables", #automatic
+    "business_use_case", #automatic
+    "technical_specifications", #expert-review-step
+    "review_project", #automatic
+    "deliverables", #automatic
 ]
 
 
@@ -557,10 +553,40 @@ async def fetch_quizdata(url):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
 
+
+async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_step=0):
+    file_id = ObjectId()
+    convert_markdown_to_pdf(markdown=markdown, file_id=file_id, template_name=template_name)
+
+    output_path = f"app/services/report_generation/outputs/{file_id}.pdf"
+
+    key = f"qu-writing-design/{lab_id}/pre_processed_deliverables/{file_id}.pdf"
+    # store the file in s3
+    s3_file_manager = S3FileManager()
+    await s3_file_manager.upload_file(output_path, key)
+
+    key = quote(key)
+
+    # store the filepath in mongodb
+    atlas_client = AtlasClient()
+
+    atlas_client.update(
+        collection_name="lab_design",
+        filter={"_id": ObjectId(lab_id)},
+        update={
+            "$set": {
+                f"{LAB_DESIGN_STEPS[lab_design_step]}_pdf": f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+            }
+        }
+    )
+
+    # remove file from os
+    os.remove(output_path)
+
+    # return file url in s3
+    return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
     
-
-
-async def generate_business_use_case_for_lab(lab_id: str):
+async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -570,4 +596,165 @@ async def generate_business_use_case_for_lab(lab_id: str):
     
     lab = lab[0]
 
-    pass
+    prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+    inputs = {
+        "NAME": lab.get("lab_name"),
+        "DESCRIPTION": lab.get("lab_description"),
+        "INSTRUCTIONS": instructions
+    }
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs)
+
+    convert_to_pdf_for_lab(lab_id, response, "business", 1)
+
+    lab["business_use_case_history"] = [{
+        "business_use_case": response,
+        "timestamp": datetime.datetime.now(),
+        "version": 1.0
+    }]
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "business_use_case_history": lab["business_use_case_history"],
+            "business_use_case": response
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+    return lab
+
+async def generate_technical_specifications_for_lab(lab_id):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+
+    business_use_case_history = lab.get("business_use_case_history")
+    if not business_use_case_history:
+        return "Business use case not found"
+    
+    business_use_case = business_use_case_history[-1].get("business_use_case")
+    
+    inputs = {
+        "BUSINESS_USE_CASE": business_use_case
+    }
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs)
+
+    lab["technical_specifications"] = response
+
+    convert_to_pdf_for_lab(lab_id, response, "technical", 2)
+
+    lab["technical_specifications_history"] = [{
+        "technical_specifications": response,
+        "timestamp": datetime.datetime.now(),
+        "version": 1.0
+    }]
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "technical_specifications_history": lab["technical_specifications_history"],
+            "technical_specifications": response
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+
+    return lab
+
+
+async def regenerate_with_feedback(content, feedback):
+    prompt = _get_prompt("REGENERATE_WITH_FEEDBACK_PROMPT")
+    inputs = {
+        "CONTENT": content,
+        "FEEDBACK": feedback
+    }
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs)
+
+    return response
+
+async def save_business_use_case(lab_id, business_use_case):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["business_use_case"] = business_use_case
+
+    business_use_case_history = lab.get("business_use_case_history", [])
+
+    if not business_use_case_history:
+        business_use_case_history = [{
+            "business_use_case": business_use_case,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = business_use_case_history[-1]
+        new_version = {
+            "business_use_case": business_use_case,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        business_use_case_history.append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "business_use_case": business_use_case,
+            "business_use_case_history": business_use_case_history
+        }
+    })
+
+    return lab
+
+async def save_technical_specifications(lab_id, technical_specifications):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["technical_specifications"] = technical_specifications
+
+    technical_specifications_history = lab.get("technical_specifications_history", [])
+
+    if not technical_specifications_history:
+        technical_specifications_history = [{
+            "technical_specifications": technical_specifications,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = technical_specifications_history[-1]
+        new_version = {
+            "technical_specifications": technical_specifications,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        technical_specifications_history.append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "technical_specifications": technical_specifications,
+            "technical_specifications_history": technical_specifications_history
+        }
+    })
+
+    return lab
