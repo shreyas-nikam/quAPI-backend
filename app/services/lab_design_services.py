@@ -289,7 +289,20 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
         "lab_description": lab_description,
         "lab_image": lab_image_link,
         "lab_outline": lab_outline,
-        "status": lab_status
+        "status": lab_status,
+        "instructions": {
+            "learningOutcomes": "",
+            "responsive": False,
+            "datasetType": "",
+            "links": [],
+            "datasetFile": [],
+            "visualizations": "",
+            "frameworks": "",
+            "accessibility": "",
+            "exportFormats": "",
+            "visualReferences": [],
+            "documentation": False,
+        }
     }
     step_directory = LAB_DESIGN_STEPS[0]
 
@@ -773,4 +786,27 @@ async def save_technical_specifications(lab_id, technical_specifications):
     })
 
     lab = _convert_object_ids_to_strings(lab)
+    return lab
+
+
+async def save_lab_instructions(lab_id, instructions):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["instructions"] = instructions
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "instructions": instructions
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+
     return lab

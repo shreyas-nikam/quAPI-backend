@@ -93,3 +93,9 @@ async def save_technical_specifications_api(lab_id: str = Form(...),
 @router.post("/convert_to_pdf_for_lab")
 async def convert_to_pdf_for_lab_api(lab_id: str = Form(...), markdown: str = Form(...), template_name: str = Form(...), lab_design_step: Optional[int] = Form(None)):
     return await convert_to_pdf_for_lab(lab_id=lab_id, markdown=markdown, template_name=template_name, lab_design_step=lab_design_step if lab_design_step else 0)
+
+@router.post("/save_lab_instructions")
+async def save_lab_instructions_api(lab_id: str = Form(...), 
+                           instructions: str = Form(...)):
+    return await save_lab_instructions(lab_id, instructions)
+
