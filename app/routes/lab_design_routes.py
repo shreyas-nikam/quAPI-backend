@@ -20,12 +20,12 @@ async def clone_lab_api(lab_id: str = Form(...)):
 async def delete_lab_api(lab_id: str = Form(...)):
     return await delete_lab(lab_id)
 
-# done
+# working
 @router.post("/create_lab")
 async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[UploadFile] = File(None), lab_image: UploadFile = File(...)):
     return await create_lab(lab_name, lab_description, lab_outline, files, lab_image)
 
-# done
+# working
 @router.get("/labs")
 async def labs_api():
     return await get_labs()
@@ -61,10 +61,16 @@ async def replace_resources_in_lab_api(lab_id: str = Form(...),
 async def delete_resources_from_lab_api(lab_id: str = Form(...), resource_id: str = Form(...)):
     return await delete_resources_from_lab(lab_id, resource_id)
 
-# done
+# working
 @router.get("/get_lab/{lab_id}")
 async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
+
+
+
+@router.post("/generate_business_use_case_for_lab")
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...)):
+    return await generate_business_use_case_for_lab(lab_id)
 
 # done
 @router.post("/submit_lab_for_content_generation")

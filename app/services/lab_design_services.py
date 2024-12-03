@@ -311,7 +311,7 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
                 "resource_id": ObjectId(),
                 "resource_type": resource_type,
                 "resource_name": file.filename,
-                "resource_description": "",
+                "resource_description": "This is a resource file uploaded at the time of lab creation.",
                 "resource_link": resource_link
             }]
     
@@ -348,17 +348,18 @@ async def get_lab(lab_id):
 async def add_resources_to_lab(lab_id, resource_type, resource_name, resource_description, resource_file, resource_id=None, lab_design_step=0):
     s3_file_manager = S3FileManager()
     step_directory = LAB_DESIGN_STEPS[lab_design_step]
+    resource_id = ObjectId() if not resource_id else ObjectId(resource_id)
 
     if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video"}:
         # resource file is the file
-        key = f"qu-lab-design/{lab_id}/{step_directory}/{resource_file.filename}"
+        key = f"qu-lab-design/{lab_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
     elif resource_type == "Image":
         # resource file is the image
-        key = f"qu-lab-design/{lab_id}/{step_directory}/{resource_file.filename}"
+        key = f"qu-lab-design/{lab_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
@@ -376,7 +377,7 @@ async def add_resources_to_lab(lab_id, resource_type, resource_name, resource_de
             file.write(resource_note)
 
         key = f"qu-lab-design/{lab_id}/{step_directory}/{resource_file_name}"
-        s3_file_manager.upload_file(resource_file_name, key)
+        await s3_file_manager.upload_file(resource_file_name, key)
         key = quote(key)
 
         # remove the temp file
@@ -391,7 +392,7 @@ async def add_resources_to_lab(lab_id, resource_type, resource_name, resource_de
     lab = lab[0]
     resources = lab.get(step_directory, [])
     resource = {
-        "resource_id": ObjectId() if not resource_id else ObjectId(resource_id),
+        "resource_id": resource_id,
         "resource_type": resource_type,
         "resource_name": resource_name,
         "resource_description": resource_description,
@@ -557,3 +558,16 @@ async def fetch_quizdata(url):
         raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
 
     
+
+
+async def generate_business_use_case_for_lab(lab_id: str):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    pass

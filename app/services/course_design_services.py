@@ -480,17 +480,18 @@ async def get_course(course_id):
 async def add_resources_to_module(course_id, module_id, resource_type, resource_name, resource_description, resource_file, resource_id=None, course_design_step=0):
     s3_file_manager = S3FileManager()
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
+    resource_id = ObjectId() if not resource_id else ObjectId(resource_id)
 
     if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video"}:
         # resource file is the file
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file.filename}"
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
     elif resource_type == "Image":
         # resource file is the image
-        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file.filename}"
+        key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{str(resource_id)}"+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
@@ -527,7 +528,7 @@ async def add_resources_to_module(course_id, module_id, resource_type, resource_
         if module.get("module_id") == ObjectId(module_id):
             resources = module.get(f"{step_directory}", [])
             resource = {
-                "resource_id": ObjectId() if not resource_id else ObjectId(resource_id),
+                "resource_id": resource_id,
                 "resource_type": resource_type,
                 "resource_name": resource_name,
                 "resource_description": resource_description,
