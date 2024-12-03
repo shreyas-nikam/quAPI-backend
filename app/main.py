@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.routes.example import router
 from app.routes.course_design_routes import router as course_design_router
 from app.routes.lecture_design_routes import router as lecture_design_router
+from app.routes.lab_design_routes import router as lab_design_router
 from app.routes.user_routes import router as user_router
 from app.routes.writing_generation_routes import router as writing_generation_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,7 @@ app.include_router(course_design_router)
 app.include_router(lecture_design_router)
 app.include_router(writing_generation_router)
 app.include_router(user_router)
+app.include_router(lab_design_router)
 
 @app.get("/")
 async def read_root():
