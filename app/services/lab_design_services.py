@@ -17,6 +17,7 @@ from openai import OpenAI
 import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
+from langchain_core.prompts import PromptTemplate
 
 
 LAB_DESIGN_STEPS = [
@@ -597,16 +598,19 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
     lab = lab[0]
 
     prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+
     inputs = {
         "NAME": lab.get("lab_name"),
         "DESCRIPTION": lab.get("lab_description"),
         "INSTRUCTIONS": instructions
     }
 
-    llm = LLM("chatgpt")
-    response = _get_response(llm, prompt, inputs)
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
-    convert_to_pdf_for_lab(lab_id, response, "business", 1)
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs, output_type="str")
+
+    await convert_to_pdf_for_lab(lab_id, response, "business", 1)
 
     lab["business_use_case_history"] = [{
         "business_use_case": response,
@@ -616,6 +620,7 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
+            "status": "Business Use Case Review",
             "business_use_case_history": lab["business_use_case_history"],
             "business_use_case": response
         }
@@ -636,6 +641,7 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
+
     business_use_case_history = lab.get("business_use_case_history")
     if not business_use_case_history:
         return "Business use case not found"
@@ -646,12 +652,14 @@ async def generate_technical_specifications_for_lab(lab_id):
         "BUSINESS_USE_CASE": business_use_case
     }
 
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
     llm = LLM("chatgpt")
-    response = _get_response(llm, prompt, inputs)
+    response = _get_response(llm, prompt, inputs, output_type="str")
 
     lab["technical_specifications"] = response
 
-    convert_to_pdf_for_lab(lab_id, response, "technical", 2)
+    await convert_to_pdf_for_lab(lab_id, response, "technical", 2)
 
     lab["technical_specifications_history"] = [{
         "technical_specifications": response,
@@ -661,6 +669,7 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
+            "status": "Technical Specifications Review",
             "technical_specifications_history": lab["technical_specifications_history"],
             "technical_specifications": response
         }
@@ -678,8 +687,10 @@ async def regenerate_with_feedback(content, feedback):
         "FEEDBACK": feedback
     }
 
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
     llm = LLM("chatgpt")
-    response = _get_response(llm, prompt, inputs)
+    response = _get_response(llm, prompt, inputs, output_type="str")
 
     return response
 
@@ -694,6 +705,7 @@ async def save_business_use_case(lab_id, business_use_case):
     lab = lab[0]
 
     lab["business_use_case"] = business_use_case
+    await convert_to_pdf_for_lab(lab_id, business_use_case, "business", 1)
 
     business_use_case_history = lab.get("business_use_case_history", [])
 
@@ -719,6 +731,8 @@ async def save_business_use_case(lab_id, business_use_case):
         }
     })
 
+    lab = _convert_object_ids_to_strings(lab)
+
     return lab
 
 async def save_technical_specifications(lab_id, technical_specifications):
@@ -732,6 +746,7 @@ async def save_technical_specifications(lab_id, technical_specifications):
     lab = lab[0]
 
     lab["technical_specifications"] = technical_specifications
+    await convert_to_pdf_for_lab(lab_id, technical_specifications, "technical", 2)
 
     technical_specifications_history = lab.get("technical_specifications_history", [])
 
@@ -757,4 +772,5 @@ async def save_technical_specifications(lab_id, technical_specifications):
         }
     })
 
+    lab = _convert_object_ids_to_strings(lab)
     return lab
