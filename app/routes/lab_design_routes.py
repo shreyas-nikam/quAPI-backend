@@ -93,33 +93,3 @@ async def save_technical_specifications_api(lab_id: str = Form(...),
 @router.post("/convert_to_pdf_for_lab")
 async def convert_to_pdf_for_lab_api(lab_id: str = Form(...), markdown: str = Form(...), template_name: str = Form(...), lab_design_step: Optional[int] = Form(None)):
     return await convert_to_pdf_for_lab(lab_id=lab_id, markdown=markdown, template_name=template_name, lab_design_step=lab_design_step if lab_design_step else 0)
-
-# done
-@router.post("/submit_lab_for_content_generation")
-async def submit_lab_for_content_generation_api(lab_id: str = Form(...), instructions: str = Form(...)):
-    return await submit_lab_for_step(lab_id, 1, "in_content_generation_queue", instructions)
-
-# done
-@router.post("/submit_lab_for_structure_generation")
-async def submit_lab_for_structure_generation_api(lab_id: str = Form(...)):
-    return await submit_lab_for_step(lab_id, 4, "in_structure_generation_queue")
-
-# done
-@router.post("/submit_lab_for_deliverables_generation")
-async def submit_lab_for_deliverables_generation_api(lab_id: str = Form(...)):
-    return await submit_lab_for_step(lab_id, 7, "in_deliverables_generation_queue")
-
-# done
-@router.post("/submit_for_publishing_pipeline")
-async def submit_for_publishing_pipeline_api(lab_id: str = Form(...)):
-    return await submit_lab_for_step(lab_id, 9, "in_publishing_queue")
-
-# done
-@router.post("/fetch_note")
-async def fetch_note_api(url: str = Form(...)):
-    return await fetch_note(url)
-
-# done
-@router.post("/fetch_quizdata")
-async def fetch_quizdata_api(url: str = Form(...)):
-    return await fetch_quizdata(url)
