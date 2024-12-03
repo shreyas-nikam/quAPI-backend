@@ -509,7 +509,7 @@ async def add_resources_to_module(course_id, module_id, resource_type, resource_
             file.write(resource_note)
 
         key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource_file_name}"
-        s3_file_manager.upload_file(resource_file_name, key)
+        await s3_file_manager.upload_file(resource_file_name, key)
         key = quote(key)
 
         # remove the temp file

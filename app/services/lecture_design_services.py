@@ -377,7 +377,7 @@ async def add_resources_to_lecture(lecture_id, resource_type, resource_name, res
             file.write(resource_note)
 
         key = f"qu-lecture-design/{lecture_id}/{step_directory}/{resource_file_name}"
-        s3_file_manager.upload_file(resource_file_name, key)
+        await s3_file_manager.upload_file(resource_file_name, key)
         key = quote(key)
 
         # remove the temp file
