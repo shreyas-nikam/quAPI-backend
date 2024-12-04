@@ -204,22 +204,22 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
     })
 
     raw_resources = []
-
-    # store the files in s3
-    for file in files:
-        key = f"qu-writing-design/{writing_id}/raw_resources/{file.filename}"
-        await s3_file_manager.upload_file_from_frontend(file, key)
-        resource_id = ObjectId()
-        key = quote(key)
-        resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
-        resource = {
-            "resource_id": resource_id,
-            "resource_type": "File",
-            "resource_name": file.filename,
-            "resource_description": "File uploaded at the time of creation",
-            "resource_link": resource_link
-        }
-        raw_resources.append(resource)
+    if files:
+        # store the files in s3
+        for file in files:
+            key = f"qu-writing-design/{writing_id}/raw_resources/{file.filename}"
+            await s3_file_manager.upload_file_from_frontend(file, key)
+            resource_id = ObjectId()
+            key = quote(key)
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+            resource = {
+                "resource_id": resource_id,
+                "resource_type": "File",
+                "resource_name": file.filename,
+                "resource_description": "File uploaded at the time of creation",
+                "resource_link": resource_link
+            }
+            raw_resources.append(resource)
 
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": {"raw_resources": raw_resources}
