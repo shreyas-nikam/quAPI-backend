@@ -4,10 +4,10 @@ from app.utils.s3_file_manager import S3FileManager
 from urllib.parse import quote, unquote
 from app.utils.atlas_client import AtlasClient
 from openai import OpenAI
-
 import os
 import json
 import logging
+import datetime
 
 
 
@@ -81,12 +81,13 @@ async def writing_outline(files, instructions, identifier):
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
-    for file in files:
-        file_content = file.file.read()
+    if files:
+        for file in files:
+            file_content = file.file.read()
 
-        file.file.seek(0)
+            file.file.seek(0)
 
-        assistant_files_streams.append((file.filename, file_content))
+            assistant_files_streams.append((file.filename, file_content))
 
     # Track created resources
     created_assistant_id = None
@@ -107,15 +108,19 @@ async def writing_outline(files, instructions, identifier):
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
+        if files:
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=assistant_files_streams
+            )
 
-        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-            vector_store_id=vector_store.id, files=assistant_files_streams
-        )
-
-        assistant = client.beta.assistants.update(
-            assistant_id=assistant.id,
-            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
-        )
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
+        else:
+            assistant = client.beta.assistants.update(
+                        assistant_id=assistant.id,
+                    )
 
         thread = client.beta.threads.create(
             messages=[{
@@ -194,28 +199,27 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
         "status": "In Design Phase",
         "identifier": identifier
     }
-    print("Writing id", writing_id)
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": writing
     })
 
     raw_resources = []
-
-    # store the files in s3
-    for file in files:
-        key = f"qu-writing-design/{writing_id}/raw_resources/{file.filename}"
-        await s3_file_manager.upload_file_from_frontend(file, key)
-        resource_id = ObjectId()
-        key = quote(key)
-        resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
-        resource = {
-            "resource_id": resource_id,
-            "resource_type": "File",
-            "resource_name": file.filename,
-            "resource_description": "File uploaded at the time of creation",
-            "resource_link": resource_link
-        }
-        raw_resources.append(resource)
+    if files:
+        # store the files in s3
+        for file in files:
+            key = f"qu-writing-design/{writing_id}/raw_resources/{file.filename}"
+            await s3_file_manager.upload_file_from_frontend(file, key)
+            resource_id = ObjectId()
+            key = quote(key)
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+            resource = {
+                "resource_id": resource_id,
+                "resource_type": "File",
+                "resource_name": file.filename,
+                "resource_description": "File uploaded at the time of creation",
+                "resource_link": resource_link
+            }
+            raw_resources.append(resource)
 
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": {"raw_resources": raw_resources}
@@ -300,7 +304,6 @@ async def convert_to_pdf(writing_id, markdown, template_name):
     )
 
     # remove file from os
-    print(output_path)
     os.remove(output_path)
 
     # return file url in s3
@@ -331,3 +334,47 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     )
 
     return True
+
+
+async def save_writing(writing_id, writing_outline):
+    atlas_client = AtlasClient()
+    
+    writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
+    if not writing:
+        return False
+    writing = writing[0]
+    history = writing.get("history", [])
+    if not history:
+        history={
+                "writing_outline": writing_outline,
+                "version": 1.0,
+                "timestamp": datetime.datetime.now()
+            }
+    else:
+        latest_version = history[-1]
+        history={
+                "writing_outline": writing_outline,
+                "version": latest_version["version"] + 1.0,
+                "timestamp": datetime.datetime.now()
+            }
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$push": {
+                "history": history
+            }
+        }
+    )
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$set": {
+                "writing_outline": writing_outline
+            }
+        }
+    )
+       
+    return True
+

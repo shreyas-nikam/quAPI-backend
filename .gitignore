@@ -29,6 +29,3 @@ venv/
 # temp test files
 temp.py
 
-
-app/services/report_generation/outputs
-

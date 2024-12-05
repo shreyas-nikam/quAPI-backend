@@ -5,7 +5,7 @@ css: |
     body {
         font-family: 'Times New Roman', serif;
         line-height: 1.5;
-        margin: 1cm;
+        margin: 2cm;
     }
     .document {
         max-width: 210mm;

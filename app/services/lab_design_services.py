@@ -1,4 +1,5 @@
-
+from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
+import datetime
 import mimetypes
 import requests
 from fastapi import HTTPException
@@ -16,31 +17,27 @@ from openai import OpenAI
 import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
+from langchain_core.prompts import PromptTemplate
 
 
-LECTURE_DESIGN_STEPS = [
+LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
-    "in_content_generation_queue", #automatic
-    "pre_processed_content", #expert-review-step
-    "post_processed_content", #automatic
-    "in_structure_generation_queue", #automatic
-    "pre_processed_structure", #expert-review-step
-    "post_processed_structure", #automatic
-    "in_deliverables_generation_queue", #automatic
-    "pre_processed_deliverables", #expert-review-step
-    "post_processed_deliverables", #automatic
+    "business_use_case", #automatic
+    "technical_specifications", #expert-review-step
+    "review_project", #automatic
+    "deliverables", #automatic
 ]
 
 
-def _get_lecture(lecture_id):
+def _get_lab(lab_id):
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
-    if not lecture:
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+    if not lab:
         return "Lecture not found", None
     
-    lecture = lecture[0]
+    lab = lab[0]
     
-    return lecture, None
+    return lab, None
 
 def _get_prompt(prompt_name):
     """
@@ -133,16 +130,16 @@ def _get_file_type(file: UploadFile):
     else:
         return "File"
 
-async def get_lectures():
+async def get_labs():
     atlas_client = AtlasClient()
-    lectures = atlas_client.find("lecture_design")
-    lectures = _convert_object_ids_to_strings(lectures)
-    return lectures
+    labs = atlas_client.find("lab_design")
+    labs = _convert_object_ids_to_strings(labs)
+    return labs
     
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
-async def generate_lecture_outline(files, instructions):
+async def generate_lab_outline(files, instructions):
 
-    lecture_outline_instructions = _get_prompt("LECTURE_OUTLINE_PROMPT")
+    lab_outline_instructions = _get_prompt("LAB_OUTLINE_PROMPT")
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -161,7 +158,7 @@ async def generate_lecture_outline(files, instructions):
     try:
         assistant = client.beta.assistants.create(
             name="Lecture outline creator",
-            instructions=lecture_outline_instructions,
+            instructions=lab_outline_instructions,
             model=os.getenv("OPENAI_MODEL"),
             tools=[{"type": "file_search"}]
         )
@@ -185,7 +182,7 @@ async def generate_lecture_outline(files, instructions):
         thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Create the lecture outline based on the instructions provided and the following user's instructions: " + instructions,
+                "content": "Create the lab outline based on the instructions provided and the following user's instructions: " + instructions,
             }]
         )
         created_thread_id = thread.id  # Track the thread
@@ -207,7 +204,7 @@ async def generate_lecture_outline(files, instructions):
 
         response = message_content.value
     except Exception as e:
-        logging.error(f"Error in generating lecture outline: {e}")
+        logging.error(f"Error in generating lab outline: {e}")
         return "# Slide 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### Slide 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### Slide 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### Slide 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### Slide 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
     finally:
         # Clean up all created resources to avoid charges
@@ -221,16 +218,16 @@ async def generate_lecture_outline(files, instructions):
     return response
 
 # clone_course -> takes in the course_id and clones the course
-async def clone_lecture(lecture_id):
+async def clone_lab(lab_id):
     
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
 
-    if not lecture:
+    if not lab:
         return "Lecture not found"
     
-    lecture = lecture[0]
-    lecture.pop("_id")
+    lab = lab[0]
+    lab.pop("_id")
 
     # recursively iterate through the modules and resources and clone them. if it contains _id, replace it with a new ObjectId
     def clone(data):
@@ -245,56 +242,69 @@ async def clone_lecture(lecture_id):
                 data[index] = clone(item)
         return data
 
-    atlas_client.insert("lecture_design", lecture)
+    atlas_client.insert("lab_design", lab)
 
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = _convert_object_ids_to_strings(lab)
 
-    return lecture
+    return lab
 
 
 # delete_course -> takes in the course_id and deletes the course
-async def delete_lecture(lecture_id):
+async def delete_lab(lab_id):
     
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
 
-    if not lecture:
+    if not lab:
         return "Lecture not found"
     
-    lecture = lecture[0]
+    lab = lab[0]
     
-    atlas_client.delete("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    atlas_client.delete("lab_design", filter={"_id": ObjectId(lab_id)})
 
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = _convert_object_ids_to_strings(lab)
     
-    return lecture
+    return lab
     
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-async def create_lecture(lecture_name, lecture_description, lecture_outline, files, lecture_image):
-    lecture_status = "In Design Phase"
+async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
+    lab_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
 
     
     # upload the course image to s3 and get the link
-    lecture_id = ObjectId()
-    key = f"qu-lecture-design/{lecture_id}/lecture_image/{lecture_image.filename}"
-    await s3_file_manager.upload_file_from_frontend(lecture_image, key)
+    lab_id = ObjectId()
+    key = f"qu-lab-design/{lab_id}/lab_image/{lab_image.filename}"
+    await s3_file_manager.upload_file_from_frontend(lab_image, key)
     key = quote(key)
-    lecture_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+    lab_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
 
-    lecture = {
-        "_id": lecture_id,
-        "lecture_name": lecture_name,
-        "lecture_description": lecture_description,
-        "lecture_image": lecture_image_link,
-        "lecture_outline": lecture_outline,
-        "status": lecture_status
+    lab = {
+        "_id": lab_id,
+        "lab_name": lab_name,
+        "lab_description": lab_description,
+        "lab_image": lab_image_link,
+        "lab_outline": lab_outline,
+        "status": lab_status,
+        "instructions": {
+            "learningOutcomes": "",
+            "responsive": False,
+            "datasetType": "",
+            "links": [],
+            "datasetFile": [],
+            "visualizations": "",
+            "frameworks": "",
+            "accessibility": "",
+            "exportFormats": "",
+            "visualReferences": [],
+            "documentation": False,
+        }
     }
-    step_directory = LECTURE_DESIGN_STEPS[0]
+    step_directory = LAB_DESIGN_STEPS[0]
 
 
     raw_resources = []
@@ -302,7 +312,7 @@ async def create_lecture(lecture_name, lecture_description, lecture_outline, fil
         for file in files:
             resource_type = _get_file_type(file)
 
-            key = f"qu-lecture-design/{lecture_id}/{step_directory}/{file.filename}"  
+            key = f"qu-lab-design/{lab_id}/{step_directory}/{file.filename}"  
             await s3_file_manager.upload_file_from_frontend(file, key)
             key = quote(key)
             resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"    
@@ -311,16 +321,16 @@ async def create_lecture(lecture_name, lecture_description, lecture_outline, fil
                 "resource_id": ObjectId(),
                 "resource_type": resource_type,
                 "resource_name": file.filename,
-                "resource_description": "",
+                "resource_description": "This is a resource file uploaded at the time of lab creation.",
                 "resource_link": resource_link
             }]
     
-    lecture[step_directory] = raw_resources
+    lab[step_directory] = raw_resources
 
-    atlas_client.insert("lecture_design", lecture)
+    atlas_client.insert("lab_design", lab)
 
-    lecture = _convert_object_ids_to_strings(lecture)
-    return lecture
+    lab = _convert_object_ids_to_strings(lab)
+    return lab
 
 
 def _get_resource_key_from_link(resource_link):
@@ -331,35 +341,35 @@ def _get_resource_key_from_link(resource_link):
 
 
 # get_course -> takes in the course_id and returns the course object
-async def get_lecture(lecture_id):
+async def get_lab(lab_id):
 
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
 
-    if not lecture:
+    if not lab:
         return {}
     
-    lecture = lecture[0]
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = lab[0]
+    lab = _convert_object_ids_to_strings(lab)
     
-    return lecture
+    return lab
 
-# add_resources_to_module -> takes in the lecture_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
-async def add_resources_to_lecture(lecture_id, resource_type, resource_name, resource_description, resource_file, resource_id=None, lecture_design_step=0):
+# add_resources_to_module -> takes in the lab_id, resource_type, resource_name, resource_description, resource_file, and adds a resource to the module and to s3
+async def add_resources_to_lab(lab_id, resource_type, resource_name, resource_description, resource_file, resource_id=None, lab_design_step=0):
     s3_file_manager = S3FileManager()
-    step_directory = LECTURE_DESIGN_STEPS[lecture_design_step]
+    step_directory = LAB_DESIGN_STEPS[lab_design_step]
     resource_id = ObjectId() if not resource_id else ObjectId(resource_id)
 
     if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video"}:
         # resource file is the file
-        key = f"qu-lecture-design/{lecture_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
+        key = f"qu-lab-design/{lab_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
     elif resource_type == "Image":
         # resource file is the image
-        key = f"qu-lecture-design/{lecture_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
+        key = f"qu-lab-design/{lab_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
         key = quote(key)
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
@@ -376,7 +386,7 @@ async def add_resources_to_lecture(lecture_id, resource_type, resource_name, res
         with open(resource_file_name, "w") as file:
             file.write(resource_note)
 
-        key = f"qu-lecture-design/{lecture_id}/{step_directory}/{resource_file_name}"
+        key = f"qu-lab-design/{lab_id}/{step_directory}/{resource_file_name}"
         await s3_file_manager.upload_file(resource_file_name, key)
         key = quote(key)
 
@@ -385,12 +395,12 @@ async def add_resources_to_lecture(lecture_id, resource_type, resource_name, res
         resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
-    if not lecture:
-        return "lecture not found"
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+    if not lab:
+        return "lab not found"
     
-    lecture = lecture[0]
-    resources = lecture.get(step_directory, [])
+    lab = lab[0]
+    resources = lab.get(step_directory, [])
     resource = {
         "resource_id": resource_id,
         "resource_type": resource_type,
@@ -399,103 +409,103 @@ async def add_resources_to_lecture(lecture_id, resource_type, resource_name, res
         "resource_link": resource_link
     }
     resources.append(resource)
-    lecture[step_directory] = resources
+    lab[step_directory] = resources
 
-    atlas_client.update("lecture_design", filter={"_id": ObjectId(lecture_id)}, update={
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
             step_directory: resources
         }
     }
     )
 
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = _convert_object_ids_to_strings(lab)
 
-    return lecture
+    return lab
 
 
 # delete_resource_from_module -> takes in the course_id, module_id, resource_id, and deletes the resource from the module and from s3
-async def delete_resources_from_lecture(lecture_id, resource_id, lecture_design_step=0):
-    step_directory = LECTURE_DESIGN_STEPS[lecture_design_step]
+async def delete_resources_from_lab(lab_id, resource_id, lab_design_step=0):
+    step_directory = LAB_DESIGN_STEPS[lab_design_step]
 
     atlas_client = AtlasClient()
-    lecture = atlas_client.find("lecture_design", filter={"_id": ObjectId(lecture_id)})
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
 
-    if not lecture:
+    if not lab:
         return "Lecture not found"
     
-    lecture = lecture[0]
-    resources = lecture.get(step_directory, [])
+    lab = lab[0]
+    resources = lab.get(step_directory, [])
     for resource in resources:
         if resource.get("resource_id") == ObjectId(resource_id):
             resources.remove(resource)
             break
     
 
-    atlas_client.update("lecture_design", filter={"_id": ObjectId(lecture_id)}, update={
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
             step_directory: resources
         }
     }
     )
 
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = _convert_object_ids_to_strings(lab)
 
-    return lecture
+    return lab
 
 # replace the resource in the module and s3
-async def replace_resources_in_lecture(lecture_id, resource_id, resource_name, resource_type, resource_description, resource_file, lecture_design_step=0):
+async def replace_resources_in_lab(lab_id, resource_id, resource_name, resource_type, resource_description, resource_file, lab_design_step=0):
     
     # delete the resource with the resource id, and add the new resource with the same id
-    lecture = await delete_resources_from_lecture(lecture_id=lecture_id,
+    lab = await delete_resources_from_lab(lab_id=lab_id,
                                                 resource_id=resource_id, 
-                                                lecture_design_step=lecture_design_step)
+                                                lab_design_step=lab_design_step)
 
     # add the new resource
-    lecture = await add_resources_to_lecture(lecture_id=lecture_id,
+    lab = await add_resources_to_lab(lab_id=lab_id,
                                            resource_type=resource_type, 
                                            resource_name=resource_name, 
                                            resource_description=resource_description, 
                                            resource_file=resource_file, 
                                            resource_id=resource_id, 
-                                           lecture_design_step=lecture_design_step)
+                                           lab_design_step=lab_design_step)
 
-    lecture = _convert_object_ids_to_strings(lecture)
+    lab = _convert_object_ids_to_strings(lab)
     
-    return lecture
+    return lab
 
-def _handle_s3_file_transfer(lecture_id, prev_step_directory, step_directory, resources):
+def _handle_s3_file_transfer(lab_id, prev_step_directory, step_directory, resources):
     s3_file_manager = S3FileManager()
     for resource in resources:
-        next_step_key = f"qu-lecture-design/{lecture_id}/{step_directory}/{resource.get('resource_name')}"
-        prev_step_key = f"qu-lecture-design/{lecture_id}/{prev_step_directory}/{resource.get('resource_name')}"
+        next_step_key = f"qu-lab-design/{lab_id}/{step_directory}/{resource.get('resource_name')}"
+        prev_step_key = f"qu-lab-design/{lab_id}/{prev_step_directory}/{resource.get('resource_name')}"
         s3_file_manager.copy_file(prev_step_key, next_step_key)
 
-async def submit_lecture_for_step(lecture_id, lecture_design_step, queue_name_suffix, instructions=""):
-    step_directory = LECTURE_DESIGN_STEPS[lecture_design_step]
-    prev_step_directory = LECTURE_DESIGN_STEPS[lecture_design_step - 1]
+async def submit_lab_for_step(lab_id, lab_design_step, queue_name_suffix, instructions=""):
+    step_directory = LAB_DESIGN_STEPS[lab_design_step]
+    prev_step_directory = LAB_DESIGN_STEPS[lab_design_step - 1]
 
-    lecture, _ = _get_lecture(lecture_id=lecture_id)
+    lab, _ = _get_lab(lab_id=lab_id)
 
-    if not lecture:
+    if not lab:
         return "Lecture not found"
 
-    lecture["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
+    lab["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
     if instructions:
-        lecture["instructions"] = instructions
+        lab["instructions"] = instructions
 
     atlas_client = AtlasClient()
-    atlas_client.update("lecture_design", filter={"_id": ObjectId(lecture_id)}, update={
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
             "status": f"{queue_name_suffix.replace('_', ' ').title()}"
         }
     })
 
-    prev_step_resources = lecture.get(prev_step_directory, [])
-    _handle_s3_file_transfer(lecture_id, prev_step_directory, step_directory, prev_step_resources)
+    prev_step_resources = lab.get(prev_step_directory, [])
+    _handle_s3_file_transfer(lab_id, prev_step_directory, step_directory, prev_step_resources)
 
     queue_payload = {
-        "lecture_id": lecture_id,
-        "type": "lecture"
+        "lab_id": lab_id,
+        "type": "lab"
     }
 
     if instructions:
@@ -557,4 +567,280 @@ async def fetch_quizdata(url):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error fetching quiz data: {e}")
 
+
+async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_step=0):
+
+    file_id = ObjectId()
+    convert_markdown_to_pdf(markdown=markdown, file_id=file_id, template_name=template_name)
+
+    output_path = f"app/services/report_generation/outputs/{file_id}.pdf"
+
+    key = f"qu-writing-design/{lab_id}/pre_processed_deliverables/{file_id}.pdf"
+    # store the file in s3
+    s3_file_manager = S3FileManager()
+    await s3_file_manager.upload_file(output_path, key)
+
+    key = quote(key)
+
+    # store the filepath in mongodb
+    atlas_client = AtlasClient()
+
+    atlas_client.update(
+        collection_name="lab_design",
+        filter={"_id": ObjectId(lab_id)},
+        update={
+            "$set": {
+                f"{LAB_DESIGN_STEPS[lab_design_step]}_pdf": f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+            }
+        }
+    )
+
+    # remove file from os
+    os.remove(output_path)
+
+    # return file url in s3
+    return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
     
+async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+
+    inputs = {
+        "NAME": lab.get("lab_name"),
+        "DESCRIPTION": lab.get("lab_description"),
+        "INSTRUCTIONS": instructions
+    }
+
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs, output_type="str")
+    if response.startswith("```"):
+        response = response[3:].strip()
+    if response.startswith("markdown"):
+        response = response[8:].strip()
+    if response.endswith("```"):
+        response = response[:-3].strip()
+
+    await convert_to_pdf_for_lab(lab_id, response, "business", 1)
+
+    if not lab.get("business_use_case_history"):
+        lab["business_use_case_history"] = [{
+            "business_use_case": response,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = lab["business_use_case_history"][-1]
+        new_version = {
+            "business_use_case": response,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        lab["business_use_case_history"].append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "status": "Business Use Case Review",
+            "business_use_case_history": lab["business_use_case_history"],
+            "business_use_case": response
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+    return lab
+
+async def generate_technical_specifications_for_lab(lab_id):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+
+
+    business_use_case_history = lab.get("business_use_case_history")
+    if not business_use_case_history:
+        return "Business use case not found"
+    
+    business_use_case = business_use_case_history[-1].get("business_use_case")
+    
+    inputs = {
+        "BUSINESS_USE_CASE": business_use_case
+    }
+
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs, output_type="str")
+
+    if response.startswith("```"):
+        response = response[3:].strip()
+    if response.startswith("markdown"):
+        response = response[8:].strip()
+    # if the response ends with ``` remove it
+    if response.endswith("```"):
+        response = response[:-3].strip()
+
+    lab["technical_specifications"] = response
+
+    await convert_to_pdf_for_lab(lab_id, response, "technical", 2)
+
+    if not lab.get("technical_specifications_history"):
+        lab["technical_specifications_history"] = [{
+            "technical_specifications": response,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = lab["technical_specifications_history"][-1]
+        new_version = {
+            "technical_specifications": response,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        lab["technical_specifications_history"].append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "status": "Technical Specifications Review",
+            "technical_specifications_history": lab["technical_specifications_history"],
+            "technical_specifications": response
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+
+    return lab
+
+
+async def regenerate_with_feedback(content, feedback):
+    prompt = _get_prompt("REGENERATE_WITH_FEEDBACK_PROMPT")
+    inputs = {
+        "CONTENT": content,
+        "FEEDBACK": feedback
+    }
+
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs, output_type="str")
+
+    return response
+
+async def save_business_use_case(lab_id, business_use_case):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["business_use_case"] = business_use_case
+    await convert_to_pdf_for_lab(lab_id, business_use_case, "business", 1)
+
+    business_use_case_history = lab.get("business_use_case_history", [])
+
+    if not business_use_case_history:
+        business_use_case_history = [{
+            "business_use_case": business_use_case,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = business_use_case_history[-1]
+        new_version = {
+            "business_use_case": business_use_case,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        business_use_case_history.append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "business_use_case": business_use_case,
+            "business_use_case_history": business_use_case_history
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+
+    return lab
+
+async def save_technical_specifications(lab_id, technical_specifications):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["technical_specifications"] = technical_specifications
+    await convert_to_pdf_for_lab(lab_id, technical_specifications, "technical", 2)
+
+    technical_specifications_history = lab.get("technical_specifications_history", [])
+
+    if not technical_specifications_history:
+        technical_specifications_history = [{
+            "technical_specifications": technical_specifications,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = technical_specifications_history[-1]
+        new_version = {
+            "technical_specifications": technical_specifications,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        technical_specifications_history.append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "technical_specifications": technical_specifications,
+            "technical_specifications_history": technical_specifications_history
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+    return lab
+
+
+async def save_lab_instructions(lab_id, instructions):
+    instructions = json.loads(instructions)
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["instructions"] = instructions
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "instructions": instructions
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+
+    return lab

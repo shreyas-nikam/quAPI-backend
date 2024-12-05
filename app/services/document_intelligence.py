@@ -155,26 +155,19 @@ class Document_intelligence:
         image_output_directory = f"{output_directory}/images"
 
         if result.figures:
-            print("Figures:")
             for idx, figure in enumerate(result.figures):
                 figure_content = ""
                 img_description = ""
-                print(f"Figure #{idx} has the following spans: {figure.spans}")
                 for i, span in enumerate(figure.spans):
-                    print(f"Span #{i}: {span}")
                     figure_content += md_content[span.offset:span.offset + span.length]
-                print(f"Original figure content in markdown: {figure_content}")
 
                 # Note: figure bounding regions currently contain both the bounding region of figure caption and figure body
                 try:
                     if figure.caption:
                         caption_region = figure.caption.bounding_regions
-                        print(f"\tCaption: {figure.caption.content}")
-                        print(f"\tCaption bounding region: {caption_region}")
                         
                         for region in figure.bounding_regions:
                             if region not in caption_region:
-                                print(f"\tFigure body bounding regions: {region}")
                                 # To learn more about bounding regions, see https://aka.ms/bounding-region
                                 boundingbox = (
                                         region.polygon[0],  # x0 (left)
@@ -182,7 +175,6 @@ class Document_intelligence:
                                         region.polygon[4],  # x1 (right)
                                         region.polygon[5]   # y1 (bottom)
                                     )
-                                print(f"\tFigure body bounding box in (x0, y0, x1, y1): {boundingbox}")
                                 cropped_image = self.crop_image_from_file(input_file_path, region.page_number - 1, boundingbox) # page_number is 1-indexed
 
                                 # Get the base name of the file
@@ -202,11 +194,8 @@ class Document_intelligence:
                                         local_file_path=temp_file.name, s3_file_name=cropped_image_filename)
                                     self.s3filemanager.make_object_public(s3_file_name=cropped_image_filename)
 
-                                print(f"\tFigure {idx} cropped and saved as {cropped_image_filename}")
                     else:
-                        print("\tNo caption found for this figure.")
                         for region in figure.bounding_regions:
-                            print(f"\tFigure body bounding regions: {region}")
                             # To learn more about bounding regions, see https://aka.ms/bounding-region
                             boundingbox = (
                                     region.polygon[0],  # x0 (left)
@@ -214,7 +203,6 @@ class Document_intelligence:
                                     region.polygon[4],  # x1 (right)
                                     region.polygon[5]   # y1 (bottom)
                                 )
-                            print(f"\tFigure body bounding box in (x0, y0, x1, y1): {boundingbox}")
 
                             cropped_image = self.crop_image_from_file(input_file_path, region.page_number - 1, boundingbox) # page_number is 1-indexed
 
@@ -235,7 +223,6 @@ class Document_intelligence:
                                     local_file_path=temp_file.name, s3_file_name=cropped_image_filename)
                                 self.s3filemanager.make_object_public(s3_file_name=cropped_image_filename)
 
-                            print(f"\tFigure {idx} cropped and saved as {cropped_image_filename}")
                 except Exception as e:
                     logging.warning(f"Skipped image_{idx} because of error {e}")    
 
@@ -274,7 +261,6 @@ class Document_intelligence:
             return temp_dir
         except Exception as e:
             logging.error(f"Error occurred while creating temporary PDF: {str(e)}")
-            # print(f"Error occurred while creating temporary PDF: {str(e)}")
             return None 
 
     def main(self, file, output_directory, model = "prebuilt-layout"):
@@ -304,7 +290,6 @@ class Document_intelligence:
         except Exception as e:
             logging.error(f"An error occurred in document intelligence processing: {e}")
             return {'status': "failed", 'output': str(e)}
-            # print(f"An error occurred in document intelligence processing: {e}")
         
         finally:
             shutil.rmtree(temp_dir)

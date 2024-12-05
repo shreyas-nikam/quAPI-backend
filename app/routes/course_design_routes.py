@@ -6,7 +6,7 @@ router = APIRouter()
 
 # done
 @router.post("/generate_course_outline")
-async def generate_course_outline_api(files: List[UploadFile] = File(...),
+async def generate_course_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...)):
     return await generate_course_outline(files, instructions) 
 
@@ -22,8 +22,8 @@ async def delete_course_api(course_id: str = Form(...)):
 
 # done
 @router.post("/create_course")
-async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: List[UploadFile] = File(...), course_image: UploadFile = File(...)):
-    return await create_course(course_name, course_description, course_outline, files, course_image)
+async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), course_image: UploadFile = File(...), modulesAtCreation: bool = Form(True)):
+    return await create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation)
 
 # done
 @router.get("/courses")
@@ -33,7 +33,6 @@ async def courses_api():
 # done
 @router.post("/add_module")
 async def add_module_api(course_id: str = Form(...), module_name: str = Form(...), module_description: str = Form(...)):
-    print(course_id, module_name, module_description)
     return await add_module(course_id, module_name, module_description)
 
 # done
@@ -104,3 +103,13 @@ async def fetch_note_api(url: str = Form(...)):
 @router.post("/fetch_quizdata")
 async def fetch_quizdata_api(url: str = Form(...)):
     return await fetch_quizdata(url)
+
+@router.post("/fetch_pdf")
+async def fetch_pdf_api(url: str = Form(...)):
+    return await fetch_pdf(url)
+
+@router.post("/add_artifact_to_course")
+async def add_artifact_to_course_api(course_id: str = Form(...), 
+                                            artifact_type: str = Form(...), 
+                                            artifact_id: str = Form(...)):
+    return await add_artifact_to_course(course_id, artifact_type, artifact_id)

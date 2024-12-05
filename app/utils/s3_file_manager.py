@@ -167,11 +167,9 @@ class S3FileManager:
             return True
         except NoCredentialsError:
             logging.error("AWS credentials not available or incorrect.")
-            print("AWS credentials not available or incorrect.")
             return False
         except Exception as e:
             logging.error(f"An error occurred: make_object_public: {e}")
-            print(f"An error occurred: make_object_public: {e}")
             return False
         
     def copy_file(self, source_key, destination_key):
@@ -194,7 +192,6 @@ class S3FileManager:
             logging.error("Credentials not available")
             return False
         except ClientError as e:
-            print(source_key)
             logging.error(e)
             return False
 
