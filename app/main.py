@@ -14,7 +14,6 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
-import marimo
 import os
 import logging
 from dotenv import load_dotenv
@@ -67,14 +66,12 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-
 # Add session middleware
 app.add_middleware(
-    SessionMiddleware, 
+    SessionMiddleware,
     secret_key=os.getenv("SECRET_KEY", "your-secret-key")
 )
 app.mount("/marimo/", server.build())
-
 
 
 # Allow CORS for the frontend
@@ -98,6 +95,7 @@ app.include_router(lecture_design_router)
 app.include_router(writing_generation_router)
 app.include_router(user_router)
 app.include_router(lab_design_router)
+
 
 @app.get("/")
 async def read_root():
