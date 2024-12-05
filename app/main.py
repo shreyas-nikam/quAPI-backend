@@ -16,7 +16,6 @@ logger.setLevel(logging.ERROR)
 
 app = FastAPI()
 
-
 # Allow CORS for the frontend
 origins = [
     "*",  # React frontend URL
