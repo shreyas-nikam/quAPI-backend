@@ -623,6 +623,12 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
 
     llm = LLM("chatgpt")
     response = _get_response(llm, prompt, inputs, output_type="str")
+    if response.startswith("```"):
+        response = response[3:].strip()
+    if response.startswith("markdown"):
+        response = response[8:].strip()
+    if response.endswith("```"):
+        response = response[:-3].strip()
 
     await convert_to_pdf_for_lab(lab_id, response, "business", 1)
 
@@ -679,6 +685,14 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     llm = LLM("chatgpt")
     response = _get_response(llm, prompt, inputs, output_type="str")
+
+    if response.startswith("```"):
+        response = response[3:].strip()
+    if response.startswith("markdown"):
+        response = response[8:].strip()
+    # if the response ends with ``` remove it
+    if response.endswith("```"):
+        response = response[:-3].strip()
 
     lab["technical_specifications"] = response
 
