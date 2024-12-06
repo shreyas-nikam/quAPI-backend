@@ -73,7 +73,6 @@ def _get_file_type(file: UploadFile):
 
 async def generate_podcast_outline(files, instructions):
 
-
     podcast_prompt = _get_prompt("GENERATE_PODCAST_WITH_TEXT_PROMPT")
     podcast_prompt = podcast_prompt.replace("{metadeta}", instructions)
     print("Podcast prompt is: ", podcast_prompt)
@@ -164,15 +163,47 @@ async def generate_podcast_outline(files, instructions):
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    print("Response is: ", response)
-    return response
+    podcast_dialogue = """
+    **Alex:** Welcome, everyone, to *Decoding AI: A Revolution in Business and National Security*! I'm your host, Alex Johnson, and today, we're diving into the fascinating world of artificial intelligence with a leading expert, Dr. Anya Sharma.
 
-# async def get_podcasts():
-#     atlas_client = AtlasClient()
-#     podcasts = atlas_client.find("podcast_design")
-#     podcasts = _convert_object_ids_to_strings(podcasts)
-#     print("Podcasts are: ", podcasts)
-#     return podcasts
+    **Anya:** Thanks for having me, Alex. It's exciting to discuss this rapidly evolving field.
+
+    **Alex:** Absolutely! For those just tuning in, can you give us a quick, jargon-free definition of artificial intelligence and machine learning?
+
+    **Anya:** Certainly. Artificial intelligence, or AI, is essentially the ability of a computer to mimic human intelligence. That includes problem-solving, decision-making, and learning from experience. Machine learning, or ML, is a subset of AI. It’s where we teach computers to learn from data without explicit programming—they learn patterns and make predictions based on that data.
+
+    **Alex:** So, essentially, it's like teaching a computer to learn by example, rather than giving it a set of strict rules to follow?
+
+    **Anya:** Exactly! That’s a huge shift from how computers have worked for the past 75 years. Think about it—before AI, we programmed every single step a computer took. Now, we can train a system to learn and adapt on its own, leading to some pretty amazing capabilities.
+
+    **Alex:** That’s fascinating. Can you explain this difference using an analogy?
+
+    **Anya:** Sure. Imagine explaining computers in 1950 to someone using slide rules and manual calculators. You tell them about machines that can do complex calculations instantly, learn, and adapt—they’d be amazed! That’s where we are now with AI—a complete game-changer impacting everything from business to defense.
+
+    **Alex:** What exactly can AI do these days? And just as importantly, what can’t it do?
+
+    **Anya:** AI excels at tasks involving massive data sets, like natural language processing, computer vision, and anomaly detection. It’s transforming industries—think self-driving cars, medical diagnoses, and fraud detection. But AI has limitations: it struggles with uncertainty, explaining its reasoning, and handling unexpected situations or genuine creativity.
+
+    **Alex:** Let’s delve into specific applications. How is AI impacting business?
+
+    **Anya:** AI is revolutionizing industries. It assists humans in programming and decision-making, streamlines supply chains, optimizes marketing, and enhances customer support. In healthcare, it’s helping with diagnostics, drug discovery, and personalized medicine. Autonomous vehicles and human-machine teaming are other key areas of transformation.
+
+    **Alex:** And in national security? How is AI reshaping warfare and intelligence?
+
+    **Anya:** AI is transforming national security with enhanced surveillance, autonomous systems, and efficient data analysis. It plays a crucial role in human-machine teaming, augmenting intelligence while keeping humans at the decision-making helm. However, ethical concerns arise, especially regarding autonomous weapons and AI-driven disinformation.
+
+    **Alex:** Those are critical points. Let’s talk about the hardware driving these advancements. What’s happening on that front?
+
+    **Anya:** Hardware is crucial. Specialized AI chips, cloud computing, and robust infrastructure are propelling the field forward. Companies like Nvidia lead the way, with a significant software advantage that creates a competitive edge. However, challenges remain as newer players work to catch up.
+
+    **Alex:** This field is moving at lightning speed. To wrap things up, what are the key takeaways?
+
+    **Anya:** AI is a revolutionary force transforming business and national security. While its potential is immense, so are its challenges. Responsible development, ethical considerations, and informed usage are critical. This is a rapidly evolving field, so staying informed is essential.
+
+    **Alex:** Dr. Sharma, thank you for sharing your expertise. And to our listeners, thank you for tuning in to *Decoding AI*. Until next time, keep exploring and stay curious!
+    """
+
+    return podcast_dialogue
 
 async def get_podcasts():
     try:
@@ -268,4 +299,22 @@ async def get_podcast(podcast_id):
     podcast = _convert_object_ids_to_strings(podcast)
     podcast = podcast[0]
     return podcast
+
+async def delete_podcast(podcast_id):
+
+    atlas_client = AtlasClient()
+    podcast = atlas_client.find("podcast_design", filter={
+                               "_id": ObjectId(podcast_id)})
+
+    if not podcast:
+        return "Podcast not found"
+
+    podcast = podcast[0]
+
+    atlas_client.delete("podcast_design", filter={"_id": ObjectId(podcast_id)})
+
+    podcast = _convert_object_ids_to_strings(podcast)
+
+    return podcast
+
 
