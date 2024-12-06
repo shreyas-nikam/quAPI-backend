@@ -139,6 +139,18 @@ async def get_lectures():
     lectures = _convert_object_ids_to_strings(lectures)
     return lectures
     
+
+# files to outline
+# outline to slides
+# speaker notes for each slide
+# slides to images for each slide
+# speaker notes to audio for all slides
+# audio to video using images for each slides
+
+
+
+
+
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
 async def generate_lecture_outline(files, instructions):
 
