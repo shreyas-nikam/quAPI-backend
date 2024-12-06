@@ -63,6 +63,14 @@ def _convert_object_ids_to_strings(data):
     else:
         return data
 
+def _get_file_type(file: UploadFile):
+    if file.content_type.startswith("image"):
+        return "Image"
+    elif file.content_type.startswith("text"):
+        return "Note"
+    else:
+        return "File"
+
 async def generate_podcast_outline(files, instructions):
 
 
