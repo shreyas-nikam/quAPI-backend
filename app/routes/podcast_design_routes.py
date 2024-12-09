@@ -9,6 +9,12 @@ async def generate_podcast_outline_api(files: Optional[List[UploadFile]] = File(
                                   instructions: str = Form(...)):
     return await generate_podcast_outline(files, instructions) 
 
+@router.post("/generate_audio_for_podcast")
+async def generate_audio_for_podcast_api(
+    outline_text: str = Form(...),
+    podcast_id: str = Form(...),
+):
+    return await generate_audio_for_podcast(outline_text)
 
 @router.get("/podcasts")
 async def podcasts_api():
