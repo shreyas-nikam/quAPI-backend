@@ -24,6 +24,7 @@ from tempfile import NamedTemporaryFile  # Import for temporary file creation
 from pathlib import Path  # Import Path for handling filesystem paths
 import tempfile
 import boto3
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -216,18 +217,24 @@ async def generate_podcast_outline(files, instructions):
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    dialogue_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
-    dialogue_prompt = podcast_prompt.replace("{text}", response)
-    try:
-        response = await generate_podcast_dialogue(dialogue_prompt)
-        formatted_response = format_podcast_dialogue(response)
-        return formatted_response
+    # dialogue_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
+    # dialogue_prompt = podcast_prompt.replace("{text}", response)
+    # try:
+    #     response = await generate_podcast_dialogue(dialogue_prompt)
+    #     formatted_response = format_podcast_dialogue(response)
+    #     return formatted_response
     
-    except Exception as e:
-        logging.error(f"Error in generating podcast dialogue: {e}")
-        return response
+    # except Exception as e:
+    #     logging.error(f"Error in generating podcast dialogue: {e}")
+    #     return response
 
-    return response
+    match = re.search(r'<podcast_dialogue>(.*?)</podcast_dialogue>', response, re.DOTALL)
+
+    if match:
+        dialogue_content = match.group(1).strip()  # Extract the matched content
+        return dialogue_content
+    else:
+        return response
 
 
 
