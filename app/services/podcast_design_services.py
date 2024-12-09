@@ -75,10 +75,8 @@ async def generate_podcast_outline(files, instructions):
 
     podcast_prompt = _get_prompt("GENERATE_PODCAST_WITH_TEXT_PROMPT")
     podcast_prompt = podcast_prompt.replace("{metadeta}", instructions)
-    print("Podcast prompt is: ", podcast_prompt)
+    # print("Podcast prompt is: ", podcast_prompt)
 
-    # return "**Podcast Title: AI and Machine Learning in Finance** --- **Intro Music Fades In** **Host 1: Alex** Welcome to “AI and Machine Learning in Finance,” the show where we unpack how cutting-edge technology is revolutionizing the world of finance. I’m your host, Alex. **Host 2: Jamie** And I’m Jamie! Today, we’re diving deep into the fascinating world of AI and ML, highlighting some fundamental concepts while also exploring their real-world applications in the finance sector. **Alex** So, Jamie, let’s start with the basics. Can you explain what AI and ML actually are, and how they differ? **Jamie** Absolutely, Alex! Artificial Intelligence, or AI, refers to the simulation of human intelligence in machines. These machines are programmed to think and learn like humans. Machine Learning, a subset of AI, is all about algorithms that improve automatically through experience. In simple terms, ML allows computers to learn from data and get better over time without being explicitly programmed to do so. **Alex** That makes sense! It's like teaching a child how to solve puzzles; the more puzzles they solve, the better they become at it. **Jamie** Exactly! And when we apply these technologies in finance, it gets really exciting. For instance, institutions use AI for fraud detection. By analyzing huge amounts of transaction data, machine learning models can spot unusual patterns that may indicate fraudulent activity far quicker than a human could. **Alex** I love that. It’s like having a digital watchdog that never sleeps, right? Speaking of which, what are some other fascinating applications of AI and ML in finance? **Jamie** Oh, the list is extensive. One key application is in algorithmic trading. AI systems can analyze market data and make trades at lightning speeds—much faster than any human trader. They can also react to news and events in real-time, which is invaluable in a market that moves as fast as today’s does. **Alex** That raises an interesting point about risk management. How does AI help in that area? **Jamie** Good question! AI and ML help quantify risks by analyzing historical data and forecasting financial outcomes based on various scenarios. This capability enables financial institutions to make more informed decisions about lending, investments, and even compliance with regulatory standards. **Alex** That’s pretty powerful! I can only imagine how it must feel for risk managers to have these tools at their fingertips. But tell me, what are the challenges of implementing AI in finance? **Jamie** There definitely are challenges. One significant issue is data quality. AI models rely heavily on data, so if that data is inaccurate or incomplete, it can lead to poor decision-making. Additionally, there are regulatory concerns and the need for transparency. Many financial firms are also navigating the talent shortage in data science and AI specialists. **Alex** And with such rapidly evolving technology, keeping pace with advancements must be a challenge as well. **Jamie** Definitely. It’s a double-edged sword; the technology moves fast, and firms need to adapt quickly or risk becoming obsolete. Coupled with ethical considerations—like bias in AI models—there's a lot for firms to juggle. **Alex** Speaking of ethics, that sounds like a juicy topic! Let’s pivot a bit. Can you share an anecdote or an example of how AI failure has caused hurdles for financial institutions? **Jamie** Sure! One major example is the infamous “robo-advisor,” which aimed to automate investment management. While they’re useful, some algorithms accidentally favored certain market segments over others, leading to poorly diversified portfolios for clients. This sparked a backlash and raised questions about how much trust we should put in machine-generated advice. **Alex** That’s fascinating and somewhat alarming! It really emphasizes the need for human oversight, doesn’t it? **Jamie** Absolutely. While AI can enhance efficiency, human intuition and experience are irreplaceable. A balance between leveraging AI and human judgment will lead to the best results. **Alex** As we wrap up this enlightening discussion, what would you say are the main takeaways for our listeners today about AI and ML in finance? **Jamie** Well, listeners, remember that AI and ML aren’t just buzzwords; they are transformative technologies that can optimize operations, manage risks, and detect fraud effectively. However, it’s essential to be aware of the challenges, including data quality and ethical implications. Incorporating AI in finance isn’t about replacing human intelligence but augmenting it. **Alex** Very well said, Jamie! It’s clear that embracing AI in finance requires a thoughtful approach. Thank you all for tuning in! **Jamie** And don’t forget to join us next time, where we’ll explore the future of AI and its potential in revolutionizing customer service in the finance world! **Alex** Until next time, stay curious and keep learning! **Outro Music Fades In** --- **End of Podcast**"
-    # return "Podcast outline generated successfully"
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -163,47 +161,7 @@ async def generate_podcast_outline(files, instructions):
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    podcast_dialogue = """
-    **Alex:** Welcome, everyone, to *Decoding AI: A Revolution in Business and National Security*! I'm your host, Alex Johnson, and today, we're diving into the fascinating world of artificial intelligence with a leading expert, Dr. Anya Sharma.
-
-    **Anya:** Thanks for having me, Alex. It's exciting to discuss this rapidly evolving field.
-
-    **Alex:** Absolutely! For those just tuning in, can you give us a quick, jargon-free definition of artificial intelligence and machine learning?
-
-    **Anya:** Certainly. Artificial intelligence, or AI, is essentially the ability of a computer to mimic human intelligence. That includes problem-solving, decision-making, and learning from experience. Machine learning, or ML, is a subset of AI. It’s where we teach computers to learn from data without explicit programming—they learn patterns and make predictions based on that data.
-
-    **Alex:** So, essentially, it's like teaching a computer to learn by example, rather than giving it a set of strict rules to follow?
-
-    **Anya:** Exactly! That’s a huge shift from how computers have worked for the past 75 years. Think about it—before AI, we programmed every single step a computer took. Now, we can train a system to learn and adapt on its own, leading to some pretty amazing capabilities.
-
-    **Alex:** That’s fascinating. Can you explain this difference using an analogy?
-
-    **Anya:** Sure. Imagine explaining computers in 1950 to someone using slide rules and manual calculators. You tell them about machines that can do complex calculations instantly, learn, and adapt—they’d be amazed! That’s where we are now with AI—a complete game-changer impacting everything from business to defense.
-
-    **Alex:** What exactly can AI do these days? And just as importantly, what can’t it do?
-
-    **Anya:** AI excels at tasks involving massive data sets, like natural language processing, computer vision, and anomaly detection. It’s transforming industries—think self-driving cars, medical diagnoses, and fraud detection. But AI has limitations: it struggles with uncertainty, explaining its reasoning, and handling unexpected situations or genuine creativity.
-
-    **Alex:** Let’s delve into specific applications. How is AI impacting business?
-
-    **Anya:** AI is revolutionizing industries. It assists humans in programming and decision-making, streamlines supply chains, optimizes marketing, and enhances customer support. In healthcare, it’s helping with diagnostics, drug discovery, and personalized medicine. Autonomous vehicles and human-machine teaming are other key areas of transformation.
-
-    **Alex:** And in national security? How is AI reshaping warfare and intelligence?
-
-    **Anya:** AI is transforming national security with enhanced surveillance, autonomous systems, and efficient data analysis. It plays a crucial role in human-machine teaming, augmenting intelligence while keeping humans at the decision-making helm. However, ethical concerns arise, especially regarding autonomous weapons and AI-driven disinformation.
-
-    **Alex:** Those are critical points. Let’s talk about the hardware driving these advancements. What’s happening on that front?
-
-    **Anya:** Hardware is crucial. Specialized AI chips, cloud computing, and robust infrastructure are propelling the field forward. Companies like Nvidia lead the way, with a significant software advantage that creates a competitive edge. However, challenges remain as newer players work to catch up.
-
-    **Alex:** This field is moving at lightning speed. To wrap things up, what are the key takeaways?
-
-    **Anya:** AI is a revolutionary force transforming business and national security. While its potential is immense, so are its challenges. Responsible development, ethical considerations, and informed usage are critical. This is a rapidly evolving field, so staying informed is essential.
-
-    **Alex:** Dr. Sharma, thank you for sharing your expertise. And to our listeners, thank you for tuning in to *Decoding AI*. Until next time, keep exploring and stay curious!
-    """
-
-    return podcast_dialogue
+   return response
 
 async def get_podcasts():
     try:
