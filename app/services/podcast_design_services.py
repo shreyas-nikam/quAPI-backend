@@ -18,7 +18,16 @@ from openai import OpenAI
 import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
+import concurrent.futures as cf
+import io
+from tempfile import NamedTemporaryFile  # Import for temporary file creation
+from pathlib import Path  # Import Path for handling filesystem paths
+import tempfile
+import boto3
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 PODCAST_DESIGN_STEPS = [
     "raw_resources",  # automatic
@@ -34,6 +43,13 @@ PODCAST_DESIGN_STEPS = [
     "in_publishing_queue",  # automatic
     "published"  # expert-review-step
 ]
+
+# Voice mapping for speakers
+VOICE_MAP = {
+    "female-1": "alloy",
+    "male-1": "onyx",
+    "female-2": "shimmer",
+}
 
 def _get_prompt(prompt_name):
     """
@@ -63,15 +79,58 @@ def _convert_object_ids_to_strings(data):
     else:
         return data
 
+def _get_file_type(file: UploadFile):
+    if file.content_type.startswith("image"):
+        return "Image"
+    elif file.content_type.startswith("text"):
+        return "Note"
+    else:
+        return "File"
+
+def save_response_to_file(response, filename="podcast_output.txt"):
+    """
+    Save the given response to a text file.
+    
+    :param response: The string content to save.
+    :param filename: The name of the file to save the content into.
+    """
+    try:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(response)
+    except Exception as e:
+        logger.error(f"Failed to save response to file: {e}")
+
+def format_podcast_dialogue(response_text):
+    """
+    Formats podcast dialogue for display in a markdown editor with a single blank line between each speaker's dialogue.
+
+    Args:
+        response_text (str): The raw response text containing the podcast dialogue.
+
+    Returns:
+        str: The formatted podcast dialogue with proper markdown styling.
+    """
+    formatted_lines = []
+    lines = response_text.split("\n")
+
+    for line in lines:
+        # Check if the line contains a speaker label followed by content
+        if ":" in line:
+            speaker, content = line.split(":", 1)
+            # Correctly format the speaker's name (bold) and content
+            formatted_lines.append(f"**{speaker.strip()}**: {content.strip()}")
+        elif line.strip():  # Add non-empty lines as-is
+            formatted_lines.append(line.strip())
+
+    # Join all lines with a blank line in between for better readability in markdown
+    return "\n\n".join(formatted_lines)
+
+
+
 async def generate_podcast_outline(files, instructions):
-
-
     podcast_prompt = _get_prompt("GENERATE_PODCAST_WITH_TEXT_PROMPT")
     podcast_prompt = podcast_prompt.replace("{metadeta}", instructions)
-    print("Podcast prompt is: ", podcast_prompt)
 
-    # return "**Podcast Title: AI and Machine Learning in Finance** --- **Intro Music Fades In** **Host 1: Alex** Welcome to “AI and Machine Learning in Finance,” the show where we unpack how cutting-edge technology is revolutionizing the world of finance. I’m your host, Alex. **Host 2: Jamie** And I’m Jamie! Today, we’re diving deep into the fascinating world of AI and ML, highlighting some fundamental concepts while also exploring their real-world applications in the finance sector. **Alex** So, Jamie, let’s start with the basics. Can you explain what AI and ML actually are, and how they differ? **Jamie** Absolutely, Alex! Artificial Intelligence, or AI, refers to the simulation of human intelligence in machines. These machines are programmed to think and learn like humans. Machine Learning, a subset of AI, is all about algorithms that improve automatically through experience. In simple terms, ML allows computers to learn from data and get better over time without being explicitly programmed to do so. **Alex** That makes sense! It's like teaching a child how to solve puzzles; the more puzzles they solve, the better they become at it. **Jamie** Exactly! And when we apply these technologies in finance, it gets really exciting. For instance, institutions use AI for fraud detection. By analyzing huge amounts of transaction data, machine learning models can spot unusual patterns that may indicate fraudulent activity far quicker than a human could. **Alex** I love that. It’s like having a digital watchdog that never sleeps, right? Speaking of which, what are some other fascinating applications of AI and ML in finance? **Jamie** Oh, the list is extensive. One key application is in algorithmic trading. AI systems can analyze market data and make trades at lightning speeds—much faster than any human trader. They can also react to news and events in real-time, which is invaluable in a market that moves as fast as today’s does. **Alex** That raises an interesting point about risk management. How does AI help in that area? **Jamie** Good question! AI and ML help quantify risks by analyzing historical data and forecasting financial outcomes based on various scenarios. This capability enables financial institutions to make more informed decisions about lending, investments, and even compliance with regulatory standards. **Alex** That’s pretty powerful! I can only imagine how it must feel for risk managers to have these tools at their fingertips. But tell me, what are the challenges of implementing AI in finance? **Jamie** There definitely are challenges. One significant issue is data quality. AI models rely heavily on data, so if that data is inaccurate or incomplete, it can lead to poor decision-making. Additionally, there are regulatory concerns and the need for transparency. Many financial firms are also navigating the talent shortage in data science and AI specialists. **Alex** And with such rapidly evolving technology, keeping pace with advancements must be a challenge as well. **Jamie** Definitely. It’s a double-edged sword; the technology moves fast, and firms need to adapt quickly or risk becoming obsolete. Coupled with ethical considerations—like bias in AI models—there's a lot for firms to juggle. **Alex** Speaking of ethics, that sounds like a juicy topic! Let’s pivot a bit. Can you share an anecdote or an example of how AI failure has caused hurdles for financial institutions? **Jamie** Sure! One major example is the infamous “robo-advisor,” which aimed to automate investment management. While they’re useful, some algorithms accidentally favored certain market segments over others, leading to poorly diversified portfolios for clients. This sparked a backlash and raised questions about how much trust we should put in machine-generated advice. **Alex** That’s fascinating and somewhat alarming! It really emphasizes the need for human oversight, doesn’t it? **Jamie** Absolutely. While AI can enhance efficiency, human intuition and experience are irreplaceable. A balance between leveraging AI and human judgment will lead to the best results. **Alex** As we wrap up this enlightening discussion, what would you say are the main takeaways for our listeners today about AI and ML in finance? **Jamie** Well, listeners, remember that AI and ML aren’t just buzzwords; they are transformative technologies that can optimize operations, manage risks, and detect fraud effectively. However, it’s essential to be aware of the challenges, including data quality and ethical implications. Incorporating AI in finance isn’t about replacing human intelligence but augmenting it. **Alex** Very well said, Jamie! It’s clear that embracing AI in finance requires a thoughtful approach. Thank you all for tuning in! **Jamie** And don’t forget to join us next time, where we’ll explore the future of AI and its potential in revolutionizing customer service in the finance world! **Alex** Until next time, stay curious and keep learning! **Outro Music Fades In** --- **End of Podcast**"
-    # return "Podcast outline generated successfully"
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -132,6 +191,7 @@ async def generate_podcast_outline(files, instructions):
 
         messages = list(client.beta.threads.messages.list(
             thread_id=thread.id, run_id=run.id))
+
         message_content = messages[0].content[0].text
         annotations = message_content.annotations
         citations = []
@@ -146,7 +206,7 @@ async def generate_podcast_outline(files, instructions):
         response = message_content.value
     except Exception as e:
         logging.error(f"Error in generating course outline: {e}")
-        return "# Module 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### Module 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### Module 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### Module 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### Module 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
+        return """ **Alex:** Welcome, everyone, to *Decoding AI: A Revolution in Business and National Security*! I'm your host, Alex Johnson, and today, we're diving into the fascinating world of artificial intelligence with a leading expert, Dr. Anya Sharma. **Anya:** Thanks for having me, Alex. It's exciting to discuss this rapidly evolving field. **Alex:** Absolutely! For those just tuning in, can you give us a quick, jargon-free definition of artificial intelligence and machine learning? **Anya:** Certainly. Artificial intelligence, or AI, is essentially the ability of a computer to mimic human intelligence. That includes problem-solving, decision-making, and learning from experience. Machine learning, or ML, is a subset of AI. It’s where we teach computers to learn from data without explicit programming—they learn patterns and make predictions based on that data. **Alex:** So, essentially, it's like teaching a computer to learn by example, rather than giving it a set of strict rules to follow? **Anya:** Exactly! That’s a huge shift from how computers have worked for the past 75 years. Think about it—before AI, we programmed every single step a computer took. Now, we can train a system to learn and adapt on its own, leading to some pretty amazing capabilities. **Alex:** That’s fascinating. Can you explain this difference using an analogy? **Anya:** Sure. Imagine explaining computers in 1950 to someone using slide rules and manual calculators. You tell them about machines that can do complex calculations instantly, learn, and adapt—they’d be amazed! That’s where we are now with AI—a complete game-changer impacting everything from business to defense. **Alex:** What exactly can AI do these days? And just as importantly, what can’t it do? **Anya:** AI excels at tasks involving massive data sets, like natural language processing, computer vision, and anomaly detection. It’s transforming industries—think self-driving cars, medical diagnoses, and fraud detection. But AI has limitations: it struggles with uncertainty, explaining its reasoning, and handling unexpected situations or genuine creativity. **Alex:** Let’s delve into specific applications. How is AI impacting business? **Anya:** AI is revolutionizing industries. It assists humans in programming and decision-making, streamlines supply chains, optimizes marketing, and enhances customer support. In healthcare, it’s helping with diagnostics, drug discovery, and personalized medicine. Autonomous vehicles and human-machine teaming are other key areas of transformation. **Alex:** And in national security? How is AI reshaping warfare and intelligence? **Anya:** AI is transforming national security with enhanced surveillance, autonomous systems, and efficient data analysis. It plays a crucial role in human-machine teaming, augmenting intelligence while keeping humans at the decision-making helm. However, ethical concerns arise, especially regarding autonomous weapons and AI-driven disinformation. **Alex:** Those are critical points. Let’s talk about the hardware driving these advancements. What’s happening on that front? **Anya:** Hardware is crucial. Specialized AI chips, cloud computing, and robust infrastructure are propelling the field forward. Companies like Nvidia lead the way, with a significant software advantage that creates a competitive edge. However, challenges remain as newer players work to catch up. **Alex:** This field is moving at lightning speed. To wrap things up, what are the key takeaways? **Anya:** AI is a revolutionary force transforming business and national security. While its potential is immense, so are its challenges. Responsible development, ethical considerations, and informed usage are critical. This is a rapidly evolving field, so staying informed is essential. **Alex:** Dr. Sharma, thank you for sharing your expertise. And to our listeners, thank you for tuning in to *Decoding AI*. Until next time, keep exploring and stay curious! """
     finally:
         # Clean up all created resources to avoid charges
         if created_assistant_id:
@@ -156,15 +216,112 @@ async def generate_podcast_outline(files, instructions):
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    print("Response is: ", response)
+    dialogue_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
+    dialogue_prompt = podcast_prompt.replace("{text}", response)
+    try:
+        response = await generate_podcast_dialogue(dialogue_prompt)
+        formatted_response = format_podcast_dialogue(response)
+        return formatted_response
+    
+    except Exception as e:
+        logging.error(f"Error in generating podcast dialogue: {e}")
+        return response
+
     return response
 
-# async def get_podcasts():
-#     atlas_client = AtlasClient()
-#     podcasts = atlas_client.find("podcast_design")
-#     podcasts = _convert_object_ids_to_strings(podcasts)
-#     print("Podcasts are: ", podcasts)
-#     return podcasts
+
+
+
+async def generate_podcast_dialogue(dialogue, files = None):
+    podcast_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
+    podcast_prompt = podcast_prompt.replace("{text}", dialogue)
+
+    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+
+    assistant_files_streams = []
+    if files:
+        for file in files:
+            file_content = file.file.read()
+
+            file.file.seek(0)
+
+            assistant_files_streams.append((file.filename, file_content))
+
+    # Track created resources
+    created_assistant_id = None
+    created_vector_store_id = None
+    created_thread_id = None
+
+    try:
+        assistant = client.beta.assistants.create(
+            name="podcast creator",
+            instructions=podcast_prompt,
+            model=os.getenv("OPENAI_MODEL"),
+            tools=[{"type": "file_search"}]
+        )
+        created_assistant_id = assistant.id  # Track the assistant
+
+        vector_store = client.beta.vector_stores.create(
+            name="Podcast Resources",
+            expires_after={"days": 1, "anchor": "last_active_at"},
+        )
+        created_vector_store_id = vector_store.id  # Track the vector store
+        if files:
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=assistant_files_streams
+            )
+
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {
+                    "vector_store_ids": [vector_store.id]}},
+            )
+
+        else:
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+            )
+
+        thread = client.beta.threads.create(
+            messages=[{
+                "role": "user",
+                "content": "Create the podcast based on the instructions provided and the following user's instructions: " + instructions,
+            }]
+        )
+        created_thread_id = thread.id  # Track the thread
+
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id, assistant_id=assistant.id
+        )
+
+        messages = list(client.beta.threads.messages.list(
+            thread_id=thread.id, run_id=run.id))
+
+        message_content = messages[0].content[0].text
+        annotations = message_content.annotations
+        citations = []
+
+        for index, annotation in enumerate(annotations):
+            message_content.value = message_content.value.replace(
+                annotation.text, f"[{index}]")
+            if file_citation := getattr(annotation, "file_citation", None):
+                cited_file = client.files.retrieve(file_citation.file_id)
+                citations.append(f"[{index}] {cited_file.filename}")
+
+        response = message_content.value
+    except Exception as e:
+        logging.error(f"Error in generating course outline: {e}")
+        return """ **Alex:** Welcome, everyone, to *Decoding AI: A Revolution in Business and National Security*! I'm your host, Alex Johnson, and today, we're diving into the fascinating world of artificial intelligence with a leading expert, Dr. Anya Sharma. **Anya:** Thanks for having me, Alex. It's exciting to discuss this rapidly evolving field. **Alex:** Absolutely! For those just tuning in, can you give us a quick, jargon-free definition of artificial intelligence and machine learning? **Anya:** Certainly. Artificial intelligence, or AI, is essentially the ability of a computer to mimic human intelligence. That includes problem-solving, decision-making, and learning from experience. Machine learning, or ML, is a subset of AI. It’s where we teach computers to learn from data without explicit programming—they learn patterns and make predictions based on that data. **Alex:** So, essentially, it's like teaching a computer to learn by example, rather than giving it a set of strict rules to follow? **Anya:** Exactly! That’s a huge shift from how computers have worked for the past 75 years. Think about it—before AI, we programmed every single step a computer took. Now, we can train a system to learn and adapt on its own, leading to some pretty amazing capabilities. **Alex:** That’s fascinating. Can you explain this difference using an analogy? **Anya:** Sure. Imagine explaining computers in 1950 to someone using slide rules and manual calculators. You tell them about machines that can do complex calculations instantly, learn, and adapt—they’d be amazed! That’s where we are now with AI—a complete game-changer impacting everything from business to defense. **Alex:** What exactly can AI do these days? And just as importantly, what can’t it do? **Anya:** AI excels at tasks involving massive data sets, like natural language processing, computer vision, and anomaly detection. It’s transforming industries—think self-driving cars, medical diagnoses, and fraud detection. But AI has limitations: it struggles with uncertainty, explaining its reasoning, and handling unexpected situations or genuine creativity. **Alex:** Let’s delve into specific applications. How is AI impacting business? **Anya:** AI is revolutionizing industries. It assists humans in programming and decision-making, streamlines supply chains, optimizes marketing, and enhances customer support. In healthcare, it’s helping with diagnostics, drug discovery, and personalized medicine. Autonomous vehicles and human-machine teaming are other key areas of transformation. **Alex:** And in national security? How is AI reshaping warfare and intelligence? **Anya:** AI is transforming national security with enhanced surveillance, autonomous systems, and efficient data analysis. It plays a crucial role in human-machine teaming, augmenting intelligence while keeping humans at the decision-making helm. However, ethical concerns arise, especially regarding autonomous weapons and AI-driven disinformation. **Alex:** Those are critical points. Let’s talk about the hardware driving these advancements. What’s happening on that front? **Anya:** Hardware is crucial. Specialized AI chips, cloud computing, and robust infrastructure are propelling the field forward. Companies like Nvidia lead the way, with a significant software advantage that creates a competitive edge. However, challenges remain as newer players work to catch up. **Alex:** This field is moving at lightning speed. To wrap things up, what are the key takeaways? **Anya:** AI is a revolutionary force transforming business and national security. While its potential is immense, so are its challenges. Responsible development, ethical considerations, and informed usage are critical. This is a rapidly evolving field, so staying informed is essential. **Alex:** Dr. Sharma, thank you for sharing your expertise. And to our listeners, thank you for tuning in to *Decoding AI*. Until next time, keep exploring and stay curious! """
+    finally:
+        # Clean up all created resources to avoid charges
+        if created_assistant_id:
+            client.beta.assistants.delete(created_assistant_id)
+        if created_vector_store_id:
+            client.beta.vector_stores.delete(created_vector_store_id)
+        if created_thread_id:
+            client.beta.threads.delete(created_thread_id)
+
+    return response
 
 async def get_podcasts():
     try:
@@ -173,43 +330,118 @@ async def get_podcasts():
         # Attempt to retrieve podcasts
         podcasts = atlas_client.find("podcast_design")
 
-        print("Podcasts are: ", podcasts)
         # Ensure ObjectIds are converted to strings
         podcasts = _convert_object_ids_to_strings(podcasts)
-        
-        # Print the retrieved podcasts for debugging
       
         return podcasts
 
     except ConnectionError as ce:
         # Handle connection errors
-        print(f"Connection error while fetching podcasts: {ce}")
         return {"error": "Failed to connect to the database. Please try again later."}
 
     except ValueError as ve:
         # Handle data conversion issues
-        print(f"Value error during podcast processing: {ve}")
         return {"error": "Data format issue encountered while processing podcasts."}
 
     except Exception as e:
         # Catch-all for any other unexpected exceptions
-        print(f"Unexpected error: {e}")
         return {"error": "An unexpected error occurred. Please contact support."}
 
+async def generate_audio_for_podcast(outline_text: str, podcast_id: str):
+    """
+    Generate audio based on the provided podcast outline text, save it as an MP3 file,
+    and upload to S3.
+    
+    Args:
+        outline_text (str): The transcript to generate audio from.
+        podcast_id (str): The podcast ID used for creating the S3 key.
+    
+    Returns:
+        str: The URL to the uploaded MP3 file.
+        str: Transcript used for generating the audio.
+    """
+    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+    
+    audio = b""  # Initialize the audio data as an empty byte string
+    transcript = outline_text.strip()  # Use the provided outline as the transcript
+
+    # Generate audio for each line in the transcript
+    with cf.ThreadPoolExecutor() as executor:
+        futures = []
+        # Detect the number of speakers (assuming 2 for this case)
+        speaker_voices = random.sample(list(VOICE_MAP.values()), 2)  # Randomly select two voices
+        
+        for i, line in enumerate(transcript.split("\n")):
+            line = line.strip()
+            if line:  # Ignore empty lines
+                # Alternate between the two voices
+                voice = speaker_voices[i % 2]  # Alternate between two voices
+                future = executor.submit(get_mp3, line, voice)
+                futures.append((future, line))
+        
+        # Collect the audio chunks from each future
+        for future, line in futures:
+            audio_chunk = future.result()
+            audio += audio_chunk
+
+
+    s3_file_manager = S3FileManager()
+
+    audio_key = f"qu-podcast-design/{podcast_id}/podcast_audio/podcast_audio_{int(time.time())}.mp3"
+    
+    # Use the save_mp3_and_upload method to save the file locally and then upload it to S3
+    try:
+        await s3_file_manager.save_mp3_and_upload(audio, audio_key)
+    except Exception as e:
+        logging.error(f"Failed to upload the file to S3 with key: {audio_key}")
+        return None, transcript
+
+    # Log success
+    logging.info(f"File uploaded to S3 with key: {audio_key}")
+
+    # Make the uploaded file public
+    s3_file_manager.make_object_public(audio_key)
+
+    # Generate the S3 URL for the uploaded audio
+    audio_key = quote(audio_key)
+    podcast_audio_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{audio_key}"
+
+    return podcast_audio_link, transcript
+
+def get_mp3(text: str, voice: str) -> bytes:
+    """
+    Generate MP3 audio for the given text and voice using the OpenAI API.
+    """
+    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+    with client.audio.speech.with_streaming_response.create(
+        model="tts-1",
+        voice=voice,
+        input=text,
+    ) as response:
+        with io.BytesIO() as file:
+            for chunk in response.iter_bytes():
+                file.write(chunk)
+            return file.getvalue()
 
 async def create_podcast(podcast_name, podcast_description, podcast_transcript, files, podcast_image):
     podcast_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
-   
 
-    # upload the podcast image to s3 and get the link
+    # Upload the podcast image to S3 and get the link
     podcast_id = ObjectId()
     key = f"qu-podcast-design/{podcast_id}/podcast_image/{podcast_image.filename}"
     await s3_file_manager.upload_file_from_frontend(podcast_image, key)
     key = quote(key)
     podcast_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+
+    # Generate podcast audio and get the link
+    podcast_audio_link, _ = await generate_audio_for_podcast(podcast_transcript, str(podcast_id))
+
+    if not podcast_audio_link:
+        logging.error("Failed to generate podcast audio.")
+        return None
 
     podcast = {
         "_id": podcast_id,
@@ -217,8 +449,10 @@ async def create_podcast(podcast_name, podcast_description, podcast_transcript, 
         "podcast_description": podcast_description,
         "podcast_image": podcast_image_link,
         "podcast_transcript": podcast_transcript,
-        "status": podcast_status
+        "status": podcast_status,
+        "podcast_audio": podcast_audio_link  # Add the audio link here
     }
+    
     step_directory = PODCAST_DESIGN_STEPS[0]
 
     raw_resources = []
@@ -226,12 +460,10 @@ async def create_podcast(podcast_name, podcast_description, podcast_transcript, 
         for file in files:
             resource_type = _get_file_type(file)
 
-            key = f"qu-podcast-design/{podcast_id}/{
-                step_directory}/{file.filename}"
+            key = f"qu-podcast-design/{podcast_id}/{step_directory}/{file.filename}"
             await s3_file_manager.upload_file_from_frontend(file, key)
             key = quote(key)
-            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{
-                key}"
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
             raw_resources += [{
                 "resource_id": ObjectId(),
@@ -243,8 +475,10 @@ async def create_podcast(podcast_name, podcast_description, podcast_transcript, 
 
     podcast[step_directory] = raw_resources
 
+    # Insert the podcast into the database
     atlas_client.insert("podcast_design", podcast)
 
+    # Convert object IDs to strings for the response
     podcast = _convert_object_ids_to_strings(podcast)
     return podcast
 
@@ -261,3 +495,19 @@ async def get_podcast(podcast_id):
     podcast = podcast[0]
     return podcast
 
+async def delete_podcast(podcast_id):
+
+    atlas_client = AtlasClient()
+    podcast = atlas_client.find("podcast_design", filter={
+                               "_id": ObjectId(podcast_id)})
+
+    if not podcast:
+        return "Podcast not found"
+
+    podcast = podcast[0]
+
+    atlas_client.delete("podcast_design", filter={"_id": ObjectId(podcast_id)})
+
+    podcast = _convert_object_ids_to_strings(podcast)
+
+    return podcast
