@@ -129,8 +129,7 @@ def format_podcast_dialogue(response_text):
 
 
 async def generate_podcast_outline(files, instructions):
-    podcast_prompt = _get_prompt("GENERATE_PODCAST_WITH_TEXT_PROMPT")
-    podcast_prompt = podcast_prompt.replace("{metadeta}", instructions)
+    podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
 
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
@@ -181,7 +180,7 @@ async def generate_podcast_outline(files, instructions):
         thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Create the podcast based on the instructions provided and the following user's instructions: " + instructions,
+                "content": podcast_prompt
             }]
         )
         created_thread_id = thread.id  # Track the thread
