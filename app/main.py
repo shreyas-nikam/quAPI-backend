@@ -19,6 +19,8 @@ import os
 import logging
 from dotenv import load_dotenv
 from fastapi import Form
+from pathlib import Path
+import tempfile
 
 # Load environment variables
 load_dotenv()
@@ -32,29 +34,37 @@ logger = logging.getLogger("weasyprint")
 if not logger.handlers:
     logger.addHandler(logging.NullHandler())
 logger.setLevel(logging.ERROR)
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 
 app = FastAPI()
 
-ui_dir = os.path.join(os.path.dirname(__file__), "ui")
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+# Marimo server
 server = marimo.create_asgi_app()
 app_names: list[str] = []
 
-for filename in sorted(os.listdir(ui_dir)):
-    if filename.endswith(".py"):
-        app_name = os.path.splitext(filename)[0]
-        app_path = os.path.join(ui_dir, filename)
-        server = server.with_app(path=f"/{app_name}", root=app_path)
+# Path to the "ui" directory
+notebooks_dir = Path(__file__).parent / "ui"
+print(notebooks_dir)
+
+# Iterate over Python files in the "ui" directory
+for filename in sorted(notebooks_dir.iterdir()):
+    if filename.suffix == ".py":  # Only process .py files
+        app_name = filename.stem  # Extract app name (file name without extension)
+        
+        # Add the app to the server
+        server = server.with_app(path=f"/{app_name}", root=filename)
+        
+        # Print the app details (corrected f-string syntax)
+        print(f"Added app: {app_name} at path /{app_name} with root as {filename}")
+        
+        # Append the app name to the list
         app_names.append(app_name)
+
+
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory=templates_dir)
 
 
-@app.get("/marimo-home/")
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "home.html", {"request": request, "app_names": app_names}
-    )
 
 
 @app.exception_handler(HTTPException)
@@ -74,6 +84,11 @@ app.add_middleware(
 )
 app.mount("/marimo/", server.build())
 
+@app.get("/marimo")
+async def home(request: Request):
+    return templates.TemplateResponse(
+        "home.html", {"request": request, "app_names": app_names}
+    )
 
 # Allow CORS for the frontend
 origins = [
