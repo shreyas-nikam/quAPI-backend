@@ -14,10 +14,13 @@
             <h1 class="text-3xl font-bold">Welcome!</h1>
         </div>
         <h2 class="text-2xl font-semibold mb-4">Available Applications:</h2>
-        <p class="text mb-2">Here are some sample applications demonstrating the use of cvxsimulator.</p>
+        <p class="text mb-2">Here are some sample application components demonstrating the use of marimo.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {% for app_name in app_names %}
-            <a href="http://localhost:8000/marimo/marimo/{{ app_name }}" class="block" target="_blank">
+            <a href="/marimo/{{ app_name }}/" class="block">
+                <!-- <a href="http://localhost:8000/marimo/{{ app_name }}" class="block" target="_blank"> -->
+                <!-- <a href="/marimo/{{ app_name }}" class="block" target="_blank"> -->
+                <!-- <a href="http://localhost:8000/marimo/marimo/{{ app_name }}" class="block" target="_blank"> -->
                 <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4">
                     <h3 class="text-lg font-semibold text-blue-600 hover:text-blue-800">{{ app_name }}</h3>
                     <p class="text-gray-600 mt-2">Click to open application</p>
