@@ -375,13 +375,21 @@ async def generate_audio_for_podcast(outline_text: str, podcast_id: str):
     with cf.ThreadPoolExecutor() as executor:
         futures = []
         # Detect the number of speakers (assuming 2 for this case)
-        speaker_voices = random.sample(list(VOICE_MAP.values()), 2)  # Randomly select two voices
-        
-        for i, line in enumerate(transcript.split("\n")):
+        speaker_voices = random.sample(list(VOICE_MAP.values()), 2)  # Randomly select two voices        
+        lines = transcript.split("\n")
+
+        voiceToggle = True
+
+        for i, line in enumerate(lines):
             line = line.strip()
             if line:  # Ignore empty lines
-                # Alternate between the two voices
-                voice = speaker_voices[i % 2]  # Alternate between two voices
+                if voiceToggle:
+                    voice = speaker_voices[0]
+                    voiceToggle = False
+                else:   
+                    voice = speaker_voices[1]
+                    voiceToggle = True
+                # voice = speaker_voices[i % 2]  # Alternate between two voices
                 future = executor.submit(get_mp3, line, voice)
                 futures.append((future, line))
         
