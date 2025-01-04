@@ -9,6 +9,7 @@ import tempfile
 from dotenv import load_dotenv
 import os
 from fastapi import UploadFile
+import time
 
 # Load the environment variables
 load_dotenv()
@@ -273,6 +274,7 @@ class S3FileManager:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 temp_file.write(data)
                 temp_file.close()
+                print("Temp file name: ", temp_file.name)
                 self.upload_file(temp_file.name, key)
                 os.unlink(temp_file.name)
             return True
@@ -378,5 +380,70 @@ class S3FileManager:
         except ClientError as e:
             logging.error(e)
             return False
+
+    async def save_mp3_and_upload(self, audio_data, key):
+        """
+        Save the MP3 data to a file and upload it to S3.
+        
+        Args:
+        audio_data: bytes - The audio data (MP3).
+        key: str - The key under which to store the file in S3.
+        
+        Returns:
+        bool: True if the upload succeeded, False otherwise.
+        """
+        try:
+            # Define the folder where you want to save the file
+            folder_path = "mp3_files"
+            Path(folder_path).mkdir(parents=True, exist_ok=True)  # Create the folder if it doesn't exist
+            
+            # Create a unique filename using the current timestamp
+            file_name = f"podcast_audio_{int(time.time())}.mp3"
+            file_path = os.path.join(folder_path, file_name)
+            
+            # Write the audio data to an MP3 file
+            with open(file_path, 'wb') as f:
+                f.write(audio_data)
+
+            # Upload the file asynchronously
+            success = await self.async_upload_file(file_path, key)
+            
+            if success:
+                logging.info(f"Successfully uploaded file to S3 with key: {key}")
+                return True
+            else:
+                logging.error(f"Failed to upload file to S3 with key: {key}")
+                return False
+
+        except Exception as e:
+            logging.error(f"Error saving and uploading MP3: {e}")
+            return False  # Return False if there's an exception
+
+        finally:
+            # Clean up: Delete the file after uploading
+            if 'file_path' in locals() and os.path.exists(file_path):
+                os.remove(file_path)
+
+
+    def async_upload_file(self, file_path, key):
+        """
+        Upload a file to S3.
+
+        Args:
+        file_path (str): Path to the file on your local machine.
+        key (str): Key (path) in the S3 bucket where the file will be stored.
+
+        Returns:
+        bool: True if the file was uploaded successfully, False otherwise.
+        """
+        try:
+            # Upload the file to S3
+            response = self.s3_client.upload_file(file_path, self.bucket_name, key)
+            logging.info(f"Successfully uploaded file to S3 with key: {key}")
+            return True
+        except Exception as e:
+            logging.error(f"Error uploading file to S3: {e}")
+            return False
+
         
     
