@@ -6,7 +6,7 @@ router = APIRouter()
 
 # done
 @router.post("/generate_lab_outline")
-async def generate_lab_outline_api(files: List[UploadFile] = File(...),
+async def generate_lab_outline_api(files: List[List[UploadFile]] = File(...),
                                   instructions: str = Form(...)):
     return await generate_lab_outline(files, instructions) 
 
@@ -22,7 +22,7 @@ async def delete_lab_api(lab_id: str = Form(...)):
 
 # working
 @router.post("/create_lab")
-async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[UploadFile] = File(None), lab_image: UploadFile = File(...)):
+async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), lab_image: UploadFile = File(...)):
     return await create_lab(lab_name, lab_description, lab_outline, files, lab_image)
 
 # working
