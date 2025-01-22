@@ -86,13 +86,17 @@ async def submit_module_for_structure_generation_api(course_id: str = Form(...),
 
 # /submit_module_for_deliverables_generation -> takes in the course_id, module_id and the reviewed files and submits them for final generation to the deliverables_generation_queue
 @router.post("/submit_module_for_deliverables_generation")
-async def submit_module_for_deliverables_generation_api(course_id: str = Form(...), module_id: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 7, "in_deliverables_generation_queue")
+async def submit_module_for_deliverables_generation_api(course_id: str = Form(...), module_id: str = Form(...), voice_name: str = Form(...), assessment: bool = Form(...), chatbot: bool = Form(...)):
+    return await submit_module_for_deliverables_step(course_id, module_id, 7, voice_name, assessment, chatbot, "in_deliverables_generation_queue")
 
 # /submit_for_publishing_pipeline -> takes in the course_id and submits the course for the publishing pipeline
 @router.post("/submit_for_publishing_pipeline")
 async def submit_for_publishing_pipeline_api(course_id: str = Form(...), module_id: str = Form(...)):
     return await submit_module_for_step(course_id, module_id, 9, "in_publishing_queue")
+
+@router.post("/submit_for_unpublishing_pipeline")
+async def submit_for_unpublishing_pipeline_api(course_id: str = Form(...), module_id: str = Form(...)):
+    return await submit_module_for_unpublish(course_id, module_id, 9, "in_publishing_queue")
 
 # done
 @router.post("/fetch_note")

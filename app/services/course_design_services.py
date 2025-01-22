@@ -626,8 +626,8 @@ async def replace_resources_in_module(course_id, module_id, resource_id, resourc
 def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_directory, resources):
     s3_file_manager = S3FileManager()
     for resource in resources:
-        next_step_key = f"qu-course-design/{course_id}/{module_id}/{            step_directory}/{resource.get('resource_name')}"
-        prev_step_key = f"qu-course-design/{course_id}/{module_id}/{            prev_step_directory}/{resource.get('resource_name')}"
+        next_step_key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource["resource_link"].split('/')[-1]}"
+        prev_step_key = f"qu-course-design/{course_id}/{module_id}/{prev_step_directory}/{resource["resource_link"].split('/')[-1]}"
         s3_file_manager.copy_file(prev_step_key, next_step_key)
 
 
@@ -649,8 +649,7 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
         "module_id") == module_id else m for m in course.get("modules", [])]
 
     atlas_client = AtlasClient()
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={        "$set": {            "modules": course.get("modules", [])
-        }
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])}
     })
 
     prev_step_resources = module.get(prev_step_directory, [])
@@ -664,7 +663,111 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
     if instructions:
         queue_payload["instructions"] = instructions
 
-    atlas_client.insert(step_directory, queue_payload)
+    # Check if the document already exists
+    existing_item = atlas_client.find(step_directory, {"course_id": course_id, "module_id": module_id}, limit=1)
+
+    if existing_item:
+        # If it exists, update it
+        atlas_client.update(step_directory, {"course_id": course_id, "module_id": module_id}, {"$set": queue_payload})
+    else:
+        # If it does not exist, insert a new document
+        atlas_client.insert(step_directory, queue_payload)
+
+    course = _convert_object_ids_to_strings(course)
+
+    return course
+
+
+async def submit_module_for_unpublish(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
+    step_directory = COURSE_DESIGN_STEPS[course_design_step]
+    prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
+
+    course, module = _get_course_and_module(course_id, module_id)
+
+    if not course:
+        return "Course not found"
+    if not module:
+        return "Module not found"
+
+    module["status"] = prev_step_directory
+    if instructions:
+        module["instructions"] = instructions
+    course["modules"] = [module if m.get(
+        "module_id") == module_id else m for m in course.get("modules", [])]
+
+    atlas_client = AtlasClient()
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])}
+    })
+
+    prev_step_resources = module.get(prev_step_directory, [])
+    _handle_s3_file_transfer(
+        course_id, module_id, prev_step_directory, step_directory, prev_step_resources)
+
+    queue_payload = {        
+        "course_id": course_id,
+        "module_id": module_id,
+    }
+
+    if instructions:
+        queue_payload["instructions"] = instructions
+
+    # Check if the document already exists
+    existing_item = atlas_client.find(step_directory, {"course_id": course_id, "module_id": module_id}, limit=1)
+
+    if existing_item:
+        # If it exists, update it
+        atlas_client.update(step_directory, {"course_id": course_id, "module_id": module_id}, {"$set": queue_payload})
+    else:
+        # If it does not exist, insert a new document
+        atlas_client.insert(step_directory, queue_payload)
+
+    course = _convert_object_ids_to_strings(course)
+
+    return course
+
+
+async def submit_module_for_deliverables_step(course_id, module_id, course_design_step, voice_name, assessment, chatbot, queue_name_suffix):
+    step_directory = COURSE_DESIGN_STEPS[course_design_step]
+    prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
+
+    course, module = _get_course_and_module(course_id, module_id)
+
+    if not course:
+        return "Course not found"
+    if not module:
+        return "Module not found"
+
+    module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
+    module["assessment"] = assessment
+   
+    course["modules"] = [module if m.get("module_id") == module_id else m for m in course.get("modules", [])]
+
+    atlas_client = AtlasClient()
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])
+        }
+    })
+
+    prev_step_resources = module.get(prev_step_directory, [])
+    _handle_s3_file_transfer(
+        course_id, module_id, prev_step_directory, step_directory, prev_step_resources)
+
+    queue_payload = {        "course_id": course_id,
+        "module_id": module_id,
+    }
+
+    if voice_name:
+        queue_payload["voice_name"] = voice_name
+        queue_payload["chatbot"] = chatbot
+
+    # Check if the document already exists
+    existing_item = atlas_client.find(step_directory, {"course_id": course_id, "module_id": module_id}, limit=1)
+
+    if existing_item:
+        # If it exists, update it
+        atlas_client.update(step_directory, {"course_id": course_id, "module_id": module_id}, {"$set": queue_payload})
+    else:
+        # If it does not exist, insert a new document
+        atlas_client.insert(step_directory, queue_payload)
 
     course = _convert_object_ids_to_strings(course)
 
