@@ -84,7 +84,7 @@ This repository contains a Streamlit application for demonstrating the features 
 
 
 
-def create_github_repo(repo_name, description="", private=False):
+def _create_github_repo(repo_name, description="", private=False):
     """Create a new GitHub repository."""
     url = f"{GITHUB_API_URL}/user/repos"
     headers = {
@@ -191,9 +191,9 @@ def update_file_in_github(repo_name, file_path, new_content, commit_message="Upd
         print(f"Failed to update file '{file_path}': {response.status_code}, {response.text}")
 
 
-def create_lab_in_github(repo_name, description, private=False):
+def create_repo_in_github(repo_name, description, private=False):
     """Create a new GitHub repository for a Streamlit lab."""
-    repo_url = create_github_repo(repo_name, description, private)
+    repo_url = _create_github_repo(repo_name, description, private)
 
     if repo_url:
         upload_file_to_github(repo_name, ".gitignore", gitignore_content, "Add .gitignore")
