@@ -24,6 +24,9 @@ from urllib.parse import quote, unquote
 
 COURSE_DESIGN_STEPS = [
     "raw_resources",  # automatic
+    "in_outline_generation_queue",  # expert-review-step
+    "pre_processed_outline",  # expert-review-step
+    "post_processed_outline",  # automatic
     "in_content_generation_queue",  # automatic
     "pre_processed_content",  # expert-review-step
     "post_processed_content",  # automatic
@@ -36,8 +39,6 @@ COURSE_DESIGN_STEPS = [
     "in_publishing_queue",  # automatic
     "published"  # expert-review-step
 ]
-
-
 def _get_course_and_module(course_id, module_id):
     atlas_client = AtlasClient()
     course = atlas_client.find("course_design", filter={               "_id": ObjectId(course_id)})
@@ -693,19 +694,24 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
         return "Course not found"
     if not module:
         return "Module not found"
-    
 
     if course_design_step == 1:
-        await remove_module_from_step(course_id, module_id, 9, "in_publishing_queue", instructions)
-        await remove_module_from_step(course_id, module_id, 7, "in_deliverables_generation_queue", instructions)
-        await remove_module_from_step(course_id, module_id, 4, "in_structure_generation_queue", instructions)
-        
+        await remove_module_from_step(course_id, module_id, 12, "in_publishing_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 10, "in_deliverables_generation_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 7, "in_structure_generation_queue", instructions) 
+        await remove_module_from_step(course_id, module_id, 4, "in_content_generation_queue", instructions) 
+
     if course_design_step == 4:
-        await remove_module_from_step(course_id, module_id, 9, "in_publishing_queue", instructions)
-        await remove_module_from_step(course_id, module_id, 7, "in_deliverables_generation_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 12, "in_publishing_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 10, "in_deliverables_generation_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 7, "in_structure_generation_queue", instructions)
         
     if course_design_step == 7:
-        await remove_module_from_step(course_id, module_id, 9, "in_publishing_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 12, "in_publishing_queue", instructions)
+        await remove_module_from_step(course_id, module_id, 10, "in_deliverables_generation_queue", instructions)
+        
+    if course_design_step == 10:
+        await remove_module_from_step(course_id, module_id, 12, "in_publishing_queue", instructions)
 
     module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
     if instructions:
