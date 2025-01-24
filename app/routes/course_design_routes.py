@@ -74,25 +74,33 @@ async def delete_resources_from_module_api(course_id: str = Form(...), module_id
 async def get_course_api(course_id: str):
     return await get_course(course_id)
 
+@router.post("/submit_module_for_outline_generation")
+async def submit_module_for_outline_generation_api(course_id: str = Form(...), module_id: str = Form(...), instructions: str = Form(...)):
+    return await submit_module_for_step(course_id, module_id, 1, "in_outline_generation_queue", instructions)
+
 # /submit_module_for_content_generation -> takes in the course_id, module_id, and submits the module for content generation to the content_generation_queue
 @router.post("/submit_module_for_content_generation")
-async def submit_module_for_content_generation_api(course_id: str = Form(...), module_id: str = Form(...), instructions: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 1, "in_content_generation_queue", instructions)
+async def submit_module_for_content_generation_api(course_id: str = Form(...), module_id: str = Form(...)):
+    return await submit_module_for_step(course_id, module_id, 4, "in_content_generation_queue")
 
 # /submit_module_for_structure_generation -> takes in the course_id, module_id and the reviewed files and submits them for structure generation to the structure_generation_queue
 @router.post("/submit_module_for_structure_generation")
 async def submit_module_for_structure_generation_api(course_id: str = Form(...), module_id: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 4, "in_structure_generation_queue")
+    return await submit_module_for_step(course_id, module_id, 7, "in_structure_generation_queue")
 
 # /submit_module_for_deliverables_generation -> takes in the course_id, module_id and the reviewed files and submits them for final generation to the deliverables_generation_queue
 @router.post("/submit_module_for_deliverables_generation")
-async def submit_module_for_deliverables_generation_api(course_id: str = Form(...), module_id: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 7, "in_deliverables_generation_queue")
+async def submit_module_for_deliverables_generation_api(course_id: str = Form(...), module_id: str = Form(...), voice_name: str = Form(...), assessment: bool = Form(...), chatbot: bool = Form(...)):
+    return await submit_module_for_deliverables_step(course_id, module_id, 10, voice_name, assessment, chatbot, "in_deliverables_generation_queue")
 
 # /submit_for_publishing_pipeline -> takes in the course_id and submits the course for the publishing pipeline
 @router.post("/submit_for_publishing_pipeline")
 async def submit_for_publishing_pipeline_api(course_id: str = Form(...), module_id: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 9, "in_publishing_queue")
+    return await submit_module_for_step(course_id, module_id, 12, "in_publishing_queue")
+
+@router.post("/submit_for_unpublishing_pipeline")
+async def submit_for_unpublishing_pipeline_api(course_id: str = Form(...), module_id: str = Form(...)):
+    return await submit_module_for_unpublish(course_id, module_id, 12, "in_publishing_queue")
 
 # done
 @router.post("/fetch_note")
