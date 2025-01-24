@@ -338,8 +338,9 @@ async def create_course(course_name, course_description, course_outline, files, 
     if files:
         for file in files:
             resource_type = _get_file_type(file)
-
-            key = f"qu-course-design/{course_id}/{step_directory}/{file.filename}"
+            file_id = str(ObjectId())
+            
+            key = f"qu-course-design/{course_id}/{step_directory}/{file_id}"
             await s3_file_manager.upload_file_from_frontend(file, key)
             key = quote(key)
             resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
@@ -364,8 +365,9 @@ async def create_course(course_name, course_description, course_outline, files, 
             if files:
                 for file in files:
                     resource_type = _get_file_type(file)
-
-                    key = f"qu-course-design/{course_id}/{str(module_id)}/{step_directory}/{file.filename}"
+                    file_id = str(ObjectId())
+            
+                    key = f"qu-course-design/{course_id}/{step_directory}/{file_id}"
                     await s3_file_manager.upload_file_from_frontend(file, key)
                     key = quote(key)
                     resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
