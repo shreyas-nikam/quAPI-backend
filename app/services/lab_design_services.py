@@ -18,7 +18,7 @@ import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
 from langchain_core.prompts import PromptTemplate
-
+from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -330,6 +330,10 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
     atlas_client.insert("lab_design", lab)
 
     lab = _convert_object_ids_to_strings(lab)
+    # Create Repo on GitHub
+    res = create_repo_in_github(lab["_id"], lab_description, private=False)
+    print("Res: ", res)
+    # Create it as an object id and store the unique objectid
     return lab
 
 
@@ -656,6 +660,9 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
     })
 
     lab = _convert_object_ids_to_strings(lab)
+    print("Lab ID: ", lab_id)
+    res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
+    print("Res: ", res) 
     return lab
 
 async def generate_technical_specifications_for_lab(lab_id):
@@ -723,6 +730,9 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     lab = _convert_object_ids_to_strings(lab)
 
+    res = upload_file_to_github(lab_id, "technical_specifications.md", response, "Add technical specifications")
+    print("Res: ", res) 
+
     return lab
 
 
@@ -778,7 +788,13 @@ async def save_business_use_case(lab_id, business_use_case):
     })
 
     lab = _convert_object_ids_to_strings(lab)
-
+    res = update_file_in_github(
+        repo_name=lab_id, 
+        file_path="business_requirements.md", 
+        new_content=business_use_case, 
+        commit_message=f"Update business requirements to {latest_version.get('version') + 1.0}"
+    )
+    print("Res: ", res)
     return lab
 
 async def save_technical_specifications(lab_id, technical_specifications):
@@ -819,6 +835,13 @@ async def save_technical_specifications(lab_id, technical_specifications):
     })
 
     lab = _convert_object_ids_to_strings(lab)
+    res = update_file_in_github(
+        repo_name=lab_id, 
+        file_path="technical_specifications.md", 
+        new_content=technical_specifications, 
+        commit_message=f"Update technical specifications to {latest_version.get('version') + 1.0}"
+    )
+    print("Res: ", res)
     return lab
 
 
@@ -844,3 +867,35 @@ async def save_lab_instructions(lab_id, instructions):
     lab = _convert_object_ids_to_strings(lab)
 
     return lab
+
+
+async def submit_lab_for_generation(lab_id, queue_name_suffix):
+    atlas_client = AtlasClient()
+
+    try:
+        # Fetch the lab
+        lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+        if not lab:
+            return "Lab not found"
+        lab = lab[0]
+
+        # Update the lab status
+        # queue_payload = {
+        #     "lab_id": str(lab_id),
+        #     "status": f"{queue_name_suffix.replace('_', ' ').title()}",
+        # }
+        # atlas_client.update("lab_design", {"_id": ObjectId(lab_id)}, {"$set": {"status": queue_payload["status"]}})
+
+        # Check and update/insert into step directory
+        existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
+        if existing_item:
+            atlas_client.update(queue_name_suffix, {"lab_id": str(lab_id)})
+        else:
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+
+        # Convert ObjectId fields to strings
+        lab = _convert_object_ids_to_strings(lab)
+        return lab
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"

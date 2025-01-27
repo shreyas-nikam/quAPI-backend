@@ -99,3 +99,7 @@ async def save_lab_instructions_api(lab_id: str = Form(...),
                            instructions: str = Form(...)):
     return await save_lab_instructions(lab_id, instructions)
 
+@router.post("/submit_lab_for_generation")
+async def submit_lab_for_generation_api(lab_id: str = Form(...)):
+    return await submit_lab_for_generation(lab_id, "in_lab_generation_queue")
+
