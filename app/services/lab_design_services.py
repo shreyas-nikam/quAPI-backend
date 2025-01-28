@@ -18,7 +18,7 @@ import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
 from langchain_core.prompts import PromptTemplate
-from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github
+from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -899,3 +899,48 @@ async def submit_lab_for_generation(lab_id, queue_name_suffix):
 
     except Exception as e:
         return f"An error occurred: {str(e)}"
+    
+
+async def create_github_issue_in_lab(lab_id, issue_title, issue_description, labels, uploaded_files):
+    if labels == ['']:
+        labels = []
+    if uploaded_files:
+        s3_file_manager = S3FileManager()
+        issue_description += "\n\n**Supporting Screenshots:**\n"
+        for index, file in enumerate(uploaded_files):
+            # Get file type
+            resource_type = _get_file_type(file)
+
+            # Define the S3 key
+            key = f"qu-lab-design/{lab_id}/image_{index}.{file.filename.split('.')[-1]}"
+            await s3_file_manager.upload_file_from_frontend(file, key)
+
+            # URL encode the key for S3
+            key = quote(key)
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}" 
+
+            # Append the image to the description in Markdown format
+            issue_description += f"[image-screenshot-{index}]({resource_link})\n"
+            
+    if labels:
+        # Ensure labels are properly formatted
+        if isinstance(labels, list) and len(labels) == 1 and isinstance(labels[0], str):
+            # Split the single string in the list into multiple elements
+            # labels = [label.strip() for label in labels[0].split(",")]
+            labels = [label.strip().lower() for label in labels[0].split(",")] 
+
+    atlas_client = AtlasClient()
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return {"status": 404, "message": "Lab not found"}
+    
+    lab = lab[0]
+    
+    # Call the function to create the GitHub issue
+    res = create_github_issue(lab_id, issue_title, issue_description, labels)
+    
+    if res is None:
+        return {"status": 400, "message": "Unable to create issue"}
+    
+    return res    

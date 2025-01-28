@@ -103,3 +103,22 @@ async def save_lab_instructions_api(lab_id: str = Form(...),
 async def submit_lab_for_generation_api(lab_id: str = Form(...)):
     return await submit_lab_for_generation(lab_id, "in_lab_generation_queue")
 
+@router.post("/create_github_issue")
+async def create_github_issue_api(
+    lab_id: str = Form(...),
+    issue_title: str = Form(...),
+    issue_description: str = Form(...),
+    labels: Optional[List[str]] = Form(None),
+    uploaded_files: Optional[List[UploadFile]] = Form(None)
+):
+    # Pass the form data values directly, not empty lists
+    response = await create_github_issue_in_lab(
+        lab_id, 
+        issue_title, 
+        issue_description, 
+        labels=labels if labels else [],  # Use the provided labels or default to empty list
+        uploaded_files=uploaded_files if uploaded_files else []  # Use the provided files or default to empty list
+    )
+    return response
+
+
