@@ -66,10 +66,13 @@ async def delete_resources_from_lab_api(lab_id: str = Form(...), resource_id: st
 async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
 
+@router.post("/generate_idea_for_concept_lab")
+async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
+    return await generate_idea_for_concept_lab(lab_id, instructions)
 
 @router.post("/generate_business_use_case_for_lab")
-async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
-    return await generate_business_use_case_for_lab(lab_id, instructions)
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...)):
+    return await generate_business_use_case_for_lab(lab_id)
 
 @router.post("/generate_technical_specifications_for_lab")
 async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...)):
@@ -79,6 +82,10 @@ async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...))
 async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...)):
     return await regenerate_with_feedback(content, feedback)
 
+@router.post("/save_concept_lab_idea")
+async def save_concept_lab_idea_api(lab_id: str = Form(...), 
+                           idea: str = Form(...)):
+    return await save_concept_lab_idea(lab_id, idea)
 
 @router.post("/save_business_use_case")
 async def save_business_use_case_api(lab_id: str = Form(...), 

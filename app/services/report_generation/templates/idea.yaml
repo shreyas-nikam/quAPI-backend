@@ -1,0 +1,61 @@
+name: Idea Template
+logo: 'https://www.quantuniversity.com/assets/img/logo5.jpg'
+css: |
+    body {
+        font-family: 'Arial', sans-serif;
+        line-height: 1.5;
+        margin: 1cm;
+        color: #333333;
+    }
+    .document {
+        max-width: 210mm;
+        margin: 0 auto;
+        position: relative;
+    }
+    .logo {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 15px; 
+        height: 15px;
+    }
+    h1 {
+        color: #004d40; /* Dark teal for headings */
+        font-size: 24px;
+        font-weight: bold;
+    }
+    h2, h3 {
+        color: #00796b;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    p {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th {
+        background-color: #e0f2f1;
+        border: 1px solid #004d40;
+        padding: 10px;
+        font-weight: bold;
+    }
+    td {
+        border: 1px solid #cccccc;
+        padding: 10px;
+    }
+header_template: |
+    @page {
+        @top-left {
+            content: 'Business Report';
+            font-size: 14pt;
+            color: #004d40;
+        }
+        @bottom-right {
+            content: 'Page ' counter(page) ' of ' counter(pages);
+        }
+    }
