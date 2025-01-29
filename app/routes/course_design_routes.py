@@ -125,3 +125,7 @@ async def add_artifact_to_course_api(course_id: str = Form(...),
                                             artifact_type: str = Form(...), 
                                             artifact_id: str = Form(...)):
     return await add_artifact_to_course(course_id, artifact_type, artifact_id)
+
+@router.get("/fetch_quskillbridge_course_id/{course_id}")
+async def fetch_qu_skill_bridge_course_id_api(course_id: str):
+    return await fetch_qu_skill_bridge_course_id(course_id)
