@@ -979,3 +979,12 @@ async def add_artifact_to_course(course_id, artifact_type, artifact_id):
     course = await get_course(course_id)
     course = _convert_object_ids_to_strings(course)
     return course
+
+
+async def fetch_qu_skill_bridge_course_id(course_id):
+    atlas_client = AtlasClient()
+    course = atlas_client.find("courses", filter={"course_id": ObjectId(course_id)})
+    if not course:
+        return "Course not found"
+    course = course[0]
+    return str(course["_id"])
