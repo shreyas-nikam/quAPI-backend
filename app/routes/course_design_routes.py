@@ -102,6 +102,10 @@ async def submit_for_publishing_pipeline_api(course_id: str = Form(...), module_
 async def submit_for_unpublishing_pipeline_api(course_id: str = Form(...), module_id: str = Form(...)):
     return await submit_module_for_unpublish(course_id, module_id, 12, "in_publishing_queue")
 
+@router.post("/submit_course_for_publishing_pipeline")
+async def submit_for_publishing_pipeline_api(course_id: str = Form(...)):
+    return await submit_course_for_publishing(course_id, 13, "in_publishing_queue")
+
 # done
 @router.post("/fetch_note")
 async def fetch_note_api(url: str = Form(...)):
