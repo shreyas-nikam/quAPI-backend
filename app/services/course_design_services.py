@@ -752,7 +752,6 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
 
     return course
 
-
 async def submit_module_for_unpublish(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
     prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
@@ -800,6 +799,54 @@ async def submit_module_for_unpublish(course_id, module_id, course_design_step, 
 
     return course
 
+async def submit_course_for_publishing(course_id: str, step_directory: str, queue_name_suffix: str):
+    # Initialize Atlas Client
+    atlas_client = AtlasClient()
+
+    # Validate step_directory
+    step_directory = COURSE_DESIGN_STEPS[step_directory]
+    if not step_directory:
+        return "Invalid step directory", None
+    
+    # Fetch course by ID
+    course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+    if not course:
+        return "Course not found", None
+    course = course[0]
+
+    # Format status using queue_name_suffix and update the course
+    formatted_status = queue_name_suffix.replace('_', ' ').title()
+    update_status_payload = {"$set": {"status": formatted_status}}
+
+    update_response = atlas_client.update(
+        "course_design", 
+        filter={"_id": ObjectId(course_id)}, 
+        update=update_status_payload
+    )
+
+    if not update_response:
+        raise ValueError("Failed to update course status.")
+
+    # Create the queue payload
+    queue_payload = {"course_id": course_id}
+
+    # Check if the document exists in the step directory
+    existing_item = atlas_client.find(step_directory, {"course_id": course_id}, limit=1)
+    if existing_item:
+        # Update the existing document
+        update_response = atlas_client.update(step_directory, {"course_id": course_id}, {"$set": queue_payload})
+        if not update_response:
+            raise ValueError("Failed to update the queue document.")
+    else:
+        # Insert a new document if it doesn't exist
+        insert_response = atlas_client.insert(step_directory, queue_payload)
+        if not insert_response:
+            raise ValueError("Failed to insert new queue document.")
+
+    # Convert object IDs to strings before returning
+    course = _convert_object_ids_to_strings(course)
+
+    return course, None  # Return course data with no errors
 
 async def submit_module_for_deliverables_step(course_id, module_id, course_design_step, voice_name, assessment, chatbot, queue_name_suffix):
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
