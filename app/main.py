@@ -111,6 +111,7 @@ app.include_router(lecture_design_router)
 app.include_router(writing_generation_router)
 app.include_router(user_router)
 app.include_router(lab_design_router)
+app.include_router(router)
 app.include_router(podcast_design_router)
 
 

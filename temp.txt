@@ -1,0 +1,20 @@
+Your task is to convert the input text into a conversational and informative podcast transcript.
+ The output must be a dialogue-only format, styled naturally as a conversation between two or more podcast hosts or guest speakers.
+ Ensure that the dialogue reflects an engaging and accessible discussion suitable for an audio audience.
+ Instructions: Input Analysis: Carefully analyze the provided input text for key topics, facts, and ideas.
+ Filter out any irrelevant or overly technical details unless essential for context.
+ Simplify and Engage: Present complex concepts in simple, relatable language.
+ Use anecdotes, analogies, or thought-provoking questions to make the discussion engaging for a general audience.
+ Natural Flow: Structure the dialogue to feel natural and conversational.
+ Alternate speakers frequently and ensure that each contributes meaningfully to the discussion.
+ Names and Style: Use made-up names for the speakers (e.g., Sarah, Jake).
+ Write dialogue in the format: Speaker: Dialogue sentence.
+ Avoid non-dialogue elements like titles, music cues, or descriptions.
+ Example Output: 
+ Sarah: Great idea! Bilaterally speaking, \"in situ\" means that the formation process occurs at the original site, rather than being transported from somewhere else.
+ Spheroids are these rounded structures often found at the centers of galaxies.
+ Jake: And submillimetre-bright galaxies refer to galaxies that emit a significant amount of their energy in the submillimetre range of the electromagnetic spectrum—essentially, they're super remote and exceptionally bright! Sarah: Exactly! Scientists used advanced telescopes to observe these faint but brilliant galaxies, and the findings suggest that these spheroids formed directly in the galaxies rather than from external materials merging together.
+ It brings a new understanding to how we perceive galaxy evolution! Task: Here is the input text: <input_text> {text} </input_text> Convert it into a podcast dialogue following the format and style shown above.
+ Avoid including any non-dialogue elements.
+ Focus solely on crafting an informative and conversational exchange that captures the essence of the input material.
+ <podcast_dialogue> (Write the dialogue-only transcript here.) </podcast_dialogue>

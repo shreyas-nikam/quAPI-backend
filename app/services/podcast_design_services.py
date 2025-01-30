@@ -47,9 +47,8 @@ PODCAST_DESIGN_STEPS = [
 
 # Voice mapping for speakers
 VOICE_MAP = {
-    "female-1": "alloy",
     "male-1": "onyx",
-    "female-2": "shimmer",
+    "female-1": "alloy",
 }
 
 def _get_prompt(prompt_name):
@@ -375,7 +374,7 @@ async def generate_audio_for_podcast(outline_text: str, podcast_id: str):
     with cf.ThreadPoolExecutor() as executor:
         futures = []
         # Detect the number of speakers (assuming 2 for this case)
-        speaker_voices = random.sample(list(VOICE_MAP.values()), 2)  # Randomly select two voices        
+        speaker_voices = list(VOICE_MAP.values())
         lines = transcript.split("\n")
 
         voiceToggle = True

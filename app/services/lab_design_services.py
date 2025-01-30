@@ -18,10 +18,11 @@ import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
 from langchain_core.prompts import PromptTemplate
-
+from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
+    "idea",
     "business_use_case", #automatic
     "technical_specifications", #expert-review-step
     "review_project", #automatic
@@ -330,6 +331,10 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
     atlas_client.insert("lab_design", lab)
 
     lab = _convert_object_ids_to_strings(lab)
+    # Create Repo on GitHub
+    res = create_repo_in_github(lab["_id"], lab_description, private=False)
+    print("Res: ", res)
+    # Create it as an object id and store the unique objectid
     return lab
 
 
@@ -600,8 +605,9 @@ async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_ste
 
     # return file url in s3
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
-    
-async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
+
+
+async def generate_idea_for_concept_lab(lab_id: str, instructions: str):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -611,7 +617,7 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
     
     lab = lab[0]
 
-    prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+    prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
 
     inputs = {
         "NAME": lab.get("lab_name"),
@@ -631,21 +637,75 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
         response = response[:-3].strip()
 
     await convert_to_pdf_for_lab(lab_id, response, "business", 1)
+    
 
-    if not lab.get("business_use_case_history"):
-        lab["business_use_case_history"] = [{
-            "business_use_case": response,
-            "timestamp": datetime.datetime.now(),
-            "version": 1.0
-        }]
-    else:
-        latest_version = lab["business_use_case_history"][-1]
-        new_version = {
-            "business_use_case": response,
-            "timestamp": datetime.datetime.now(),
-            "version": latest_version.get("version") + 1.0
+    # Replace the `idea_history` and `idea` fields
+    lab["idea_history"] = [{
+        "idea": response,
+        "timestamp": datetime.datetime.now(),
+        "version": 1.0
+    }]
+    lab["idea"] = response
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "status": "Idea Review",
+            "idea_history": lab["idea_history"],
+            "idea": lab["idea"]
         }
-        lab["business_use_case_history"].append(new_version)
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+    res = upload_file_to_github(lab_id, "idea.md", response, "Add concept lab idea.")
+    return lab
+
+
+async def generate_business_use_case_for_lab(lab_id: str):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+    idea_history = lab.get("idea_history")
+    if not idea_history:
+        return "Idea not found"
+    
+    idea = idea_history[-1].get("idea")
+    
+    inputs = {
+        "NAME": lab.get("lab_name"),
+        "DESCRIPTION": lab.get("lab_description"),
+        "INSTRUCTIONS": idea
+    }
+    
+    prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
+    llm = LLM("chatgpt")
+    response = _get_response(llm, prompt, inputs, output_type="str")
+
+    if response.startswith("```"):
+        response = response[3:].strip()
+    if response.startswith("markdown"):
+        response = response[8:].strip()
+    # if the response ends with ``` remove it
+    if response.endswith("```"):
+        response = response[:-3].strip()
+        
+    
+    await convert_to_pdf_for_lab(lab_id, response, "business", 2)
+    
+    # Replace the `business_use_case_history` and `business` fields
+    lab["business_use_case_history"] = [{
+        "business_use_case": response,
+        "timestamp": datetime.datetime.now(),
+        "version": 1.0
+    }]
+    lab["business_use_case"] = response
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
@@ -656,6 +716,7 @@ async def generate_business_use_case_for_lab(lab_id: str, instructions: str):
     })
 
     lab = _convert_object_ids_to_strings(lab)
+    res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
 async def generate_technical_specifications_for_lab(lab_id):
@@ -694,24 +755,15 @@ async def generate_technical_specifications_for_lab(lab_id):
     if response.endswith("```"):
         response = response[:-3].strip()
 
+    await convert_to_pdf_for_lab(lab_id, response, "technical", 3)
+    
+    # Replace the `technical_specifications_history` and `technical_specifications` fields
+    lab["technical_specifications_history"] = [{
+        "technical_specifications": response,
+        "timestamp": datetime.datetime.now(),
+        "version": 1.0
+    }]
     lab["technical_specifications"] = response
-
-    await convert_to_pdf_for_lab(lab_id, response, "technical", 2)
-
-    if not lab.get("technical_specifications_history"):
-        lab["technical_specifications_history"] = [{
-            "technical_specifications": response,
-            "timestamp": datetime.datetime.now(),
-            "version": 1.0
-        }]
-    else:
-        latest_version = lab["technical_specifications_history"][-1]
-        new_version = {
-            "technical_specifications": response,
-            "timestamp": datetime.datetime.now(),
-            "version": latest_version.get("version") + 1.0
-        }
-        lab["technical_specifications_history"].append(new_version)
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
@@ -723,6 +775,7 @@ async def generate_technical_specifications_for_lab(lab_id):
 
     lab = _convert_object_ids_to_strings(lab)
 
+    res = upload_file_to_github(lab_id, "technical_specifications.md", response, "Add technical specifications")
     return lab
 
 
@@ -740,6 +793,53 @@ async def regenerate_with_feedback(content, feedback):
 
     return response
 
+async def save_concept_lab_idea(lab_id, idea):
+    atlas_client = AtlasClient()
+
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return "Lab not found"
+    
+    lab = lab[0]
+
+    lab["idea"] = idea
+    await convert_to_pdf_for_lab(lab_id, idea, "idea", 1)
+
+    idea_history = lab.get("idea_history", [])
+
+    if not idea_history:
+        idea_history = [{
+            "idea": idea,
+            "timestamp": datetime.datetime.now(),
+            "version": 1.0
+        }]
+    else:
+        latest_version = idea_history[-1]
+        new_version = {
+            "idea": idea,
+            "timestamp": datetime.datetime.now(),
+            "version": latest_version.get("version") + 1.0
+        }
+        idea_history.append(new_version)
+
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "idea": idea,
+            "idea_history": idea_history
+        }
+    })
+
+    lab = _convert_object_ids_to_strings(lab)
+    res = update_file_in_github(
+        repo_name=lab_id, 
+        file_path="idea.md", 
+        new_content=idea, 
+        commit_message=f"Update Idea to {latest_version.get('version') + 1.0}"
+    )
+    print("Res: ", res)
+    return lab
+
 async def save_business_use_case(lab_id, business_use_case):
     atlas_client = AtlasClient()
 
@@ -751,7 +851,7 @@ async def save_business_use_case(lab_id, business_use_case):
     lab = lab[0]
 
     lab["business_use_case"] = business_use_case
-    await convert_to_pdf_for_lab(lab_id, business_use_case, "business", 1)
+    await convert_to_pdf_for_lab(lab_id, business_use_case, "business", 2)
 
     business_use_case_history = lab.get("business_use_case_history", [])
 
@@ -778,7 +878,13 @@ async def save_business_use_case(lab_id, business_use_case):
     })
 
     lab = _convert_object_ids_to_strings(lab)
-
+    res = update_file_in_github(
+        repo_name=lab_id, 
+        file_path="business_requirements.md", 
+        new_content=business_use_case, 
+        commit_message=f"Update business requirements to {latest_version.get('version') + 1.0}"
+    )
+    print("Res: ", res)
     return lab
 
 async def save_technical_specifications(lab_id, technical_specifications):
@@ -792,7 +898,7 @@ async def save_technical_specifications(lab_id, technical_specifications):
     lab = lab[0]
 
     lab["technical_specifications"] = technical_specifications
-    await convert_to_pdf_for_lab(lab_id, technical_specifications, "technical", 2)
+    await convert_to_pdf_for_lab(lab_id, technical_specifications, "technical", 3)
 
     technical_specifications_history = lab.get("technical_specifications_history", [])
 
@@ -819,6 +925,13 @@ async def save_technical_specifications(lab_id, technical_specifications):
     })
 
     lab = _convert_object_ids_to_strings(lab)
+    res = update_file_in_github(
+        repo_name=lab_id, 
+        file_path="technical_specifications.md", 
+        new_content=technical_specifications, 
+        commit_message=f"Update technical specifications to {latest_version.get('version') + 1.0}"
+    )
+    print("Res: ", res)
     return lab
 
 
@@ -844,3 +957,80 @@ async def save_lab_instructions(lab_id, instructions):
     lab = _convert_object_ids_to_strings(lab)
 
     return lab
+
+
+async def submit_lab_for_generation(lab_id, queue_name_suffix):
+    atlas_client = AtlasClient()
+
+    try:
+        # Fetch the lab
+        lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+        if not lab:
+            return "Lab not found"
+        lab = lab[0]
+
+        # Update the lab status
+        # queue_payload = {
+        #     "lab_id": str(lab_id),
+        #     "status": f"{queue_name_suffix.replace('_', ' ').title()}",
+        # }
+        # atlas_client.update("lab_design", {"_id": ObjectId(lab_id)}, {"$set": {"status": queue_payload["status"]}})
+
+        # Check and update/insert into step directory
+        existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
+        if existing_item:
+            atlas_client.update(queue_name_suffix, {"lab_id": str(lab_id)})
+        else:
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+
+        # Convert ObjectId fields to strings
+        lab = _convert_object_ids_to_strings(lab)
+        return lab
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+    
+
+async def create_github_issue_in_lab(lab_id, issue_title, issue_description, labels, uploaded_files):
+    if labels == ['']:
+        labels = []
+    if uploaded_files:
+        s3_file_manager = S3FileManager()
+        issue_description += "\n\n**Supporting Screenshots:**\n"
+        for index, file in enumerate(uploaded_files):
+            # Get file type
+            resource_type = _get_file_type(file)
+
+            # Define the S3 key
+            key = f"qu-lab-design/{lab_id}/image_{index}.{file.filename.split('.')[-1]}"
+            await s3_file_manager.upload_file_from_frontend(file, key)
+
+            # URL encode the key for S3
+            key = quote(key)
+            resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}" 
+
+            # Append the image to the description in Markdown format
+            issue_description += f"[image-screenshot-{index}]({resource_link})\n"
+            
+    if labels:
+        # Ensure labels are properly formatted
+        if isinstance(labels, list) and len(labels) == 1 and isinstance(labels[0], str):
+            # Split the single string in the list into multiple elements
+            # labels = [label.strip() for label in labels[0].split(",")]
+            labels = [label.strip().lower() for label in labels[0].split(",")] 
+
+    atlas_client = AtlasClient()
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab:
+        return {"status": 404, "message": "Lab not found"}
+    
+    lab = lab[0]
+    
+    # Call the function to create the GitHub issue
+    res = create_github_issue(lab_id, issue_title, issue_description, labels)
+    
+    if res is None:
+        return {"status": 400, "message": "Unable to create issue"}
+    
+    return res    

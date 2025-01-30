@@ -76,6 +76,7 @@ identifier_mappings = {
 
 async def writing_outline(files, instructions, identifier):
     prompt = identifier.upper() + "_PROMPT"
+    
     identifier_text = identifier_mappings.get(identifier, "Writing")
     outline_instructions = _get_prompt(prompt)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))

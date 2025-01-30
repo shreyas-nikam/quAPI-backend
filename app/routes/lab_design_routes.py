@@ -6,7 +6,7 @@ router = APIRouter()
 
 # done
 @router.post("/generate_lab_outline")
-async def generate_lab_outline_api(files: List[UploadFile] = File(...),
+async def generate_lab_outline_api(files: List[List[UploadFile]] = File(...),
                                   instructions: str = Form(...)):
     return await generate_lab_outline(files, instructions) 
 
@@ -22,7 +22,7 @@ async def delete_lab_api(lab_id: str = Form(...)):
 
 # working
 @router.post("/create_lab")
-async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[UploadFile] = File(None), lab_image: UploadFile = File(...)):
+async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), lab_image: UploadFile = File(...)):
     return await create_lab(lab_name, lab_description, lab_outline, files, lab_image)
 
 # working
@@ -66,10 +66,13 @@ async def delete_resources_from_lab_api(lab_id: str = Form(...), resource_id: st
 async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
 
+@router.post("/generate_idea_for_concept_lab")
+async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
+    return await generate_idea_for_concept_lab(lab_id, instructions)
 
 @router.post("/generate_business_use_case_for_lab")
-async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
-    return await generate_business_use_case_for_lab(lab_id, instructions)
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...)):
+    return await generate_business_use_case_for_lab(lab_id)
 
 @router.post("/generate_technical_specifications_for_lab")
 async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...)):
@@ -79,6 +82,10 @@ async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...))
 async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...)):
     return await regenerate_with_feedback(content, feedback)
 
+@router.post("/save_concept_lab_idea")
+async def save_concept_lab_idea_api(lab_id: str = Form(...), 
+                           idea: str = Form(...)):
+    return await save_concept_lab_idea(lab_id, idea)
 
 @router.post("/save_business_use_case")
 async def save_business_use_case_api(lab_id: str = Form(...), 
@@ -98,4 +105,27 @@ async def convert_to_pdf_for_lab_api(lab_id: str = Form(...), markdown: str = Fo
 async def save_lab_instructions_api(lab_id: str = Form(...), 
                            instructions: str = Form(...)):
     return await save_lab_instructions(lab_id, instructions)
+
+@router.post("/submit_lab_for_generation")
+async def submit_lab_for_generation_api(lab_id: str = Form(...)):
+    return await submit_lab_for_generation(lab_id, "in_lab_generation_queue")
+
+@router.post("/create_github_issue")
+async def create_github_issue_api(
+    lab_id: str = Form(...),
+    issue_title: str = Form(...),
+    issue_description: str = Form(...),
+    labels: Optional[List[str]] = Form(None),
+    uploaded_files: Optional[List[UploadFile]] = Form(None)
+):
+    # Pass the form data values directly, not empty lists
+    response = await create_github_issue_in_lab(
+        lab_id, 
+        issue_title, 
+        issue_description, 
+        labels=labels if labels else [],  # Use the provided labels or default to empty list
+        uploaded_files=uploaded_files if uploaded_files else []  # Use the provided files or default to empty list
+    )
+    return response
+
 

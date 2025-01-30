@@ -6,7 +6,7 @@ router = APIRouter()
 
 # done
 @router.post("/generate_lecture_outline")
-async def generate_lecture_outline_api(files: List[UploadFile] = File(...),
+async def generate_lecture_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...)):
     return await generate_lecture_outline(files, instructions) 
 
@@ -22,7 +22,7 @@ async def delete_lecture_api(lecture_id: str = Form(...)):
 
 # done
 @router.post("/create_lecture")
-async def create_lecture_api(lecture_name: str = Form(...),  lecture_description: str = Form(...), lecture_outline: str = Form(...), files: Optional[UploadFile] = File(None), lecture_image: UploadFile = File(...)):
+async def create_lecture_api(lecture_name: str = Form(...),  lecture_description: str = Form(...), lecture_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), lecture_image: UploadFile = File(...)):
     return await create_lecture(lecture_name, lecture_description, lecture_outline, files, lecture_image)
 
 # done
