@@ -38,33 +38,9 @@ templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 
 app = FastAPI()
 
-# Marimo server
-server = marimo.create_asgi_app()
-app_names: list[str] = []
-
-# Path to the "ui" directory
-notebooks_dir = Path(__file__).parent / "ui"
-print(notebooks_dir)
-
-# Iterate over Python files in the "ui" directory
-for filename in sorted(notebooks_dir.iterdir()):
-    if filename.suffix == ".py":  # Only process .py files
-        app_name = filename.stem  # Extract app name (file name without extension)
-        
-        # Add the app to the server
-        server = server.with_app(path=f"/{app_name}", root=filename)
-        
-        # Print the app details (corrected f-string syntax)
-        print(f"Added app: {app_name} at path /{app_name} with root as {filename}")
-        
-        # Append the app name to the list
-        app_names.append(app_name)
-
 
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory=templates_dir)
-
-
 
 
 @app.exception_handler(HTTPException)
@@ -82,13 +58,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SECRET_KEY", "your-secret-key")
 )
-app.mount("/marimo/", server.build())
 
-@app.get("/marimo")
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "home.html", {"request": request, "app_names": app_names}
-    )
 
 # Allow CORS for the frontend
 origins = [
