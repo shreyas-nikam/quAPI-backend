@@ -988,3 +988,33 @@ async def fetch_qu_skill_bridge_course_id(course_id):
         return "Course not found"
     course = course[0]
     return str(course["_id"])
+
+async def update_course_info(course_id, course_name, course_description, course_outline):
+    atlas_client = AtlasClient()
+    
+    # Fetch the course from the database
+    course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+    
+    if not course:
+        return "Course not found"
+    
+    course = course[0]  # Assuming 'find' returns a list, get the first match
+    
+    # Prepare the payload for the update
+    update_payload = {
+        "course_name": course_name,
+        "course_description": course_description,
+        "course_outline": course_outline
+    }
+    
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Assuming 'courses' is the correct collection name
+        filter={"_id": ObjectId(course_id)},
+        update={"$set": update_payload}
+    )
+
+    if update_response:
+        return "Course information updated successfully"
+    else:
+        return "Failed to update course information"
