@@ -324,7 +324,8 @@ async def create_course(course_name, course_description, course_outline, files, 
     key = quote(key)
     course_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
-    course = {        "_id": course_id,
+    course = {        
+        "_id": course_id,
         "course_name": course_name,
         "course_description": course_description,
         "course_image": course_image_link,
