@@ -57,7 +57,7 @@ jobs:
           ORIGINAL_FILES=$(jq -r '."original files"' diff.json)
           PROMPT="Please review the following code changes for any obvious quality or security issues. Provide a brief report in markdown format:\n\nDIFF:\n${DIFF_CONTENT}\n\nORIGINAL FILES:\n${ORIGINAL_FILES}"
           jq -n --arg prompt "$PROMPT" '{
-            "model": "gpt-4",
+            "model": "o3-mini",
             "messages": [
               { "role": "system", "content": "You are a code reviewer." },
               { "role": "user", "content": $prompt }
