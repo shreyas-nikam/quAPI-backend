@@ -4,7 +4,7 @@ from app.utils.atlas_client import AtlasClient
 import ast
 from bson.objectid import ObjectId
 import os
-from qu_audit.qu_audit import *
+from app.services.qu_audit.qu_audit import *
 
 # Function to get all templates
 async def get_templates():
