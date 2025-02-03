@@ -19,6 +19,8 @@ import os
 import logging
 from dotenv import load_dotenv
 from fastapi import Form
+from pathlib import Path
+import tempfile
 
 # Load environment variables
 load_dotenv()
@@ -32,29 +34,13 @@ logger = logging.getLogger("weasyprint")
 if not logger.handlers:
     logger.addHandler(logging.NullHandler())
 logger.setLevel(logging.ERROR)
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 
 app = FastAPI()
 
-ui_dir = os.path.join(os.path.dirname(__file__), "ui")
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-server = marimo.create_asgi_app()
-app_names: list[str] = []
 
-for filename in sorted(os.listdir(ui_dir)):
-    if filename.endswith(".py"):
-        app_name = os.path.splitext(filename)[0]
-        app_path = os.path.join(ui_dir, filename)
-        server = server.with_app(path=f"/{app_name}", root=app_path)
-        app_names.append(app_name)
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory=templates_dir)
-
-
-@app.get("/marimo-home/")
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "home.html", {"request": request, "app_names": app_names}
-    )
 
 
 @app.exception_handler(HTTPException)
@@ -72,7 +58,6 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SECRET_KEY", "your-secret-key")
 )
-app.mount("/marimo/", server.build())
 
 
 # Allow CORS for the frontend

@@ -209,6 +209,7 @@ def create_repo_in_github(repo_name, description, private=False):
 
 # for creating lab
 # create_lab_in_github("streamlit-lab", "Streamlit Lab for QuCreate", private=False)
+# Create it as an object id and store the unique object
 
 # for uploading the business requirements and technical requirements
 # upload_file_to_github("streamlit-lab", "business_requirements.md", business_requirements_content, "Add business requirements")
