@@ -940,22 +940,36 @@ def parse_s3_url(url: str):
 
 
 async def fetch_note(url):
+    """
+    Fetches the note content from the provided S3 URL.
+    
+    Args:
+        url (str): The S3 URL of the note file.
+        
+    Returns:
+        dict: The content of the note file and its content type.
+    """
+    
+    # Initialize S3 file manager
     s3_file_manager = S3FileManager()
+    
     try:
-        bucket_name, key = parse_s3_url(url)
+        # Parse the S3 URL to extract the bucket and key
+        _, key = parse_s3_url(url)
 
         # Get the file from S3
         response = s3_file_manager.get_object(key=key)
 
+        # Return an empty response if the file is not found
         if response is None:
             return {"content": "", "content_type": "text/plain"}
 
         file_content = response["Body"].read()
 
         # Infer content type
-        content_type = response.get("ContentType") or mimetypes.guess_type(key)[
-            0] or "application/octet-stream"
+        content_type = response.get("ContentType") or mimetypes.guess_type(key)[0] or "application/octet-stream"
 
+        # Return the note content and content type
         return {            
             "content": file_content.decode("utf-8"),
             "content_type": content_type,
