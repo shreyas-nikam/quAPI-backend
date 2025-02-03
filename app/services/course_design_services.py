@@ -912,16 +912,28 @@ async def submit_module_for_deliverables_step(course_id, module_id, course_desig
 
 
 async def fetch_pdf(url):
+    """
+    Fetch the PDF from the provided URL and return it as a StreamingResponse.
+
+    Args:
+        url (str): The URL of the PDF to fetch.
+
+    Returns:
+        StreamingResponse: The PDF as a StreamingResponse.
+    """
     try:
-        # Fetch the PDF from the provided URL
+        # Fetch the PDF file from the provided URL
         response = requests.get(url, stream=True)
+
+        # Raise an exception if the request fails
         response.raise_for_status()
 
         # Return the PDF as a StreamingResponse
         return StreamingResponse(response.raw, media_type="application/pdf")
+    
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Failed to fetch PDF: {str(e)}")
+        # Raise an HTTPException if an error occurs
+        raise HTTPException(status_code=400, detail=f"Failed to fetch PDF: {str(e)}")
 
 
 def parse_s3_url(url: str):
