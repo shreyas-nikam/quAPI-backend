@@ -17,7 +17,7 @@ async def template_outline_api(template_id: str = Form(...)):
 
 # save template data
 @router.post("/save_template_data")
-async def save_template_data_api(template_id: str = Form(...), template_data: dict = Form(...)):
+async def save_template_data_api(template_id: str = Form(...), template_data: list = Form(...)):
     return await save_template_data(template_id, template_data)
 
 # get template reports

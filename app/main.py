@@ -6,6 +6,7 @@ from app.routes.lab_design_routes import router as lab_design_router
 from app.routes.podcast_design_routes import router as podcast_design_router
 from app.routes.user_routes import router as user_router
 from app.routes.writing_generation_routes import router as writing_generation_router
+from app.routes.template_design_routes import router as template_design_router
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import marimo
@@ -83,6 +84,7 @@ app.include_router(user_router)
 app.include_router(lab_design_router)
 app.include_router(router)
 app.include_router(podcast_design_router)
+app.include_router(template_design_router)
 
 
 @app.get("/")
