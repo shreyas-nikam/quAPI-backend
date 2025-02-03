@@ -645,7 +645,7 @@ def _handle_s3_file_transfer(course_id, module_id, prev_step_directory, step_dir
 def _rollback_s3_file_transfer(course_id, module_id, step_directory, resources):
     s3_file_manager = S3FileManager()
     for resource in resources:
-        delete_file_key = f"qu-course-design/{course_id}/{module_id}/{step_directory}/{resource["resource_link"].split('/')[-1]}"
+        delete_file_key = f"""qu-course-design/{course_id}/{module_id}/{step_directory}/{resource["resource_link"].split('/')[-1]}"""
         s3_file_manager.delete_file(delete_file_key)
 
 
@@ -664,8 +664,7 @@ async def remove_module_from_step(course_id, module_id, course_design_step, queu
     # module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
     # if instructions:
     #     module["instructions"] = instructions
-    course["modules"] = [module if m.get(
-        "module_id") == module_id else m for m in course.get("modules", [])]
+    course["modules"] = [module if m.get("module_id") == module_id else m for m in course.get("modules", [])]
 
     atlas_client = AtlasClient()
     # atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])}
