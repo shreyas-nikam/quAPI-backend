@@ -733,8 +733,8 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
         "module_id") == module_id else m for m in course.get("modules", [])]
 
     atlas_client = AtlasClient()
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])}
-                                                                                      })
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, 
+                        update={"$set": {"modules": course.get("modules", [])}})
 
     prev_step_resources = module.get(prev_step_directory, [])
     _handle_s3_file_transfer(
@@ -879,9 +879,8 @@ async def submit_module_for_deliverables_step(course_id, module_id, course_desig
     course["modules"] = [module if m.get("module_id") == module_id else m for m in course.get("modules", [])]
 
     atlas_client = AtlasClient()
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])
-                                                                                               }
-                                                                                      })
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, 
+                        update={"$set": {"modules": course.get("modules", [])}})
 
     prev_step_resources = module.get(prev_step_directory, [])
     _handle_s3_file_transfer(
@@ -1004,7 +1003,7 @@ async def fetch_quizdata(url):
 
 async def add_artifact_to_course(course_id, artifact_type, artifact_id):
     atlas_client = AtlasClient()
-    course = atlas_client.find("course_design", filter={               "_id": ObjectId(course_id)})
+    course = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
     if not course:
         return "Course not found"
     course = course[0]
@@ -1014,9 +1013,8 @@ async def add_artifact_to_course(course_id, artifact_type, artifact_id):
         "artifact_id": artifact_id
     })
 
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={        "$set": {            "additional_artifacts": additional_artifacts
-        }
-    })
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, 
+                        update={"$set": {"additional_artifacts": additional_artifacts}})
     course = await get_course(course_id)
     course = _convert_object_ids_to_strings(course)
     return course
