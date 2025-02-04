@@ -118,13 +118,13 @@ async def save_template_data(template_id, template_data):
     tables = []  # List to store table data
 
     # Process template data
-    for row in template_data:
-        if row['type'] == 'table':
+    for key in template_data.keys():
+        if type(template_data[key]) == list:
             # Convert table data to string and add to tables list
-            tables.append(Note(category='embed', title=row['name'], value=convert_table_data_to_string(ast.literal_eval(row['value']))))
+            tables.append(Note(category='embed', title=key, value=convert_table_data_to_string(ast.literal_eval(template_data[key]))))
         else:
             # Set value for non-table data
-            report_inputs.set_value(row['name'], row['value'])
+            report_inputs.set_value(key, template_data[key])
 
     # Initialize report generator
     report_generator = ReportGenerator(name=template_name, version="1.0", category="basic")
