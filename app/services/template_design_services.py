@@ -7,6 +7,7 @@ from bson.objectid import ObjectId
 import os
 from app.services.qu_audit.qu_audit import *
 import fitz
+import json
 
 
 def _convert_object_ids_to_strings(data):
@@ -172,7 +173,7 @@ async def delete_report(project_id, template_id, report_id):
             project["templates"][index]["report_ids"].remove(report_id)
             break
 
-    mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": project[0]["templates"]}})
+    mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": project["templates"]}})
     mongo_client.delete("model_reports", {"_id": ObjectId(report_id)})
 
     return True
@@ -245,6 +246,7 @@ async def import_templates_to_project(project_id, template_ids):
 
 # Function to get the reports for a template in a project
 async def get_project_template_reports(project_id, template_id):
+    print("Getting project template reports...")
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
     template_reports = []
@@ -260,6 +262,7 @@ async def get_project_template_reports(project_id, template_id):
 
 # Function to save project template data
 async def save_project_template_data(project_id, template_id, template_data):
+    
     template_data = json.loads(template_data)
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
