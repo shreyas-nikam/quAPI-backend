@@ -240,7 +240,7 @@ async def import_templates_to_project(project_id, template_ids):
             templates.append({"template_id": str(template_id), "report_ids": [], "status": "Pending"})
         
         mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": templates}})
-        return get_model_project(project_id)
+        return await get_model_project(project_id)
     else:
         return "Project not found"
 
@@ -364,8 +364,9 @@ async def consolidate_reports(project_id):
 
     report_ids = []
     for template in project["templates"]:
-        report_ids += template["report_ids"][-1]
+        report_ids.append(template["report_ids"][-1])
     
+    print("Report ids.....", report_ids)
     # get all the pdf urls for the reports
     pdf_urls = []
     for report_id in report_ids:
@@ -388,7 +389,8 @@ async def get_completion_status(project_id):
     if not project:
         return "Project not found"
     project = project[0]
-
+    if len(project["templates"]) == 0:
+        return False
     for template in project["templates"]:
         if len(template["report_ids"])>0:
             continue
