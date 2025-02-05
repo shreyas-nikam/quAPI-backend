@@ -180,7 +180,7 @@ async def delete_report(project_id, template_id, report_id):
 # Function to create a model project
 async def create_model_project(project_name, project_description):
     mongo_client = AtlasClient()
-    project_id = mongo_client.insert("model_projects", {"name": project_name, "description": project_description})
+    project_id = mongo_client.insert("model_projects", {"name": project_name, "description": project_description, "templates": []})
     return _convert_object_ids_to_strings({"_id": str(project_id), "name": project_name, "description": project_description})
 
 # Function to get all model projects
