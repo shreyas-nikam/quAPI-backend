@@ -239,7 +239,7 @@ async def import_templates_to_project(project_id, template_ids):
             templates.append({"template_id": str(template_id), "report_ids": [], "status": "Pending"})
         
         mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": templates}})
-        return get_model_project(project_id)
+        return await get_model_project(project_id)
     else:
         return "Project not found"
 
