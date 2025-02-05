@@ -12,18 +12,15 @@ async def templates_api():
 
 # get template outline
 @router.post("/template_details")
-@router.post("/template_details")
 async def template_details_api(template_id: str = Form(...)):
     return await get_template_details(template_id)
 
 # get sample data for template
 @router.post("/sample_data")
-@router.post("/sample_data")
 async def sample_data_api(template_id: str = Form(...)):
     return await get_sample_data(template_id)
 
 # get sample report for template
-@router.post("/sample_report")
 @router.post("/sample_report")
 async def sample_report_api(template_id: str = Form(...)):
     return await get_sample_report(template_id)
@@ -39,7 +36,6 @@ async def model_projects_api():
     return await get_model_projects()
 
 # get model project from id
-@router.post("/model_project")
 @router.post("/model_project")
 async def model_project_api(project_id: str = Form(...)):
     return await get_model_project(project_id)
@@ -66,12 +62,10 @@ async def save_project_template_data_api(project_id: str = Form(...), template_i
 
 # consolidate all reports
 @router.post("/consolidate_reports")
-@router.post("/consolidate_reports")
 async def consolidate_reports_api(project_id: str = Form(...)):
     return await consolidate_reports(project_id)
 
 # get status of completion
-@router.post("/get_completion_status")
 @router.post("/get_completion_status")
 async def get_completion_status_api(project_id: str = Form(...)):
     return await get_completion_status(project_id)

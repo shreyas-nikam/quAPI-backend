@@ -200,6 +200,19 @@ async def get_model_projects():
 async def get_model_project(project_id):
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
+    templates = []
+    for template in project[0]["templates"]:
+        template_id = template["template_id"]
+        template_details = mongo_client.find("model_templates", {"_id": ObjectId(template_id)})
+        redacted_template = {
+            "_id": str(template_details[0]["_id"]),
+            "name": template_details[0]["name"],
+            "note": template_details[0]["note"],
+        }
+        templates.append(redacted_template)
+    
+    project[0]["templates"] = templates
+    
     if project:
         return _convert_object_ids_to_strings(project[0])
     else:
@@ -225,8 +238,7 @@ async def import_templates_to_project(project_id, template_ids):
             templates.append({"template_id": str(template_id), "report_ids": [], "status": "pending"})
         
         mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": templates}})
-        project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
-        return _convert_object_ids_to_strings(project[0])
+        return get_model_project(project_id)
     else:
         return "Project not found"
 
