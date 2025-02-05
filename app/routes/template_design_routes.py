@@ -70,3 +70,7 @@ async def consolidate_reports_api(project_id: str = Form(...)):
 @router.post("/get_completion_status")
 async def get_completion_status_api(project_id: str = Form(...)):
     return await get_completion_status(project_id)
+
+@router.post("/project_template_reports")
+async def project_template_reports_api(project_id: str = Form(...), template_id: str = Form(...)):
+    return await get_project_template_reports(project_id, template_id)

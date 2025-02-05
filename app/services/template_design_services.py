@@ -233,10 +233,10 @@ async def delete_model_project(project_id):
 async def import_templates_to_project(project_id, template_ids):
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
-    templates = []
+    templates = project[0]["templates"] if project else []
     if project:
         for template_id in template_ids:
-            templates.append({"template_id": str(template_id), "report_ids": [], "status": "pending"})
+            templates.append({"template_id": str(template_id), "report_ids": [], "status": "Pending"})
         
         mongo_client.update("model_projects", {"_id": ObjectId(project_id)}, {"$set": {"templates": templates}})
         return get_model_project(project_id)
@@ -272,7 +272,7 @@ async def save_project_template_data(project_id, template_id, template_data):
     for index, template in enumerate(project["templates"]):
         if template["template_id"] == template_id:
             project["templates"][index]["report_ids"].append(report_id)
-            project["templates"][index]["status"] = "completed"
+            project["templates"][index]["status"] = "Completed"
             report_ids = project["templates"][index]["report_ids"]
             break
 
