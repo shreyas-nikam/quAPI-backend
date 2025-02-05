@@ -246,7 +246,6 @@ async def import_templates_to_project(project_id, template_ids):
 
 # Function to get the reports for a template in a project
 async def get_project_template_reports(project_id, template_id):
-    print("Getting project template reports...")
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
     template_reports = []
@@ -261,8 +260,7 @@ async def get_project_template_reports(project_id, template_id):
         return "Project not found"
 
 # Function to save project template data
-async def save_project_template_data(project_id, template_id, template_data):
-    
+async def save_project_template_data(project_id, template_id, template_data):    
     template_data = json.loads(template_data)
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
