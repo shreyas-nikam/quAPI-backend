@@ -47,11 +47,6 @@ class ReportGenerator:
         file.write(self.report)
         print("report is saved to " + file.name)
         file.close()
-        try:
-            from google.colab import files
-            files.download(path)
-        except:
-            pass
     
     def publish(self, APIkey="", experiment="", stage=""):
         print("Publish reports to QuSandbox available with prime version, contact info@qusandbox.com for more infomation")

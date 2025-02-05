@@ -121,7 +121,7 @@ async def save_template_data(template_id, template_data):
     for key in template_data.keys():
         if type(template_data[key]) == list:
             # Convert table data to string and add to tables list
-            tables.append(Note(category='embed', title=key, value=convert_table_data_to_string(ast.literal_eval(template_data[key]))))
+            tables.append(Note(category='embed', title=key, value=convert_table_data_to_string(template_data[key])))
         else:
             # Set value for non-table data
             report_inputs.set_value(key, template_data[key])
@@ -134,14 +134,14 @@ async def save_template_data(template_id, template_data):
 
     report_generator.load(report_inputs)  # Load template values into report generator
 
-    report_generator.generate()  # Generate the report
-
-    report_generator.get_html()  # Get the generated HTML
+    report = report_generator.generate()  # Generate the report
 
     report_id = ObjectId()  # Generate a new ObjectId for the report
 
+    Path("reports").mkdir(parents=True, exist_ok=True)  # Create reports directory
+    
     # Save the generated HTML report locally
-    report_generator.save_html(f"reports/{report_id}.html")
+    report_generator.save(f"reports/{report_id}.html")
 
     s3_file_manager = S3FileManager()  # Initialize S3 file manager
     
@@ -260,22 +260,25 @@ async def get_project_template_reports(project_id, template_id):
 
 # Function to save project template data
 async def save_project_template_data(project_id, template_id, template_data):
+    template_data = json.loads(template_data)
     mongo_client = AtlasClient()
     project = mongo_client.find("model_projects", {"_id": ObjectId(project_id)})
     if not project:
         return "Project not found"
     project = project[0]
 
-    report_id = save_template_data(template_id, template_data)
+    print("Saving template data...")
+    report_data = await save_template_data(template_id, template_data)
     
-    report_ids = []
+    report_ids = [report_data["_id"]]
     for index, template in enumerate(project["templates"]):
         if template["template_id"] == template_id:
-            project["templates"][index]["report_ids"].append(report_id)
+            project["templates"][index]["report_ids"].append(report_data["_id"])
             project["templates"][index]["status"] = "Completed"
-            report_ids = project["templates"][index]["report_ids"]
             break
 
+    print("Report IDs:")
+    print(report_ids)
     report_datas = []
     for report_id in report_ids:
         report = mongo_client.find("model_reports", {"_id": ObjectId(report_id)})

@@ -58,7 +58,7 @@ async def import_templates_to_project_api(project_id: str = Form(...), template_
 
 # save project template data
 @router.post("/save_project_template_data")
-async def save_project_template_data_api(project_id: str = Form(...), template_id: str = Form(...), template_data: list = Form(...)):
+async def save_project_template_data_api(project_id: str = Form(...), template_id: str = Form(...), template_data: str = Form(...)):
     return await save_project_template_data(project_id, template_id, template_data)
 
 # consolidate all reports
