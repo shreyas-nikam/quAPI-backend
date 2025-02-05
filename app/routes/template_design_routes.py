@@ -42,7 +42,7 @@ async def model_project_api(project_id: str = Form(...)):
 
 # delete report
 @router.post("/delete_report")
-async def delete_report_api(project_id: str = Form(...), template_id: str=Form(...), report_id: str = Form(...)):
+async def delete_report_api(project_id: str = Form(...), template_id: str = Form(...), report_id: str = Form(...)):
     return await delete_report(project_id, template_id, report_id)
 
 # delete model project
