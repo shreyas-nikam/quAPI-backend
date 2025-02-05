@@ -57,9 +57,9 @@ async def get_template_details(template_id):
     """
     mongo_client = AtlasClient()  # Initialize MongoDB client
 
-    template_outline  = mongo_client.find("model_templates", {"_id": ObjectId(template_id)})  # Find template by ID
+    template_details  = mongo_client.find("model_templates", {"_id": ObjectId(template_id)})  # Find template by ID
 
-    return _convert_object_ids_to_strings(template_outline)  # Return template outline
+    return _convert_object_ids_to_strings(template_details)  # Return template details
 
 # Function to convert table data to string
 def convert_table_data_to_string(table_data):
@@ -181,7 +181,7 @@ async def delete_report(project_id, template_id, report_id):
 async def create_model_project(project_name, project_description):
     mongo_client = AtlasClient()
     project_id = mongo_client.insert("model_projects", {"name": project_name, "description": project_description})
-    return _convert_object_ids_to_strings({"project_id": str(project_id), "name": project_name, "description": project_description})
+    return _convert_object_ids_to_strings({"_id": str(project_id), "name": project_name, "description": project_description})
 
 # Function to get all model projects
 async def get_model_projects():
@@ -286,7 +286,7 @@ async def get_sample_data(template_id):
 async def get_sample_report(template_id):
     mongo_client = AtlasClient()
     template = mongo_client.find("model_templates", {"_id": ObjectId(template_id)})
-    return _convert_object_ids_to_strings(template[0]["sample_report"]   )
+    return _convert_object_ids_to_strings(template[0]["sample_report"])
 
 # Function to combine pdfs
 def combine_pdfs(pdf_urls):
