@@ -363,8 +363,9 @@ async def consolidate_reports(project_id):
 
     report_ids = []
     for template in project["templates"]:
-        report_ids += template["report_ids"][-1]
+        report_ids.append(template["report_ids"][-1])
     
+    print("Report ids.....", report_ids)
     # get all the pdf urls for the reports
     pdf_urls = []
     for report_id in report_ids:
@@ -387,7 +388,8 @@ async def get_completion_status(project_id):
     if not project:
         return "Project not found"
     project = project[0]
-
+    if len(project["templates"]) == 0:
+        return False
     for template in project["templates"]:
         if len(template["report_ids"])>0:
             continue
