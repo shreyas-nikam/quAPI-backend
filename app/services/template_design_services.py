@@ -208,6 +208,7 @@ async def get_model_project(project_id):
             "_id": str(template_details[0]["_id"]),
             "name": template_details[0]["name"],
             "note": template_details[0]["note"],
+            "status": template["status"]
         }
         templates.append(redacted_template)
     
