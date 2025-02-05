@@ -52,7 +52,8 @@ async def delete_model_project_api(project_id: str = Form(...)):
 
 # import templates to project
 @router.post("/import_templates_to_project")
-async def import_templates_to_project_api(project_id: str = Form(...), template_ids: list = Form(...)):
+async def import_templates_to_project_api(project_id: str = Form(...), template_ids: str = Form(...)):
+    template_ids = template_ids.split(",") if template_ids else []
     return await import_templates_to_project(project_id, template_ids)
 
 # save project template data
