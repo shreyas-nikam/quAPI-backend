@@ -1,3 +1,5 @@
+from app.utils.llm import LLM
+from langchain_core.prompts.prompt import PromptTemplate
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
 from bson.objectid import ObjectId
 from app.utils.s3_file_manager import S3FileManager
@@ -379,3 +381,21 @@ async def save_writing(writing_id, writing_outline):
        
     return True
 
+
+async def rewrite_writing(writing_input):
+    llm = LLM()
+    print("Writing input", writing_input)
+
+    prompt = _get_prompt("REWRITE_PROMPT")
+
+    prompt = PromptTemplate(template=prompt, input_variables=["WRITING_INPUT"])
+
+    inputs = {"WRITING_INPUT": writing_input}
+
+    response = llm.get_response(prompt, inputs)
+
+    response = response.replace('```', '')
+
+    return response
+    
+    

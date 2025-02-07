@@ -62,3 +62,7 @@ async def add_resources_to_writing_api(writing_id: str = Form(...),
 async def save_writing_api(writing_id: str = Form(...), 
                            writing_outline: str = Form(...)):
     return await save_writing(writing_id, writing_outline)
+
+@router.post("/rewrite_writing")
+async def rewrite_writing_api(writing_input: str = Form(...)):
+    return await rewrite_writing(writing_input)
