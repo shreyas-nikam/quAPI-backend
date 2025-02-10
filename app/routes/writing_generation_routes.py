@@ -56,6 +56,7 @@ async def regenerate_outline_api(
         selected_resources: object = Form(...),
         identifier: str = Form(...)
     ):
+    #TODO check implementation
     return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier)
 
 

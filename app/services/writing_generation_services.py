@@ -367,16 +367,11 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
     
     writing = writing[0]
 
-    prompt = _get_prompt("REGENERATE_OUTLINE_PROMPT")
-    prompt = PromptTemplate(template=prompt, input_variables=["WRITING_INPUT", "USER_INSTRUCTIONS", "PREVIOUS_OUTLINE", "SELECTED_RESOURCES"])
-    inputs = {
-        "WRITING_INPUT": writing["writing_outline"],
-        "USER_INSTRUCTIONS": instructions,
-        "PREVIOUS_OUTLINE": previous_outline,
-        "SELECTED_RESOURCES": selected_resources
-    }
+    prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
 
-    
+    prompt = prompt.replace("{DRAFT}", previous_outline)
+    prompt = prompt.replace("{USER_INSTRUCTIONS}", instructions)
+
     files = []
     for resource in selected_resources:
         file = resource.get("resource_link")
@@ -395,12 +390,11 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
     created_assistant_id = None
 
     identifier_text = identifier_mappings.get(identifier, "Writing")
-    outline_instructions = _get_prompt(identifier.upper() + "_PROMPT")
 
     try:
         assistant = client.beta.assistants.create(
             name=identifier_text + " Creator",
-            instructions=outline_instructions,
+            instructions=prompt,
             model=os.getenv("OPENAI_MODEL"),
             tools=[{"type": "file_search"}]
         )
