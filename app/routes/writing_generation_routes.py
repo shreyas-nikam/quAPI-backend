@@ -16,32 +16,47 @@ async def get_writing_api(writing_id: str):
 async def delete_writing_api(writing_id: str = Form(...)):
     return await delete_writing(writing_id)
 
-# generate markdown from files
+
 @router.post("/writing_outline")
 async def writing_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...),
                                   identifier: str = Form(...)):
     return await writing_outline(files, instructions, identifier) 
 
+@router.post("/generate_templates")
+async def generate_templates_api(files: Optional[List[UploadFile]] = File(None), 
+                                 identifier: str = Form(...)):
+    return await generate_templates(files, identifier)
+
 @router.post("/create_writing")
-async def create_writing_api(writing_id: str = Form(...),
-                             writing_name: str = Form(...),  
-                             writing_description: str = Form(...), 
-                             writing_outline: str = Form(...), 
-                             files: Optional[List[UploadFile]] = File(None), 
-                             writing_image: UploadFile = File(...),
-                             identifier: str = Form(...)):
-    return await create_writing(writing_id=writing_id, 
-                                writing_name=writing_name, 
-                                writing_description=writing_description, 
-                                writing_outline=writing_outline, 
-                                files=files, 
-                                writing_image=writing_image, 
-                                identifier=identifier)
+async def create_writing_api(
+        writing_id: str = Form(...),
+        writing_name: str = Form(...),  
+        writing_description: str = Form(...), 
+        writing_outline: str = Form(...), 
+        files: Optional[List[UploadFile]] = File(None), 
+        writing_image: UploadFile = File(...),
+        identifier: str = Form(...)
+    ):
+    return await create_writing(
+        writing_id=writing_id, 
+        writing_name=writing_name, 
+        writing_description=writing_description, 
+        writing_outline=writing_outline, 
+        files=files, 
+        writing_image=writing_image, 
+        identifier=identifier
+    )
 
 @router.post("/regenerate_outline")
-async def regenerate_outline_api(assistant_id: str = Form(...)):
-    return await regenerate_outline(assistant_id)
+async def regenerate_outline_api(
+        writing_id: str = Form(...),
+        instructions: str = Form(...),
+        previous_outline: str = Form(...),
+        selected_resources: object = Form(...),
+        identifier: str = Form(...)
+    ):
+    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier)
 
 
 # convert file to pdf for selected template
@@ -60,9 +75,16 @@ async def add_resources_to_writing_api(writing_id: str = Form(...),
 
 @router.post("/save_writing")
 async def save_writing_api(writing_id: str = Form(...), 
-                           writing_outline: str = Form(...)):
-    return await save_writing(writing_id, writing_outline)
+                           writing_outline: str = Form(...),
+                            message: str = Form(...),
+                            resources: List[object] = Form(...)):
+    return await save_writing(writing_id, writing_outline, message, resources)
 
 @router.post("/rewrite_writing")
 async def rewrite_writing_api(writing_input: str = Form(...)):
     return await rewrite_writing(writing_input)
+
+
+@router.post("/create_rewriting")
+async def create_rewriting_api(writing_name: str = Form(...), writing_description: str = Form(...)):
+    return await create_rewriting_project(writing_name, writing_description)

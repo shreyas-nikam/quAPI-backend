@@ -3,15 +3,26 @@ from langchain_core.prompts.prompt import PromptTemplate
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
 from bson.objectid import ObjectId
 from app.utils.s3_file_manager import S3FileManager
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 from app.utils.atlas_client import AtlasClient
 from openai import OpenAI
 import os
 import json
 import logging
 import datetime
+import ast
 
-
+identifier_mappings = {
+    "research_report": "Research Report",
+    "white_paper": "White Paper",
+    "project_plan": "Project Plan",
+    "e_book": "E-Book",
+    "blog": "Blog",
+    "news_letter": "Newsletter",
+    "case_study": "Case Study",
+    "key_insights": "Key Insights",
+    "handout": "Handout",
+}
 
 def _get_prompt(prompt_name):
     """
@@ -63,22 +74,125 @@ async def get_writing(writing_id):
         writing = _convert_object_ids_to_strings(writing)
     return writing
 
+async def generate_templates(files, identifier):
+    prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
+    
+    identifier_text = identifier_mappings.get(identifier, "Writing")
+    templates_instructions = _get_prompt(prompt)
+    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-identifier_mappings = {
-    "research_report": "Research Report",
-    "white_paper": "White Paper",
-    "project_plan": "Project Plan",
-    "e_book": "E-Book",
-    "blog": "Blog",
-    "news_letter": "Newsletter",
-    "case_study": "Case Study",
-    "key_insights": "Key Insights",
-    "handout": "Handout",
-}
+    assistant_files_streams = []
+    if files:
+        for file in files:
+            file_content = file.file.read()
+
+            file.file.seek(0)
+
+            assistant_files_streams.append((file.filename, file_content))
+
+    # Track created resources
+    created_assistant_id = None
+    created_vector_store_id = None
+    created_thread_id = None
+
+    try:
+        assistant = client.beta.assistants.create(
+            name=identifier_text + " Creator",
+            instructions=templates_instructions,
+            model=os.getenv("OPENAI_MODEL"),
+            tools=[{"type": "file_search"}]
+        )
+
+        created_assistant_id = assistant.id  # Track the assistant
+
+        vector_store = client.beta.vector_stores.create(
+            name="writing Resources",
+            expires_after={"days": 7, "anchor": "last_active_at"},
+        )
+
+        created_vector_store_id = vector_store.id  # Track the vector store
+
+        if files:
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=assistant_files_streams
+            )
+
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
+        else:
+            assistant = client.beta.assistants.update(
+                        assistant_id=assistant.id,
+                    )
+            
+        thread = client.beta.threads.create(
+            messages=[{
+                "role": "user",
+                "content": "Generate templates for " + identifier_text + " based on the instructions provided.",
+            }]
+        )
+
+        created_thread_id = thread.id  # Track the thread
+
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id, assistant_id=assistant.id
+        )
+
+        messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+        message_content = messages[0].content[0].text
+        annotations = message_content.annotations
+        citations = []
+
+        for index, annotation in enumerate(annotations):
+            message_content.value = message_content.value.replace(annotation.text, f"[{index}]")
+            if file_citation := getattr(annotation, "file_citation", None):
+                cited_file = client.files.retrieve(file_citation.file_id)
+                citations.append(f"[{index}] {cited_file.filename}")
+
+        response = message_content.value
+        try:
+            response = ast.literal_eval(response)
+        except:
+            response = ast.literal_eval(response[response.index("["):response.rindex("]") + 1])
+
+        return {
+            "templates": response
+        }
+
+    except Exception as e:
+        return {
+            "templates": [
+                {
+                    "template_name": "Student Template",
+                    "template_content": f"### {identifier_text} \nInstructions\n\n- Create a {identifier_text} for students. \n*Objectives*: \n  - Simplify complex concepts. \n  - Include interactive elements. \n  - Provide practical examples. \n*Target Audience*: Students and beginners"
+                },
+                {
+                    "template_name": "Professional Template",
+                    "template_content": f"### {identifier_text} \nInstructions\n\n- Develop a {identifier_text} for professionals. \n*Objectives*: \n  - Provide in-depth analysis. \n  - Include advanced concepts. \n  - Offer actionable insights. \n*Target Audience*: Industry experts and practitioners"
+                },
+                {
+                    "template_name": "Industry Experts Template",
+                    "template_content": f"### {identifier_text} \nInstructions\n\n- Create a {identifier_text} for industry experts. \n*Objectives*: \n  - Explore cutting-edge topics. \n  - Include advanced case studies. \n  - Offer expert-level insights. \n*Target Audience*: Industry leaders and experts"
+                },
+                {
+                    "template_name": "General Audience Template",
+                    "template_content": f"### {identifier_text} \nInstructions\n\n- Develop a {identifier_text} for a general audience. \n*Objectives*: \n  - Simplify complex topics. \n  - Include relatable examples. \n  - Offer practical advice. \n*Target Audience*: General readers and enthusiasts"
+                }
+            ]
+        }
+    
+    finally:
+        # Clean up all created resources to avoid charges
+        if created_assistant_id:
+            client.beta.assistants.delete(created_assistant_id)
+        if created_vector_store_id:
+            client.beta.vector_stores.delete(created_vector_store_id)
+        if created_thread_id:
+            client.beta.threads.delete(created_thread_id)
 
 async def writing_outline(files, instructions, identifier):
     prompt = identifier.upper() + "_PROMPT"
-    
     identifier_text = identifier_mappings.get(identifier, "Writing")
     outline_instructions = _get_prompt(prompt)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
@@ -149,17 +263,15 @@ async def writing_outline(files, instructions, identifier):
                 citations.append(f"[{index}] {cited_file.filename}")
 
         response = message_content.value
-        # if the response starts with ```markdown, remove it
         if response.startswith("```"):
             response = response[3:].strip()
         if response.startswith("markdown"):
             response = response[8:].strip()
-        # if the response ends with ``` remove it
         if response.endswith("```"):
             response = response[:-3].strip()
     except Exception as e:
         logging.error(f"Error in generating writing: {e}")
-        return "# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
+        return {"writing_id": str(id), "writing":"# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"}
     finally:
         # Clean up all created resources to avoid charges
         # store the assistant_id, vector_store_id, thread_id in mongodb
@@ -167,9 +279,11 @@ async def writing_outline(files, instructions, identifier):
         id = atlas_client.insert(
             collection_name="writing_design",
             data={
-                "writing_outline": response
+                "writing_outline": response,
+                "initial_instructions": instructions
             }
             # data={
+            #       "writing_outline": response,
             #     "assistant_id": created_assistant_id,
             #     "vector_store_id": created_vector_store_id,
             #     "thread_id": created_thread_id
@@ -184,7 +298,6 @@ async def writing_outline(files, instructions, identifier):
             client.beta.threads.delete(created_thread_id)
 
     return {"writing_id": str(id), "writing": response}
-
 
 async def create_writing(writing_id, writing_name, writing_description, writing_outline, files, writing_image, identifier):
     atlas_client = AtlasClient()
@@ -205,8 +318,11 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": writing
     })
+    writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})[0]
+    instructions = writing.get("initial_instructions", "")
 
     raw_resources = []
+    history = []
     if files:
         # store the files in s3
         for file in files:
@@ -224,17 +340,25 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
             }
             raw_resources.append(resource)
 
+    history.append({
+        "writing_outline": writing_outline,
+        "version": 1.0,
+        "timestamp": datetime.datetime.now(),
+        "resources": raw_resources,
+        "feedback": instructions
+    })
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
-        "$set": {"raw_resources": raw_resources}
+        "$set": {"history": history}
+    })
+    atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
+        "$set": {"all_resources": raw_resources}
     })
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})[0]
     writing = _convert_object_ids_to_strings(writing)
 
     return writing
 
-
-# TODO: Implement yet to be done
-async def regenerate_outline(writing_id, instructions):
+async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier):
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
@@ -242,30 +366,82 @@ async def regenerate_outline(writing_id, instructions):
         return "Writing not found"
     
     writing = writing[0]
-    assistant_id, vector_store_id, thread_id = writing["assistant_id"], writing["vector_store_id"], writing["thread_id"]
+
+    prompt = _get_prompt("REGENERATE_OUTLINE_PROMPT")
+    prompt = PromptTemplate(template=prompt, input_variables=["WRITING_INPUT", "USER_INSTRUCTIONS", "PREVIOUS_OUTLINE", "SELECTED_RESOURCES"])
+    inputs = {
+        "WRITING_INPUT": writing["writing_outline"],
+        "USER_INSTRUCTIONS": instructions,
+        "PREVIOUS_OUTLINE": previous_outline,
+        "SELECTED_RESOURCES": selected_resources
+    }
+
+    
+    files = []
+    for resource in selected_resources:
+        file = resource.get("resource_link")
+        files.append(file)
+
+    assistant_files_streams = []
+
+    for file in files:
+        file_content = file.file.read()
+
+        file.file.seek(0)
+
+        assistant_files_streams.append((file.filename, file_content))
+
+    # Track created resources
+    created_assistant_id = None
+
+    identifier_text = identifier_mappings.get(identifier, "Writing")
+    outline_instructions = _get_prompt(identifier.upper() + "_PROMPT")
 
     try:
-        # Update the thread with the new user instructions
-        updated_thread = client.beta.threads.update(
-            thread_id=thread_id,
+        assistant = client.beta.assistants.create(
+            name=identifier_text + " Creator",
+            instructions=outline_instructions,
+            model=os.getenv("OPENAI_MODEL"),
+            tools=[{"type": "file_search"}]
+        )
+        created_assistant_id = assistant.id  # Track the assistant
+
+        vector_store = client.beta.vector_stores.create(
+            name="writing Resources",
+            expires_after={"days": 7, "anchor": "last_active_at"},
+        )
+        created_vector_store_id = vector_store.id  # Track the vector store
+        if files:
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=assistant_files_streams
+            )
+
+            assistant = client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
+        else:
+            assistant = client.beta.assistants.update(
+                        assistant_id=assistant.id,
+                    )
+
+        thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Regenerate the writing in markdown format based on the following user's updated instructions: " + instructions,
+                "content": "Create the " + identifier_text + " in markdown format based on the instructions provided and the following user's instructions: " + instructions,
             }]
         )
+        created_thread_id = thread.id  # Track the thread
 
-        # Execute a new run with the updated thread
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread_id, assistant_id=assistant_id
+            thread_id=thread.id, assistant_id=assistant.id
         )
 
-        # Retrieve messages to fetch the updated content
-        messages = list(client.beta.threads.messages.list(thread_id=thread_id, run_id=run.id))
+        messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
         message_content = messages[0].content[0].text
         annotations = message_content.annotations
         citations = []
 
-        # Process annotations for citations
         for index, annotation in enumerate(annotations):
             message_content.value = message_content.value.replace(annotation.text, f"[{index}]")
             if file_citation := getattr(annotation, "file_citation", None):
@@ -273,11 +449,47 @@ async def regenerate_outline(writing_id, instructions):
                 citations.append(f"[{index}] {cited_file.filename}")
 
         response = message_content.value
-    except Exception as e:
-        logging.error(f"Error in regenerating course outline: {e}")
-        response = "An error occurred while regenerating the outline. Please try again or contact support."
-    return response
 
+        if response.startswith("```"):
+            response = response[3:].strip()
+        if response.startswith("markdown"):
+            response = response[8:].strip()
+        if response.endswith("```"):
+            response = response[:-3].strip()
+
+        history = writing.get("history", [])
+        latest_version = history[-1]
+        history.append({
+            "writing_outline": response,
+            "version": latest_version["version"] + 1.0,
+            "timestamp": datetime.datetime.now(),
+            "resources": selected_resources,
+            "feedback": instructions
+        })
+
+        atlas_client.update(
+            collection_name="writing_design",
+            filter={"_id": ObjectId(writing_id)},
+            update={
+                "$set": {
+                    "history": history
+                }
+            }
+        )
+
+    except Exception as e:
+        return {"writing_id": str(id), "writing": "Something went wrong. Please try again later. But here's a sample response:\n\n# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"}
+    
+    finally:
+        # Clean up all created resources to avoid charges
+        if created_assistant_id:
+            client.beta.assistants.delete(created_assistant_id)
+        if created_vector_store_id:
+            client.beta.vector_stores.delete(created_vector_store_id)
+        if created_thread_id:
+            client.beta.threads.delete(created_thread_id)
+
+    return {"writing_id": str(id), "writing": response}
 
 async def convert_to_pdf(writing_id, markdown, template_name):
 
@@ -312,34 +524,36 @@ async def convert_to_pdf(writing_id, markdown, template_name):
     # return file url in s3
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
-# will need to update the vector store with the new resource
 async def add_resources_to_writing(writing_id, resource_type, resource_name, resource_description, resource_file):
+    s3_file_manager = S3FileManager
     atlas_client = AtlasClient()
-    writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
-    if not writing:
-        return False
+    resource_id = ObjectId()
+    key = f"qu-writing-design/{writing_id}/resources/{resource_id}.{resource_file.filename.split('.')[-1]}"
+    await s3_file_manager.upload_file_from_frontend(resource_file, key)
 
-    # store the file in s3
-    s3_file_manager = S3FileManager()
-    key = f"qu-writing-design/{writing_id}/resources/{resource_file.filename}"
-    s3_file_manager.upload_file(resource_file.file, key)
+    key = quote(key)
+    resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+    resource = {
+        "resource_id": resource_id,
+        "resource_type": resource_type,
+        "resource_name": resource_name,
+        "resource_description": resource_description,
+        "resource_link": resource_link
+    }
 
-    # store the resource in mongodb
-    atlas_client.insert(
-        collection_name="writing_resources",
-        document={
-            "writing_id": writing_id,
-            "resource_type": resource_type,
-            "resource_name": resource_name,
-            "resource_description": resource_description,
-            "resource_file": key
+    atlas_client.update(
+        collection_name="writing_design",
+        filter={"_id": ObjectId(writing_id)},
+        update={
+            "$push": {
+                "all_resources": resource
+            }
         }
     )
 
-    return True
+    return resource
 
-
-async def save_writing(writing_id, writing_outline):
+async def save_writing(writing_id, writing_outline, message, resources):
     atlas_client = AtlasClient()
     
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
@@ -351,14 +565,18 @@ async def save_writing(writing_id, writing_outline):
         history={
                 "writing_outline": writing_outline,
                 "version": 1.0,
-                "timestamp": datetime.datetime.now()
+                "timestamp": datetime.datetime.now(),
+                "feedback": message,
+                "resources": resources
             }
     else:
         latest_version = history[-1]
         history={
                 "writing_outline": writing_outline,
                 "version": latest_version["version"] + 1.0,
-                "timestamp": datetime.datetime.now()
+                "timestamp": datetime.datetime.now(),
+                "feedback": message,
+                "resources": resources
             }
     atlas_client.update(
         collection_name="writing_design",
@@ -381,6 +599,20 @@ async def save_writing(writing_id, writing_outline):
        
     return True
 
+async def create_rewriting_project(writing_name, writing_description):
+    atlas_client = AtlasClient()
+    project_id = ObjectId()
+    atlas_client.insert(
+        collection_name="writing_design",
+        document={
+            "project_id": project_id,
+            "writing_name": writing_name,
+            "writing_description": writing_description,
+            "status": "In Progress",
+            "identifier": "rewriting"
+        }
+    )
+    return project_id
 
 async def rewrite_writing(writing_input):
     llm = LLM()
@@ -388,14 +620,14 @@ async def rewrite_writing(writing_input):
 
     prompt = _get_prompt("REWRITE_PROMPT")
 
-    prompt = PromptTemplate(template=prompt, input_variables=["WRITING_INPUT"])
+    prompt = PromptTemplate(template=prompt, input_variables=["WRITING_INPUT", "USER_INSTRUCTIONS"])
 
-    inputs = {"WRITING_INPUT": writing_input}
+    user_instructions = "Add the definition of cryptocurrency and the reference for the definition."
+
+    inputs = {"WRITING_INPUT": writing_input, "USER_INSTRUCTIONS": user_instructions}
 
     response = llm.get_response(prompt, inputs)
 
     response = response.replace('```', '')
 
     return response
-    
-    
