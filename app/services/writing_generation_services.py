@@ -385,6 +385,8 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
 
     # Track created resources
     created_assistant_id = None
+    created_vector_store_id = None
+    created_thread_id = None
 
     identifier_text = identifier_mappings.get(identifier, "Writing")
 
