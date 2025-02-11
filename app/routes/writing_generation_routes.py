@@ -16,6 +16,9 @@ async def get_writing_api(writing_id: str):
 async def delete_writing_api(writing_id: str = Form(...)):
     return await delete_writing(writing_id)
 
+@router.post("/delete_resources_from_writing")
+async def delete_resources_from_writing_api(writing_id: str = Form(...),  resource_id: str = Form(...)):
+    return await delete_resources_from_writing(writing_id, resource_id)
 
 @router.post("/writing_outline")
 async def writing_outline_api(files: Optional[List[UploadFile]] = File(None),

@@ -526,11 +526,11 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     print(f"resource_name: {resource_name}")
     print(f"resource_description: {resource_description}")
     print(f"resource_file: {resource_file}")
-    s3_file_manager = S3FileManager
+    s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
     resource_id = ObjectId()
     key = f"qu-writing-design/{writing_id}/resources/{resource_id}.{resource_file.filename.split('.')[-1]}"
-    await s3_file_manager.upload_file_from_frontend(resource_file, key)
+    await s3_file_manager.upload_file_from_frontend(file = resource_file, key = key)
 
     key = quote(key)
     resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
@@ -552,7 +552,7 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
         }
     )
 
-    return resource
+    return _convert_object_ids_to_strings(resource)
 
 async def save_writing(writing_id, writing_outline, message, resources):
     atlas_client = AtlasClient()
@@ -632,3 +632,27 @@ async def rewrite_writing(writing_input):
     response = response.replace('```', '')
 
     return response
+
+async def delete_resources_from_writing(writing_id, resource_id):
+    print("writing_id: ", writing_id)
+    print("resource_id: ", resource_id)
+
+    atlas_client = AtlasClient()
+    writing = atlas_client.find("writing_design", filter={
+                               "_id": ObjectId(writing_id)})
+
+    if not writing:
+        return "Writing not found"
+
+    writing = writing[0]
+    resources = writing.get("all_resources", [])
+    for resource in resources:
+        if resource.get("resource_id") == ObjectId(resource_id):
+            resources.remove(resource)
+            break
+
+    atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={"$set": {"all_resources": resources}})
+
+    writing = _convert_object_ids_to_strings(writing)
+
+    return writing
