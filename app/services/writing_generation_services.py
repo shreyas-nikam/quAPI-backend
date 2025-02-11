@@ -580,7 +580,7 @@ async def save_writing(writing_id, writing_outline, message, resources):
         history={
                 "writing_outline": writing_outline,
                 "version": 1.0,
-                "timestamp": datetime.datetime.now(),
+                "timestamp": datetime.datetime.utcnow(),
                 "feedback": message,
                 "resources": resources
             }
