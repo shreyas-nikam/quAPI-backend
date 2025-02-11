@@ -137,7 +137,7 @@ async def generate_templates(files, identifier):
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=10000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -249,7 +249,7 @@ async def writing_outline(files, instructions, identifier):
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=10000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -363,7 +363,6 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
 
 async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier):
     selected_resources = json.loads(selected_resources)
-    print(selected_resources)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
     s3_file_manager = S3FileManager()
@@ -388,7 +387,6 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         s3_file_manager.download_file(file_key, file_location)
         files.append(Path(file_location))
 
-    print(files)
     # Track created resources
     created_assistant_id = None
     created_vector_store_id = None
@@ -433,7 +431,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=10000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -455,8 +453,9 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             response = response[8:].strip()
         if response.endswith("```"):
             response = response[:-3].strip()
-            
-        print(response)
+
+        if "```" in response:
+            response = response[:response.index("```")].strip()
 
         history = writing.get("history", [])
         latest_version = history[-1]
@@ -467,7 +466,6 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             "resources": selected_resources,
             "feedback": instructions
         })
-        print(history)
         atlas_client.update(
             collection_name="writing_design",
             filter={"_id": ObjectId(writing_id)},
@@ -477,7 +475,15 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
                 }
             }
         )
-        print("Updated")
+        atlas_client.update(
+            collection_name="writing_design",
+            filter={"_id": ObjectId(writing_id)},
+            update={
+                "$set": {
+                    "writing_outline": response
+                }
+            }
+        )
 
     except Exception as e:
         print(e)
@@ -533,11 +539,6 @@ async def convert_to_pdf(writing_id, markdown, template_name):
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
 async def add_resources_to_writing(writing_id, resource_type, resource_name, resource_description, resource_file):
-    print(f"writing_id: {writing_id}")
-    print(f"resource_type: {resource_type}")
-    print(f"resource_name: {resource_name}")
-    print(f"resource_description: {resource_description}")
-    print(f"resource_file: {resource_file}")
     s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
     resource_id = ObjectId()
@@ -568,13 +569,13 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
 
 async def save_writing(writing_id, writing_outline, message, resources):
     resources = json.loads(resources)
-    print(resources)
     atlas_client = AtlasClient()
     
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
     if not writing:
         return False
     writing = writing[0]
+    
     history = writing.get("history", [])
     if not history:
         history={
@@ -631,7 +632,6 @@ async def create_rewriting_project(writing_name, writing_description):
 
 async def rewrite_writing(writing_input):
     llm = LLM()
-    print("Writing input", writing_input)
 
     prompt = _get_prompt("REWRITE_PROMPT")
 
@@ -648,8 +648,6 @@ async def rewrite_writing(writing_input):
     return response
 
 async def delete_resources_from_writing(writing_id, resource_id):
-    print("writing_id: ", writing_id)
-    print("resource_id: ", resource_id)
 
     atlas_client = AtlasClient()
     writing = atlas_client.find("writing_design", filter={
