@@ -381,17 +381,12 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         file = resource.get("resource_link")
         files.append(file)
 
-    assistant_files_streams = []
 
-    for file in files:
-        file_content = file.file.read()
-
-        file.file.seek(0)
-
-        assistant_files_streams.append((file.filename, file_content))
 
     # Track created resources
     created_assistant_id = None
+    created_vector_store_id = None
+    created_thread_id = None
 
     identifier_text = identifier_mappings.get(identifier, "Writing")
 
@@ -411,7 +406,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
             file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-                vector_store_id=vector_store.id, files=assistant_files_streams
+                vector_store_id=vector_store.id, files=files
             )
 
             assistant = client.beta.assistants.update(
