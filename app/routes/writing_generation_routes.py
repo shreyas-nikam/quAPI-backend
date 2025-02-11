@@ -53,7 +53,7 @@ async def regenerate_outline_api(
         writing_id: str = Form(...),
         instructions: str = Form(...),
         previous_outline: str = Form(...),
-        selected_resources: object = Form(...),
+        selected_resources: str = Form(...),
         identifier: str = Form(...)
     ):
     #TODO check implementation
@@ -78,7 +78,7 @@ async def add_resources_to_writing_api(writing_id: str = Form(...),
 async def save_writing_api(writing_id: str = Form(...), 
                            writing_outline: str = Form(...),
                             message: str = Form(...),
-                            resources: List[object] = Form(...)):
+                            resources: str = Form(...)):
     return await save_writing(writing_id, writing_outline, message, resources)
 
 @router.post("/rewrite_writing")

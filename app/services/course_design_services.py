@@ -222,7 +222,7 @@ async def generate_course_outline(files, instructions):
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
         )
 
         messages = list(client.beta.threads.messages.list(

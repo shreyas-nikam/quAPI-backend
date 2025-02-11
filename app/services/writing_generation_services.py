@@ -136,7 +136,7 @@ async def generate_templates(files, identifier):
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -248,7 +248,7 @@ async def writing_outline(files, instructions, identifier):
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -361,6 +361,8 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
     return writing
 
 async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier):
+    selected_resources = json.loads(selected_resources)
+    print(selected_resources)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
@@ -430,7 +432,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         created_thread_id = thread.id  # Track the thread
 
         run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id, assistant_id=assistant.id
+            thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=5000
         )
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
@@ -526,7 +528,7 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     print(f"resource_name: {resource_name}")
     print(f"resource_description: {resource_description}")
     print(f"resource_file: {resource_file}")
-    s3_file_manager = S3FileManager
+    s3_file_manager = S3FileManager()
     atlas_client = AtlasClient()
     resource_id = ObjectId()
     key = f"qu-writing-design/{writing_id}/resources/{resource_id}.{resource_file.filename.split('.')[-1]}"
@@ -555,6 +557,8 @@ async def add_resources_to_writing(writing_id, resource_type, resource_name, res
     return resource
 
 async def save_writing(writing_id, writing_outline, message, resources):
+    resources = json.loads(resources)
+    print(resources)
     atlas_client = AtlasClient()
     
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
