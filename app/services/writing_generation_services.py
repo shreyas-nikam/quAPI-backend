@@ -1,4 +1,5 @@
 from app.utils.llm import LLM
+from pathlib import Path
 from langchain_core.prompts.prompt import PromptTemplate
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
 from bson.objectid import ObjectId
@@ -328,9 +329,9 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
     if files:
         # store the files in s3
         for file in files:
-            key = f"qu-writing-design/{writing_id}/raw_resources/{file.filename}"
-            await s3_file_manager.upload_file_from_frontend(file, key)
             resource_id = ObjectId()
+            key = f"qu-writing-design/{writing_id}/raw_resources/{resource_id}.{file.filename.split('.')[-1]}"
+            await s3_file_manager.upload_file_from_frontend(file, key)
             key = quote(key)
             resource_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
             resource = {
@@ -365,6 +366,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
     print(selected_resources)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
+    s3_file_manager = S3FileManager()
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
     if not writing:
         return "Writing not found"
@@ -378,11 +380,15 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
 
     files = []
     for resource in selected_resources:
-        file = resource.get("resource_link")
-        files.append(file)
+        file_link = resource.get("resource_link")
+        file_key = file_link.split("/")[3] + "/" + "/".join(file_link.split("/")[4:])
+        file_location = f"files/temp/{writing_id}/"
+        Path(file_location).mkdir(parents=True, exist_ok=True)
+        file_location += file_key.split("/")[-1]
+        s3_file_manager.download_file(file_key, file_location)
+        files.append(Path(file_location))
 
-
-
+    print(files)
     # Track created resources
     created_assistant_id = None
     created_vector_store_id = None
@@ -449,6 +455,8 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             response = response[8:].strip()
         if response.endswith("```"):
             response = response[:-3].strip()
+            
+        print(response)
 
         history = writing.get("history", [])
         latest_version = history[-1]
@@ -459,7 +467,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             "resources": selected_resources,
             "feedback": instructions
         })
-
+        print(history)
         atlas_client.update(
             collection_name="writing_design",
             filter={"_id": ObjectId(writing_id)},
@@ -469,8 +477,10 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
                 }
             }
         )
+        print("Updated")
 
     except Exception as e:
+        print(e)
         return {"writing_id": str(id), "writing": "Something went wrong. Please try again later. But here's a sample response:\n\n# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"}
     
     finally:
@@ -481,6 +491,11 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             client.beta.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
+            
+        for file in files:
+            os.remove(file)
+        os.rmdir(f"files/temp/{writing_id}")
+        os.rmdir("files/temp")
 
     return {"writing_id": str(id), "writing": response}
 
