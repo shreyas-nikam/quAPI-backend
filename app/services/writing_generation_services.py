@@ -77,9 +77,9 @@ async def get_writing(writing_id):
 
 async def generate_templates(files, identifier, target_audience, tone, expected_length):
     prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
-    
     identifier_text = identifier_mappings.get(identifier, "Writing")
     templates_instructions = _get_prompt(prompt)
+    templates_instructions = templates_instructions.replace("{IDENTIFIER_TEXT}", identifier_text)
     templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
@@ -96,7 +96,6 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
     created_assistant_id = None
     created_vector_store_id = None
     created_thread_id = None
-
 
     try:
         assistant = client.beta.assistants.create(
@@ -155,15 +154,20 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
 
         response = message_content.value
         try:
-            response = ast.literal_eval(response)
+            response = json.loads(response)
         except:
-            response = ast.literal_eval(response[response.index("["):response.rindex("]") + 1])
+            response = json.loads(response[response.index("["):response.rindex("]") + 1])
+
+        for template in response:
+            template["template_content"] = template["template_content"].replace("\\n", "\n")
+
 
         return {
             "templates": response
         }
 
     except Exception as e:
+        raise e
         return {
             "templates": [
                 {
