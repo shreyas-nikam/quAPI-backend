@@ -54,7 +54,10 @@ class MarkdownPDFConverter:
         {{ styles }}
         @page {
             size: A4;
-            margin: 0.5cm;
+            margin-top: 1cm;
+            margin-bottom: 1cm;
+            margin-left: 0.5cm;
+            margin-right: 0.5cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
                 font-size: 12px;
@@ -63,12 +66,6 @@ class MarkdownPDFConverter:
            
             @bottom-left {
                 content: "Contact info@qusandbox.com for more info";
-                font-size: 12px;
-                color: #666;
-            }
-
-            @top-left {
-                content: "QuSkillBridge.AI is powered by QuantUniversity";
                 font-size: 12px;
                 color: #666;
             }
