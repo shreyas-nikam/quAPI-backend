@@ -75,11 +75,12 @@ async def get_writing(writing_id):
         writing = _convert_object_ids_to_strings(writing)
     return writing
 
-async def generate_templates(files, identifier):
+async def generate_templates(files, identifier, target_audience, tone, expected_length):
     prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
     
     identifier_text = identifier_mappings.get(identifier, "Writing")
     templates_instructions = _get_prompt(prompt)
+    templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -95,6 +96,7 @@ async def generate_templates(files, identifier):
     created_assistant_id = None
     created_vector_store_id = None
     created_thread_id = None
+
 
     try:
         assistant = client.beta.assistants.create(

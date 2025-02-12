@@ -62,7 +62,13 @@ class MarkdownPDFConverter:
             }
            
             @bottom-left {
-                content: "QuSkillBridge.AI is powered by QuantUniversity | Contact info@qusandbox.com for more info";
+                content: "Contact info@qusandbox.com for more info";
+                font-size: 12px;
+                color: #666;
+            }
+
+            @top-left {
+                content: "QuSkillBridge.AI is powered by QuantUniversity";
                 font-size: 12px;
                 color: #666;
             }

@@ -28,8 +28,12 @@ async def writing_outline_api(files: Optional[List[UploadFile]] = File(None),
 
 @router.post("/generate_templates")
 async def generate_templates_api(files: Optional[List[UploadFile]] = File(None), 
-                                 identifier: str = Form(...)):
-    return await generate_templates(files, identifier)
+                                 identifier: str = Form(...),
+                                 target_audience: str = Form(...),
+                                 tone: str = Form(...),
+                                 expected_length: str = Form(...)
+                                ):
+    return await generate_templates(files, identifier, target_audience, tone, expected_length)
 
 @router.post("/create_writing")
 async def create_writing_api(
