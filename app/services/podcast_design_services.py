@@ -25,6 +25,7 @@ from pathlib import Path  # Import Path for handling filesystem paths
 import tempfile
 import boto3
 import re
+from app.services.metaprompt import generate_prompt
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -127,8 +128,11 @@ def format_podcast_dialogue(response_text):
 
 
 
-async def generate_podcast_outline(files, instructions):
+async def generate_podcast_outline(files, instructions, use_metaprompt=False):
     podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
+
+    if use_metaprompt:
+        podcast_prompt = generate_prompt(podcast_prompt)
 
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
@@ -214,17 +218,6 @@ async def generate_podcast_outline(files, instructions):
             client.beta.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
-
-    # dialogue_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
-    # dialogue_prompt = podcast_prompt.replace("{text}", response)
-    # try:
-    #     response = await generate_podcast_dialogue(dialogue_prompt)
-    #     formatted_response = format_podcast_dialogue(response)
-    #     return formatted_response
-    
-    # except Exception as e:
-    #     logging.error(f"Error in generating podcast dialogue: {e}")
-    #     return response
 
     match = re.search(r'<podcast_dialogue>(.*?)</podcast_dialogue>', response, re.DOTALL)
 

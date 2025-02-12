@@ -20,6 +20,7 @@ from openai import OpenAI
 import os
 from fastapi import UploadFile
 from urllib.parse import quote, unquote
+from app.services.metaprompt import generate_prompt
 
 
 COURSE_DESIGN_STEPS = [
@@ -161,9 +162,11 @@ async def get_courses():
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
 
 
-async def generate_course_outline(files, instructions):
+async def generate_course_outline(files, instructions, use_metaprompt=False):
 
     course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
+    if use_metaprompt:
+        course_outline_instructions = generate_prompt(course_outline_instructions)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     assistant_files_streams = []
     if files:

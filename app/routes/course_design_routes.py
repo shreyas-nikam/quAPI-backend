@@ -7,8 +7,8 @@ router = APIRouter()
 # done
 @router.post("/generate_course_outline")
 async def generate_course_outline_api(files: Optional[List[UploadFile]] = File(None),
-                                  instructions: str = Form(...)):
-    return await generate_course_outline(files, instructions) 
+                                  instructions: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
+    return await generate_course_outline(files, instructions, use_metaprompt) 
 
 # /clone_course -> takes in the course_id, course_name, course_image, course_description, and clones the course
 @router.post("/clone_course")

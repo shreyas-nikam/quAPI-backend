@@ -19,6 +19,7 @@ from fastapi import UploadFile
 from urllib.parse import quote, unquote
 from langchain_core.prompts import PromptTemplate
 from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
+from app.services.metaprompt import generate_prompt
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -138,9 +139,15 @@ async def get_labs():
     return labs
     
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
-async def generate_lab_outline(files, instructions):
+async def generate_lab_outline(files, instructions, use_metaprompt=False):
 
     lab_outline_instructions = _get_prompt("LAB_OUTLINE_PROMPT")
+
+    lab_outline_instructions += f"\n\nUser's instructions:\n{instructions}"
+
+    if use_metaprompt:
+        lab_outline_instructions = generate_prompt(lab_outline_instructions)
+
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -183,7 +190,7 @@ async def generate_lab_outline(files, instructions):
         thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Create the lab outline based on the instructions provided and the following user's instructions: " + instructions,
+                "content": "Create the lab outline based on the instructions provided"
             }]
         )
         created_thread_id = thread.id  # Track the thread
@@ -607,7 +614,7 @@ async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_ste
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
 
-async def generate_idea_for_concept_lab(lab_id: str, instructions: str):
+async def generate_idea_for_concept_lab(lab_id: str, instructions: str, use_metaprompt=False):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -619,6 +626,9 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str):
 
     prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
 
+    if use_metaprompt:
+        prompt = generate_prompt(prompt)
+
     inputs = {
         "NAME": lab.get("lab_name"),
         "DESCRIPTION": lab.get("lab_description"),
@@ -626,6 +636,7 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str):
     }
 
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
+
 
     llm = LLM("chatgpt")
     response = _get_response(llm, prompt, inputs, output_type="str")
@@ -660,7 +671,7 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str):
     return lab
 
 
-async def generate_business_use_case_for_lab(lab_id: str):
+async def generate_business_use_case_for_lab(lab_id: str, use_metaprompt=False):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -671,6 +682,11 @@ async def generate_business_use_case_for_lab(lab_id: str):
     lab = lab[0]
 
     prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+
+    if use_metaprompt:
+        prompt = generate_prompt(prompt)
+
+
     idea_history = lab.get("idea_history")
     if not idea_history:
         return "Idea not found"
@@ -719,7 +735,7 @@ async def generate_business_use_case_for_lab(lab_id: str):
     res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
-async def generate_technical_specifications_for_lab(lab_id):
+async def generate_technical_specifications_for_lab(lab_id, use_metaprrompt=False):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -730,6 +746,9 @@ async def generate_technical_specifications_for_lab(lab_id):
     lab = lab[0]
 
     prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+
+    if use_metaprrompt:
+        prompt = generate_prompt(prompt)
 
 
     business_use_case_history = lab.get("business_use_case_history")
@@ -779,12 +798,15 @@ async def generate_technical_specifications_for_lab(lab_id):
     return lab
 
 
-async def regenerate_with_feedback(content, feedback):
+async def regenerate_with_feedback(content, feedback, use_metaprompt=False):
     prompt = _get_prompt("REGENERATE_WITH_FEEDBACK_PROMPT")
     inputs = {
         "CONTENT": content,
         "FEEDBACK": feedback
     }
+
+    if use_metaprompt:
+        prompt = generate_prompt(prompt)
 
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 

@@ -7,8 +7,10 @@ router = APIRouter()
 # done
 @router.post("/generate_lab_outline")
 async def generate_lab_outline_api(files: List[List[UploadFile]] = File(...),
-                                  instructions: str = Form(...)):
-    return await generate_lab_outline(files, instructions) 
+                                  instructions: str = Form(...),
+                                  use_metaprompt: Optional[bool] = Form(False)
+                                  ):
+    return await generate_lab_outline(files, instructions, use_metaprompt) 
 
 # /clone_course -> takes in the course_id, course_name, course_image, course_description, and clones the course
 @router.post("/clone_lab")
@@ -67,20 +69,20 @@ async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
 
 @router.post("/generate_idea_for_concept_lab")
-async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...)):
-    return await generate_idea_for_concept_lab(lab_id, instructions)
+async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
+    return await generate_idea_for_concept_lab(lab_id, instructions, use_metaprompt)
 
 @router.post("/generate_business_use_case_for_lab")
-async def generate_business_use_case_for_lab_api(lab_id: str = Form(...)):
-    return await generate_business_use_case_for_lab(lab_id)
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
+    return await generate_business_use_case_for_lab(lab_id, use_metaprompt)
 
 @router.post("/generate_technical_specifications_for_lab")
-async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...)):
-    return await generate_technical_specifications_for_lab(lab_id)
+async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
+    return await generate_technical_specifications_for_lab(lab_id, use_metaprompt)
 
 @router.post("/regenerate_with_feedback")
-async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...)):
-    return await regenerate_with_feedback(content, feedback)
+async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
+    return await regenerate_with_feedback(content, feedback, use_metaprompt)
 
 @router.post("/save_concept_lab_idea")
 async def save_concept_lab_idea_api(lab_id: str = Form(...), 

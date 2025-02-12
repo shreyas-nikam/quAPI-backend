@@ -23,17 +23,20 @@ async def delete_resources_from_writing_api(writing_id: str = Form(...),  resour
 @router.post("/writing_outline")
 async def writing_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...),
-                                  identifier: str = Form(...)):
-    return await writing_outline(files, instructions, identifier) 
+                                  identifier: str = Form(...),
+                                  use_metaprompt: Optional[bool] = Form(False)
+                                  ):
+    return await writing_outline(files, instructions, identifier, use_metaprompt) 
 
 @router.post("/generate_templates")
 async def generate_templates_api(files: Optional[List[UploadFile]] = File(None), 
                                  identifier: str = Form(...),
                                  target_audience: str = Form(...),
                                  tone: str = Form(...),
-                                 expected_length: str = Form(...)
+                                 expected_length: str = Form(...),
+                                 use_metaprompt: Optional[bool] = Form(False)
                                 ):
-    return await generate_templates(files, identifier, target_audience, tone, expected_length)
+    return await generate_templates(files, identifier, target_audience, tone, expected_length, use_metaprompt)
 
 @router.post("/create_writing")
 async def create_writing_api(
@@ -61,10 +64,11 @@ async def regenerate_outline_api(
         instructions: str = Form(...),
         previous_outline: str = Form(...),
         selected_resources: str = Form(...),
-        identifier: str = Form(...)
+        identifier: str = Form(...),
+        use_metaprompt: Optional[bool] = Form(False)
     ):
     #TODO check implementation
-    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier)
+    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, use_metaprompt)
 
 
 # convert file to pdf for selected template

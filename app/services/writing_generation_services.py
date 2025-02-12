@@ -12,6 +12,7 @@ import json
 import logging
 import datetime
 import ast
+from app.services.metaprompt import generate_prompt
 
 identifier_mappings = {
     "research_report": "Research Report",
@@ -75,12 +76,16 @@ async def get_writing(writing_id):
         writing = _convert_object_ids_to_strings(writing)
     return writing
 
-async def generate_templates(files, identifier, target_audience, tone, expected_length):
+async def generate_templates(files, identifier, target_audience, tone, expected_length, use_metaprompt=False):
     prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
     identifier_text = identifier_mappings.get(identifier, "Writing")
     templates_instructions = _get_prompt(prompt)
     templates_instructions = templates_instructions.replace("{IDENTIFIER_TEXT}", identifier_text)
     templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
+    
+    if use_metaprompt:
+        templates_instructions = generate_prompt(templates_instructions)
+
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -198,10 +203,16 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-async def writing_outline(files, instructions, identifier):
+async def writing_outline(files, instructions, identifier, use_metaprompt=False):
     prompt = identifier.upper() + "_PROMPT"
     identifier_text = identifier_mappings.get(identifier, "Writing")
+    
     outline_instructions = _get_prompt(prompt)
+    outline_instructions += f"\n\nAdditional instructions from user: \n- {instructions}"
+
+    if use_metaprompt:
+        outline_instructions = generate_prompt(outline_instructions)
+
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
@@ -249,7 +260,7 @@ async def writing_outline(files, instructions, identifier):
         thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Create the " + identifier_text + " in markdown format based on the instructions provided and the following user's instructions: " + instructions,
+                "content": "Create the " + identifier_text + " in markdown format based on the instructions provided and the user's instructions.",
             }]
         )
         created_thread_id = thread.id  # Track the thread
@@ -367,7 +378,7 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
 
     return writing
 
-async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier):
+async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, use_metaprompt=False):
     selected_resources = json.loads(selected_resources)
     client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
@@ -382,6 +393,10 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
 
     prompt = prompt.replace("{DRAFT}", previous_outline)
     prompt = prompt.replace("{USER_INSTRUCTIONS}", instructions)
+
+    if use_metaprompt:
+        prompt = generate_prompt(prompt)
+
 
     files = []
     for resource in selected_resources:
@@ -431,7 +446,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         thread = client.beta.threads.create(
             messages=[{
                 "role": "user",
-                "content": "Create the " + identifier_text + " in markdown format based on the instructions provided and the following user's instructions: " + instructions,
+                "content": "Create the " + identifier_text + " in markdown format based on the instructions provided and the user's instructions.",
             }]
         )
         created_thread_id = thread.id  # Track the thread
