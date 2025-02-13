@@ -35,8 +35,8 @@ llama_index.core.set_global_handler(
 
 # Set OpenAI models
 embed_model = OpenAIEmbedding(model="text-embedding-3-large", api_key=OPENAI_KEY)
-llm = OpenAI(model=OPENAI_MODEL, api_key=OPENAI_KEY)
-report_gen_llm = OpenAI(model=OPENAI_MODEL, system_prompt=REPORT_OUTLINE_PROMPT, api_key=OPENAI_KEY)
+llm = OpenAI(timeout=120, model=OPENAI_MODEL, api_key=OPENAI_KEY)
+report_gen_llm = OpenAI(timeout=120, model=OPENAI_MODEL, system_prompt=REPORT_OUTLINE_PROMPT, api_key=OPENAI_KEY)
 
 # Set settings
 Settings.embed_model = embed_model
@@ -101,7 +101,6 @@ async def get_response(agent, input):
 
 def render_report(input):
     # TODO: Implement report rendering
-    print(input)
     pass
 
 

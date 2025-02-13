@@ -1,3 +1,4 @@
+import logging
 import requests
 import base64
 import os
@@ -98,10 +99,10 @@ def _create_github_repo(repo_name, description="", private=False):
     }
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 201:
-        print(f"Repository '{repo_name}' created successfully!")
+        logging.info(f"Repository '{repo_name}' created successfully!")
         return response.json()["html_url"]
     else:
-        print(f"Failed to create repository: {response.status_code}, {response.text}")
+        logging.info(f"Failed to create repository: {response.status_code}, {response.text}")
         return None
 
 
@@ -118,10 +119,10 @@ def upload_file_to_github(repo_name, file_path, file_content, commit_message="Ad
     }
     response = requests.put(url, headers=headers, json=data)
     if response.status_code == 201:
-        print(f"File '{file_path}' uploaded successfully!")
+        logging.info(f"File '{file_path}' uploaded successfully!")
         return response.json()
     else:
-        print(f"Failed to upload file: {response.status_code}, {response.text}")
+        logging.info(f"Failed to upload file: {response.status_code}, {response.text}")
         return None
 
 
@@ -146,10 +147,10 @@ def create_github_issue(repo_name, issue_title, issue_body="", labels=None):
     }
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 201:
-        print(f"Issue '{issue_title}' created successfully!")
+        logging.info(f"Issue '{issue_title}' created successfully!")
         return response.json()
     else:
-        print(f"Failed to create issue: {response.status_code}, {response.text}")
+        logging.info(f"Failed to create issue: {response.status_code}, {response.text}")
         return None
 
 
@@ -164,14 +165,14 @@ def get_file_sha(repo_name, file_path):
     if response.status_code == 200:
         return response.json()["sha"]
     else:
-        print(f"Failed to fetch file SHA: {response.status_code}, {response.text}")
+        logging.info(f"Failed to fetch file SHA: {response.status_code}, {response.text}")
         return None
 
 def update_file_in_github(repo_name, file_path, new_content, commit_message="Update file"):
     """Update an existing file in the GitHub repository."""
     sha = get_file_sha(repo_name, file_path)
     if not sha:
-        print(f"Cannot update file: Unable to fetch SHA for {file_path}")
+        logging.info(f"Cannot update file: Unable to fetch SHA for {file_path}")
         return
 
     url = f"{GITHUB_API_URL}/repos/{GITHUB_USERNAME}/{repo_name}/contents/{file_path}"
@@ -186,9 +187,9 @@ def update_file_in_github(repo_name, file_path, new_content, commit_message="Upd
     }
     response = requests.put(url, headers=headers, json=data)
     if response.status_code == 200:
-        print(f"File '{file_path}' updated successfully!")
+        logging.info(f"File '{file_path}' updated successfully!")
     else:
-        print(f"Failed to update file '{file_path}': {response.status_code}, {response.text}")
+        logging.info(f"Failed to update file '{file_path}': {response.status_code}, {response.text}")
 
 
 def create_repo_in_github(repo_name, description, private=False):

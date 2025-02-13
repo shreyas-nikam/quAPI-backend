@@ -99,7 +99,6 @@ async def add_file(collection_name, collection_id, file):
     # CHECK 1
     md_json_objs = parser.get_json_result(resource_link)
     json_dicts = md_json_objs[0]["pages"]
-    print(json_dicts)
 
     # store the images
     # make the image path if it doesn't exist

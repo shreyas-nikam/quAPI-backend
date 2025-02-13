@@ -54,7 +54,7 @@ class ReportGenerationAgent(Workflow):
         self.chunk_retriever_tool = chunk_retriever_tool
         self.doc_retriever_tool = doc_retriever_tool
 
-        self.llm = llm or OpenAI(api_key=OPENAI_KEY, model=OPENAI_MODEL)
+        self.llm = llm or OpenAI(timeout=120, api_key=OPENAI_KEY, model=OPENAI_MODEL)
         self.summarizer = CompactAndRefine(llm=self.llm)
         assert self.llm.metadata.is_function_calling_model
 

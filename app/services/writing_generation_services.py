@@ -85,8 +85,14 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
     
     if use_metaprompt:
         templates_instructions = generate_prompt(templates_instructions)
+    
+    if templates_instructions == "The request timed out. Please try again.":
+        templates_instructions = _get_prompt(prompt)
+        templates_instructions = templates_instructions.replace("{IDENTIFIER_TEXT}", identifier_text)
+        templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
 
-    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+
+    client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
     if files:
@@ -213,7 +219,11 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
     if use_metaprompt:
         outline_instructions = generate_prompt(outline_instructions)
 
-    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+    if outline_instructions == "The request timed out. Please try again.":
+        outline_instructions = _get_prompt(prompt)
+        outline_instructions += f"\n\nAdditional instructions from user: \n- {instructions}"
+
+    client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
     if files:
@@ -287,6 +297,14 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
             response = response[8:].strip()
         if response.endswith("```"):
             response = response[:-3].strip()
+
+        if "```" in response:
+            if response.count("```") > 1:
+                response = response[response.index("```") + 3:response.rindex("```")].strip()
+            else:
+                response = response[:response.index("```")].strip()
+        
+
     except Exception as e:
         logging.error(f"Error in generating writing: {e}")
         response = "# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
@@ -380,7 +398,7 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
 
 async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, use_metaprompt=False):
     selected_resources = json.loads(selected_resources)
-    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+    client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
     s3_file_manager = S3FileManager()
     writing = atlas_client.find(collection_name="writing_design", filter={"_id": ObjectId(writing_id)})
@@ -396,6 +414,11 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
 
     if use_metaprompt:
         prompt = generate_prompt(prompt)
+
+    if prompt == "The request timed out. Please try again.":
+        prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
+        prompt = prompt.replace("{DRAFT}", previous_outline)
+        prompt = prompt.replace("{USER_INSTRUCTIONS}", instructions)
 
 
     files = []
@@ -476,7 +499,10 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
             response = response[:-3].strip()
 
         if "```" in response:
-            response = response[:response.index("```")].strip()
+            if response.count("```") > 1:
+                response = response[response.index("```") + 3:response.rindex("```")].strip()
+            else:
+                response = response[:response.index("```")].strip()
 
         history = writing.get("history", [])
         latest_version = history[-1]
@@ -507,8 +533,8 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         )
 
     except Exception as e:
-        print(e)
-        return {"writing_id": str(id), "writing": "Something went wrong. Please try again later. But here's a sample response:\n\n# "+identifier_text+"\nHere's a sample: \n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"}
+        logging.error(e)
+        return {"writing_id": str(id), "writing": "The request timed out. Please try again later. However, here's a sample response:\n\n# "+identifier_text+"\n### 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"}
     
     finally:
         # Clean up all created resources to avoid charges

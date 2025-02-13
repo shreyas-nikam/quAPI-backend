@@ -1,3 +1,4 @@
+import logging
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from app.utils.atlas_client import AtlasClient
@@ -155,5 +156,5 @@ async def toggle_notification_status(notification_list):
         return True
     except Exception as e:
         # Catch any exceptions and handle them
-        print(f"Error occurred: {e}")
+        logging.error(f"Error occurred: {e}")
         return False

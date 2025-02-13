@@ -71,5 +71,4 @@ class ReportOutput(BaseModel):
     #         if isinstance(b, TextBlock):
     #              display(Markdown(b.text))
     #         else:
-    #             print(b.file_path)
-
+    #              pass 

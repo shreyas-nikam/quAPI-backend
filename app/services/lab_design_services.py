@@ -148,7 +148,11 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
     if use_metaprompt:
         lab_outline_instructions = generate_prompt(lab_outline_instructions)
 
-    client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+    if lab_outline_instructions == "The request timed out. Please try again.":
+        lab_outline_instructions = _get_prompt("LAB_OUTLINE_PROMPT")
+        lab_outline_instructions += f"\n\nUser's instructions:\n{instructions}"
+
+    client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
 
     assistant_files_streams = []
     for file in files:
@@ -213,7 +217,7 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
         response = message_content.value
     except Exception as e:
         logging.error(f"Error in generating lab outline: {e}")
-        return "# Slide 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### Slide 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### Slide 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### Slide 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### Slide 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
+        return "The request timed out. Please try again later. However, here's a sample response:\n\n# Slide 1: **On Machine Learning Applications in Investments**\n**Description**: This module provides an overview of the use of machine learning (ML) in investment practices, including its potential benefits and common challenges. It highlights examples where ML techniques have outperformed traditional investment models.\n\n**Learning Outcomes**:\n- Understand the motivations behind using ML in investment strategies.\n- Recognize the challenges and solutions in applying ML to finance.\n- Explore practical applications of ML for predicting equity returns and corporate performance.\n### Slide 2: **Alternative Data and AI in Investment Research**\n**Description**: This module explores how alternative data sources combined with AI are transforming investment research by providing unique insights and augmenting traditional methods.\n\n**Learning Outcomes**:\n- Identify key sources of alternative data and their relevance in investment research.\n- Understand how AI can process and derive actionable insights from alternative data.\n- Analyze real-world use cases showcasing the impact of AI in research and decision-making.\n### Slide 3: **Data Science for Active and Long-Term Fundamental Investing**\n**Description**: This module covers the integration of data science into long-term fundamental investing, discussing how quantitative analysis can enhance traditional methods.\n\n**Learning Outcomes**:\n- Learn the foundational role of data science in long-term investment strategies.\n- Understand the benefits of combining data science with active investing.\n- Evaluate case studies on the effective use of data science to support investment decisions.\n### Slide 4: **Unlocking Insights and Opportunities**\n**Description**: This module focuses on techniques and strategies for using data-driven insights to identify market opportunities and enhance investment management processes.\n\n**Learning Outcomes**:\n- Grasp the importance of leveraging advanced data analytics for opportunity identification.\n- Understand how to apply insights derived from data to optimize investment outcomes.\n- Explore tools and methodologies that facilitate the unlocking of valuable investment insights.\n### Slide 5: **Advances in Natural Language Understanding for Investment Management**\n**Description**: This module highlights the progression of natural language understanding (NLU) and its application in finance. It covers recent developments and their implications for asset management.\n\n**Learning Outcomes**:\n- Recognize advancements in NLU and their integration into investment strategies.\n- Explore trends and applications of NLU in financial data analysis.\n- Understand the technical challenges and solutions associated with implementing NLU tools.\n###"
     finally:
         # Clean up all created resources to avoid charges
         if created_assistant_id:
@@ -340,7 +344,6 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
     lab = _convert_object_ids_to_strings(lab)
     # Create Repo on GitHub
     res = create_repo_in_github(lab["_id"], lab_description, private=False)
-    print("Res: ", res)
     # Create it as an object id and store the unique objectid
     return lab
 
@@ -629,6 +632,9 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str, use_meta
     if use_metaprompt:
         prompt = generate_prompt(prompt)
 
+    if prompt == "The request timed out. Please try again.":
+        prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
+
     inputs = {
         "NAME": lab.get("lab_name"),
         "DESCRIPTION": lab.get("lab_description"),
@@ -685,6 +691,10 @@ async def generate_business_use_case_for_lab(lab_id: str, use_metaprompt=False):
 
     if use_metaprompt:
         prompt = generate_prompt(prompt)
+
+    if prompt == "The request timed out. Please try again.":
+        prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+
 
 
     idea_history = lab.get("idea_history")
@@ -750,6 +760,9 @@ async def generate_technical_specifications_for_lab(lab_id, use_metaprrompt=Fals
     if use_metaprrompt:
         prompt = generate_prompt(prompt)
 
+    if prompt == "The request timed out. Please try again.":
+        prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+
 
     business_use_case_history = lab.get("business_use_case_history")
     if not business_use_case_history:
@@ -808,6 +821,9 @@ async def regenerate_with_feedback(content, feedback, use_metaprompt=False):
     if use_metaprompt:
         prompt = generate_prompt(prompt)
 
+    if prompt == "The request timed out. Please try again.":
+        prompt = _get_prompt("REGENERATE_WITH_FEEDBACK_PROMPT")
+
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
     llm = LLM("chatgpt")
@@ -859,7 +875,6 @@ async def save_concept_lab_idea(lab_id, idea):
         new_content=idea, 
         commit_message=f"Update Idea to {latest_version.get('version') + 1.0}"
     )
-    print("Res: ", res)
     return lab
 
 async def save_business_use_case(lab_id, business_use_case):
@@ -906,7 +921,6 @@ async def save_business_use_case(lab_id, business_use_case):
         new_content=business_use_case, 
         commit_message=f"Update business requirements to {latest_version.get('version') + 1.0}"
     )
-    print("Res: ", res)
     return lab
 
 async def save_technical_specifications(lab_id, technical_specifications):
@@ -953,7 +967,6 @@ async def save_technical_specifications(lab_id, technical_specifications):
         new_content=technical_specifications, 
         commit_message=f"Update technical specifications to {latest_version.get('version') + 1.0}"
     )
-    print("Res: ", res)
     return lab
 
 

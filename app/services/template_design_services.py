@@ -268,7 +268,6 @@ async def save_project_template_data(project_id, template_id, template_data):
         return "Project not found"
     project = project[0]
 
-    print("Saving template data...")
     report_data = await save_template_data(template_id, template_data)
     
     report_ids = [report_data["_id"]]
@@ -278,8 +277,6 @@ async def save_project_template_data(project_id, template_id, template_data):
             project["templates"][index]["status"] = "Completed"
             break
 
-    print("Report IDs:")
-    print(report_ids)
     report_datas = []
     for report_id in report_ids:
         report = mongo_client.find("model_reports", {"_id": ObjectId(report_id)})
@@ -366,7 +363,6 @@ async def consolidate_reports(project_id):
     for template in project["templates"]:
         report_ids.append(template["report_ids"][-1])
     
-    print("Report ids.....", report_ids)
     # get all the pdf urls for the reports
     pdf_urls = []
     for report_id in report_ids:

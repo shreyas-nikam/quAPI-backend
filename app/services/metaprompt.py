@@ -2,11 +2,12 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(timeout=120, api_key=OPENAI_API_KEY)
 
 META_PROMPT = """
 Given a task description or existing prompt, produce a detailed system prompt to guide a language model in completing the task effectively.
@@ -55,19 +56,23 @@ The final prompt you output should adhere to the following structure below. Do n
 """.strip()
 
 def generate_prompt(task_or_prompt: str):
-    print("Generating Metaprompt...")
-    completion = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": META_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": "Task, Goal, or Current Prompt:\n" + task_or_prompt,
-            },
-        ],
-    )
-
-    return completion.choices[0].message.content
+    logging.info("Generating Metaprompt...")
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": META_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": "Task, Goal, or Current Prompt:\n" + task_or_prompt,
+                },
+            ],
+        )
+        response = completion.choices[0].message.content
+        return response
+    except Exception as e:
+        logging.error(f"Error generating metaprompt: {e}")
+        return "The request timed out. Please try again."

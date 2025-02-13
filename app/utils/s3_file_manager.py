@@ -274,7 +274,6 @@ class S3FileManager:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 temp_file.write(data)
                 temp_file.close()
-                print("Temp file name: ", temp_file.name)
                 self.upload_file(temp_file.name, key)
                 os.unlink(temp_file.name)
             return True

@@ -1,3 +1,4 @@
+import logging
 import requests
 import json
 from types import SimpleNamespace
@@ -35,7 +36,6 @@ class ReportGenerator:
             "report_details": self.detail,
             "notes": self.notes
         }
-        print(json.dumps(body, indent=4, sort_keys=True))
         response = requests.post(url, json.dumps(body))
         if response.status_code != 200:
             raise ValueError('Unexpected happened.')
@@ -45,11 +45,10 @@ class ReportGenerator:
     def save(self, path="audit.html"):
         file = open(path, "w")
         file.write(self.report)
-        print("report is saved to " + file.name)
         file.close()
     
     def publish(self, APIkey="", experiment="", stage=""):
-        print("Publish reports to QuSandbox available with prime version, contact info@qusandbox.com for more infomation")
+        logging.info("Publish reports to QuSandbox available with prime version, contact info@qusandbox.com for more infomation")
     
     
 class TemplateReader:
@@ -88,7 +87,6 @@ class Note:
         self.Title = title
         self.Content = description
         if category not in self.categories:
-            print('Support categories are ' + str(self.categories))
             raise ValueError('Not a support note category')
         else:
             if category in ['link', 'base64', 'file']:
@@ -149,4 +147,4 @@ def show_report(html):
         from IPython.core.display import HTML
         display(HTML(html))
     except:
-        print('Not in notebook environment, please copy the html string to a file manually')
+        logging.info('Not in notebook environment, please copy the html string to a file manually')

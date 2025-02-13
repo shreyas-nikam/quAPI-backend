@@ -28,7 +28,7 @@ load_dotenv()
 
 
 embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-llm = OpenAI(model=os.getenv("OPENAI_MODEL"), api_key=os.getenv("OPENAI_API_KEY"))
+llm = OpenAI(timeout=120, model=os.getenv("OPENAI_MODEL"), api_key=os.getenv("OPENAI_API_KEY"))
 
 Settings.embed_model = embed_model
 Settings.llm = llm
@@ -184,7 +184,6 @@ async def get_or_create_index(course_id, module_id, text_nodes, index_id):
         pc = Pinecone(
             api_key=os.environ.get("PINECONE_API_KEY")
         )
-        print(pc)
         
         if pc.list_indexes().names().count(index_id) > 0:
             logging.info(f"Using existing Pinecone index: {index_id}")
