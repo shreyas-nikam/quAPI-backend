@@ -54,10 +54,15 @@ def _convert_object_ids_to_strings(data):
     else:
         return data
     
-async def get_writings():
+async def get_writings(username: str):
     atlas_client = AtlasClient()
-    writings = atlas_client.find(collection_name="writing_design", filter={})
-    writings = _convert_object_ids_to_strings(writings)
+    writings = atlas_client.find(collection_name="writing_design")
+    user_writings = []
+    for writing in writings:
+        users = writing.get("users", [])
+        if username in users:
+            user_writings.append(writing)
+    writings = _convert_object_ids_to_strings(user_writings)
     return writings
 
 async def delete_writing(writing_id):
@@ -337,7 +342,7 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
 
     return {"writing_id": str(id), "writing": response}
 
-async def create_writing(writing_id, writing_name, writing_description, writing_outline, files, writing_image, identifier):
+async def create_writing(username, writing_id, writing_name, writing_description, writing_outline, files, writing_image, identifier):
     atlas_client = AtlasClient()
     s3_file_manager = S3FileManager()
 
@@ -345,7 +350,9 @@ async def create_writing(writing_id, writing_name, writing_description, writing_
     await s3_file_manager.upload_file_from_frontend(writing_image, key)
     key = quote(key)
     writing_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+    users = [username]
     writing = {
+        "users": users,
         "writing_name": writing_name,
         "writing_description": writing_description,
         "writing_outline": writing_outline,
