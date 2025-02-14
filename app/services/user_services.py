@@ -193,3 +193,31 @@ async def fetch_users():
     users = atlas_client.find("qucreate_users")
     users = _convert_object_ids_to_strings(users)
     return users
+
+
+async def update_category(username, category):
+    atlas_client = AtlasClient()
+    # Check if the user exists in the database
+    user = atlas_client.find("qucreate_users", filter={"username": username})
+    if not user:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."}
+        )
+    
+    # Update the user's category
+    try:
+        atlas_client.update(
+            "qucreate_users",
+            filter={"username": username},
+            update={"$set": {"category": category}}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update user category: {str(e)}"
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "User category updated successfully."}
+    )
