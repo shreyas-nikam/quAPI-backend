@@ -153,10 +153,17 @@ def _get_file_type(file: UploadFile):
         return "File"
 
 
-async def get_courses():
+async def get_courses(username: str):
+    print("Username: ", username)
     atlas_client = AtlasClient()
-    courses = atlas_client.find("course_design")
+
+    # Find courses where username matches
+    courses = atlas_client.find("course_design", {"username": username})
+    # courses = atlas_client.find("course_design")
+    
+    # Convert ObjectIDs to strings before returning
     courses = _convert_object_ids_to_strings(courses)
+    
     return courses
 
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
@@ -311,7 +318,7 @@ async def delete_course(course_id):
 
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-async def create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation):
+async def create_course(username, course_name, course_description, course_outline, files, course_image, modulesAtCreation):
     course_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
@@ -337,6 +344,7 @@ async def create_course(course_name, course_description, course_outline, files, 
 
     course = {        
         "_id": course_id,
+        "username": username,
         "course_name": course_name,
         "course_description": course_description,
         "course_image": course_image_link,
