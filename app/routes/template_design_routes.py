@@ -27,13 +27,13 @@ async def sample_report_api(template_id: str = Form(...)):
 
 # create model project
 @router.post("/create_model_project")
-async def create_model_project_api(project_name: str = Form(...), project_description: str = Form(...)):
-    return await create_model_project(project_name, project_description)
+async def create_model_project_api(username: str = Form(...), project_name: str = Form(...), project_description: str = Form(...)):
+    return await create_model_project(username, project_name, project_description)
 
 # get model projects
-@router.get("/model_projects")
-async def model_projects_api():
-    return await get_model_projects()
+@router.post("/model_projects")
+async def model_projects_api(username: str = Form(...)):
+    return await get_model_projects(username)
 
 # get model project from id
 @router.post("/model_project")
