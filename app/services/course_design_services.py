@@ -158,11 +158,16 @@ async def get_courses(username: str):
     atlas_client = AtlasClient()
 
     # Find courses where username matches
-    courses = atlas_client.find("course_design", {"username": username})
+    courses = atlas_client.find("course_design")
+    user_courses = []
+    for course in courses:
+        users = course.get('users', [])
+        if username in users:
+            user_courses.append(course)
     # courses = atlas_client.find("course_design")
     
     # Convert ObjectIDs to strings before returning
-    courses = _convert_object_ids_to_strings(courses)
+    courses = _convert_object_ids_to_strings(user_courses)
     
     return courses
 
@@ -342,9 +347,10 @@ async def create_course(username, course_name, course_description, course_outlin
     key = quote(key)
     course_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
+    users = [username]
     course = {        
         "_id": course_id,
-        "username": username,
+        "users": users,
         "course_name": course_name,
         "course_description": course_description,
         "course_image": course_image_link,
