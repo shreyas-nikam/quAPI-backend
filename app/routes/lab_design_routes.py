@@ -24,13 +24,13 @@ async def delete_lab_api(lab_id: str = Form(...)):
 
 # working
 @router.post("/create_lab")
-async def create_lab_api(lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), lab_image: UploadFile = File(...)):
-    return await create_lab(lab_name, lab_description, lab_outline, files, lab_image)
+async def create_lab_api(username: str = Form(...), lab_name: str = Form(...),  lab_description: str = Form(...), lab_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), lab_image: UploadFile = File(...)):
+    return await create_lab(username, lab_name, lab_description, lab_outline, files, lab_image)
 
 # working
-@router.get("/labs")
-async def labs_api():
-    return await get_labs()
+@router.post("/labs")
+async def labs_api(username: str = Form(...)):
+    return await get_labs(username)
 
 # done
 @router.post("/add_resources_to_lab")

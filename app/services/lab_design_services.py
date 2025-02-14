@@ -132,9 +132,9 @@ def _get_file_type(file: UploadFile):
     else:
         return "File"
 
-async def get_labs():
+async def get_labs(username):
     atlas_client = AtlasClient()
-    labs = atlas_client.find("lab_design")
+    labs = atlas_client.find("lab_design",  {"username": username})
     labs = _convert_object_ids_to_strings(labs)
     return labs
     
@@ -280,7 +280,7 @@ async def delete_lab(lab_id):
     
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
+async def create_lab(username, lab_name, lab_description, lab_outline, files, lab_image):
     lab_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
@@ -297,6 +297,7 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
 
     lab = {
         "_id": lab_id,
+        "username": username,
         "lab_name": lab_name,
         "lab_description": lab_description,
         "lab_image": lab_image_link,
