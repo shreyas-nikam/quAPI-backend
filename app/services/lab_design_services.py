@@ -134,8 +134,13 @@ def _get_file_type(file: UploadFile):
 
 async def get_labs(username):
     atlas_client = AtlasClient()
-    labs = atlas_client.find("lab_design",  {"username": username})
-    labs = _convert_object_ids_to_strings(labs)
+    labs = atlas_client.find("lab_design")
+    user_labs = []
+    for lab in labs:
+        users = lab.get('users', [])
+        if username in users:
+            user_labs.append(lab)
+    labs = _convert_object_ids_to_strings(user_labs)
     return labs
     
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
@@ -294,10 +299,11 @@ async def create_lab(username, lab_name, lab_description, lab_outline, files, la
     key = quote(key)
     lab_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
+    users = [username]
 
     lab = {
         "_id": lab_id,
-        "username": username,
+        "users": users,
         "lab_name": lab_name,
         "lab_description": lab_description,
         "lab_image": lab_image_link,
