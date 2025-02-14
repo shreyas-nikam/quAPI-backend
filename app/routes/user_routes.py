@@ -24,3 +24,7 @@ async def toggle_notification_status_api(notification_list: List[str] = Form(...
 @router.post("/register_user")
 async def register_user_api(username: str = Form(...), email: str = Form(...), firstName: str = Form(...), lastName: str = Form(...), phone: str = Form(...)):
     return await register_user(username, email, firstName, lastName, phone)
+
+@router.get("/users")
+async def fetch_users_api():
+    return await fetch_users()

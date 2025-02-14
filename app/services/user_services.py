@@ -187,4 +187,9 @@ async def register_user(username, email, firstName, lastName, phone):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to insert user: {str(e)}"
         )
-    
+
+async def fetch_users():
+    atlas_client = AtlasClient()
+    users = atlas_client.find("qucreate_users")
+    users = _convert_object_ids_to_strings(users)
+    return users
