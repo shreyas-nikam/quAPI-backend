@@ -158,3 +158,66 @@ async def toggle_notification_status(notification_list):
         # Catch any exceptions and handle them
         logging.error(f"Error occurred: {e}")
         return False
+    
+
+async def register_user(username, email, firstName, lastName, phone):
+    atlas_client = AtlasClient()
+    # Check if the user already exists in the database
+    user = atlas_client.find("qucreate_users", filter={"username": username})
+    if user:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"message": "User already exists."}
+        )
+    
+    # If the user does not exist, insert a new user into the database
+    user_entry = {
+        "username": username,
+        "email": email, 
+        "first_name": firstName,
+        "last_name": lastName,
+        "phone": phone,
+        "category": "user",
+        "registration_date": datetime.now()
+    }
+    try:
+        atlas_client.insert("qucreate_users", user_entry)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to insert user: {str(e)}"
+        )
+
+async def fetch_users():
+    atlas_client = AtlasClient()
+    users = atlas_client.find("qucreate_users")
+    users = _convert_object_ids_to_strings(users)
+    return users
+
+
+async def update_category(username, category):
+    atlas_client = AtlasClient()
+    # Check if the user exists in the database
+    user = atlas_client.find("qucreate_users", filter={"username": username})
+    if not user:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."}
+        )
+    
+    # Update the user's category
+    try:
+        atlas_client.update(
+            "qucreate_users",
+            filter={"username": username},
+            update={"$set": {"category": category}}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update user category: {str(e)}"
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "User category updated successfully."}
+    )

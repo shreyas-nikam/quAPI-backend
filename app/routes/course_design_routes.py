@@ -22,17 +22,17 @@ async def delete_course_api(course_id: str = Form(...)):
 
 # done
 @router.post("/create_course")
-async def create_course_api(course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), course_image: UploadFile = File(...), modulesAtCreation: bool = Form(True)):
-    return await create_course(course_name, course_description, course_outline, files, course_image, modulesAtCreation)
+async def create_course_api(username: str = Form(...),course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...), files: Optional[List[UploadFile]] = File(None), course_image: UploadFile = File(...), modulesAtCreation: bool = Form(True)):
+    return await create_course(username, course_name, course_description, course_outline, files, course_image, modulesAtCreation)
 
 @router.post("/update_course_info")
 async def update_course_info_api(course_id: str = Form(...), course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...)):
     return await update_course_info(course_id, course_name, course_description, course_outline)
 
 # done
-@router.get("/courses")
-async def courses_api():
-    return await get_courses()
+@router.post("/courses")
+async def courses_api(username: str = Form(...)):
+    return await get_courses(username)
 
 # done
 @router.post("/add_module")

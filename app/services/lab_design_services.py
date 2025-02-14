@@ -132,10 +132,15 @@ def _get_file_type(file: UploadFile):
     else:
         return "File"
 
-async def get_labs():
+async def get_labs(username):
     atlas_client = AtlasClient()
     labs = atlas_client.find("lab_design")
-    labs = _convert_object_ids_to_strings(labs)
+    user_labs = []
+    for lab in labs:
+        users = lab.get('users', [])
+        if username in users:
+            user_labs.append(lab)
+    labs = _convert_object_ids_to_strings(user_labs)
     return labs
     
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
@@ -280,7 +285,7 @@ async def delete_lab(lab_id):
     
 
 # create_course -> takes in the course name, course image, course description, files, course_outline, and creates a course object. also handles creation of modules
-async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
+async def create_lab(username, lab_name, lab_description, lab_outline, files, lab_image):
     lab_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
@@ -294,9 +299,11 @@ async def create_lab(lab_name, lab_description, lab_outline, files, lab_image):
     key = quote(key)
     lab_image_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
+    users = [username]
 
     lab = {
         "_id": lab_id,
+        "users": users,
         "lab_name": lab_name,
         "lab_description": lab_description,
         "lab_image": lab_image_link,

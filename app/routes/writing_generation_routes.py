@@ -4,9 +4,9 @@ from typing import List, Optional
 
 router = APIRouter()
 
-@router.get("/writings")
-async def writings_api():
-    return await get_writings()
+@router.post("/writings")
+async def writings_api(username: str = Form(...)):
+    return await get_writings(username)
 
 @router.get("/get_writing/{writing_id}")
 async def get_writing_api(writing_id: str):
@@ -40,6 +40,7 @@ async def generate_templates_api(files: Optional[List[UploadFile]] = File(None),
 
 @router.post("/create_writing")
 async def create_writing_api(
+        username: str = Form(...),
         writing_id: str = Form(...),
         writing_name: str = Form(...),  
         writing_description: str = Form(...), 
@@ -49,6 +50,7 @@ async def create_writing_api(
         identifier: str = Form(...)
     ):
     return await create_writing(
+        username = username,
         writing_id=writing_id, 
         writing_name=writing_name, 
         writing_description=writing_description, 

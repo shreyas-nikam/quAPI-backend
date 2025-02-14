@@ -179,22 +179,25 @@ async def delete_report(project_id, template_id, report_id):
     return True
 
 # Function to create a model project
-async def create_model_project(project_name, project_description):
+async def create_model_project(username, project_name, project_description):
     mongo_client = AtlasClient()
-    project_id = mongo_client.insert("model_projects", {"name": project_name, "description": project_description, "templates": []})
+    users = [username]
+    project_id = mongo_client.insert("model_projects", {"users": users, "name": project_name, "description": project_description, "templates": []})
     return _convert_object_ids_to_strings({"_id": str(project_id), "name": project_name, "description": project_description})
 
 # Function to get all model projects
-async def get_model_projects():
+async def get_model_projects(username):
     mongo_client = AtlasClient()
-    projects = mongo_client.find("model_projects", {})
+    projects = mongo_client.find("model_projects")
     redacted_projects = []
     for project in projects:
-        redacted_projects.append({
-            "_id": str(project["_id"]),
-            "name": project["name"],
-            "description": project["description"],
-        })
+        users = project["users"]
+        if(username in users):
+            redacted_projects.append({
+                "_id": str(project["_id"]),
+                "name": project["name"],
+                "description": project["description"],
+            })
     return _convert_object_ids_to_strings(redacted_projects)
 
 # Function to get a model project
