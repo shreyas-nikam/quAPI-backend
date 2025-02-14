@@ -18,13 +18,13 @@ async def generate_audio_for_podcast_api(
 ):
     return await generate_audio_for_podcast(outline_text)
 
-@router.get("/podcasts")
-async def podcasts_api():
-    return await get_podcasts()
+@router.post("/podcasts")
+async def podcasts_api(username: str = Form(...)):
+    return await get_podcasts(username)
 
 @router.post("/create_podcast")
-async def create_podcast_api(podcast_name: str = Form(...),  podcast_description: str = Form(...), podcast_transcript: str = Form(...), files: Optional[List[UploadFile]] = File(None), podcast_image: UploadFile = File(...)):
-    return await create_podcast(podcast_name, podcast_description, podcast_transcript, files, podcast_image)
+async def create_podcast_api(username: str = Form(...), podcast_name: str = Form(...),  podcast_description: str = Form(...), podcast_transcript: str = Form(...), files: Optional[List[UploadFile]] = File(None), podcast_image: UploadFile = File(...)):
+    return await create_podcast(username, podcast_name, podcast_description, podcast_transcript, files, podcast_image)
 
 @router.get("/get_podcast/{podcast_id}")
 async def get_podcast_api(podcast_id: str):

@@ -324,15 +324,20 @@ async def generate_podcast_dialogue(dialogue, files = None):
 
     return response
 
-async def get_podcasts():
+async def get_podcasts(username: str):
     try:
         atlas_client = AtlasClient()
         
         # Attempt to retrieve podcasts
         podcasts = atlas_client.find("podcast_design")
+        user_podcasts = []
+        for podcast in podcasts:
+            users = podcast.get("users", [])
+            if username in users:
+                user_podcasts.append(podcast)
 
         # Ensure ObjectIds are converted to strings
-        podcasts = _convert_object_ids_to_strings(podcasts)
+        podcasts = _convert_object_ids_to_strings(user_podcasts)
       
         return podcasts
 
@@ -431,7 +436,7 @@ def get_mp3(text: str, voice: str) -> bytes:
                 file.write(chunk)
             return file.getvalue()
 
-async def create_podcast(podcast_name, podcast_description, podcast_transcript, files, podcast_image):
+async def create_podcast(username, podcast_name, podcast_description, podcast_transcript, files, podcast_image):
     podcast_status = "In Design Phase"
 
     s3_file_manager = S3FileManager()
@@ -450,9 +455,10 @@ async def create_podcast(podcast_name, podcast_description, podcast_transcript, 
     if not podcast_audio_link:
         logging.error("Failed to generate podcast audio.")
         return None
-
+    users = [username]
     podcast = {
         "_id": podcast_id,
+        "users": users,
         "podcast_name": podcast_name,
         "podcast_description": podcast_description,
         "podcast_image": podcast_image_link,
