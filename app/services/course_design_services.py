@@ -174,14 +174,9 @@ async def get_courses(username: str):
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
 
 
-async def generate_course_outline(files, instructions, use_metaprompt=False):
+async def generate_course_outline(files, instructions, prompt):
 
-    course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
-    if use_metaprompt:
-        course_outline_instructions = generate_prompt(course_outline_instructions)
-
-    if course_outline_instructions=="The request timed out. Please try again.":
-        course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
+    course_outline_instructions = prompt
         
     client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
     assistant_files_streams = []
@@ -1075,3 +1070,8 @@ async def update_course_info(course_id, course_name, course_description, course_
         return "Course information updated successfully"
     else:
         return "Failed to update course information"
+    
+
+async def course_outline_prompt():
+    course_outline_prompt = _get_prompt("COURSE_OUTLINE_PROMPT")
+    return course_outline_prompt
