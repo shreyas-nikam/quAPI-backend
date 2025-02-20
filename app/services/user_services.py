@@ -194,6 +194,12 @@ async def fetch_users():
     users = _convert_object_ids_to_strings(users)
     return users
 
+async def fetch_user(username):
+    atlas_client = AtlasClient()
+    user = atlas_client.find("qucreate_users", filter={"username": username})
+    user = _convert_object_ids_to_strings(user)
+    return user
+
 
 async def update_category(username, category):
     atlas_client = AtlasClient()

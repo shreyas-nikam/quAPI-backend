@@ -624,7 +624,7 @@ async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_ste
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
 
-async def generate_idea_for_concept_lab(lab_id: str, instructions: str, use_metaprompt=False):
+async def generate_idea_for_concept_lab(lab_id: str, instructions: str, prompt):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -633,11 +633,6 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str, use_meta
         return "Lab not found"
     
     lab = lab[0]
-
-    prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
-
-    if use_metaprompt:
-        prompt = generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
@@ -684,7 +679,7 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str, use_meta
     return lab
 
 
-async def generate_business_use_case_for_lab(lab_id: str, use_metaprompt=False):
+async def generate_business_use_case_for_lab(lab_id: str, prompt):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -694,15 +689,8 @@ async def generate_business_use_case_for_lab(lab_id: str, use_metaprompt=False):
     
     lab = lab[0]
 
-    prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
-
-    if use_metaprompt:
-        prompt = generate_prompt(prompt)
-
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
-
-
 
     idea_history = lab.get("idea_history")
     if not idea_history:
@@ -752,7 +740,7 @@ async def generate_business_use_case_for_lab(lab_id: str, use_metaprompt=False):
     res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
-async def generate_technical_specifications_for_lab(lab_id, use_metaprrompt=False):
+async def generate_technical_specifications_for_lab(lab_id, prompt):
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -762,10 +750,10 @@ async def generate_technical_specifications_for_lab(lab_id, use_metaprrompt=Fals
     
     lab = lab[0]
 
-    prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+    # prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
-    if use_metaprrompt:
-        prompt = generate_prompt(prompt)
+    # if use_metaprrompt:
+    #     prompt = generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
@@ -781,6 +769,8 @@ async def generate_technical_specifications_for_lab(lab_id, use_metaprrompt=Fals
         "BUSINESS_USE_CASE": business_use_case
     }
 
+    # Do this instead: Append the business use case to the prompt so that at frontend business use case parameters are not visible.
+    prompt += "\nBusiness use case:\n\n{BUSINESS_USE_CASE}"
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
     llm = LLM("chatgpt")
@@ -1075,4 +1065,13 @@ async def create_github_issue_in_lab(lab_id, issue_title, issue_description, lab
     if res is None:
         return {"status": 400, "message": "Unable to create issue"}
     
-    return res    
+    return res
+
+async def get_labs_prompt(prompt_type):
+    if prompt_type == "initial":
+        return _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
+    elif prompt_type == "idea":
+        return _get_prompt("BUSINESS_USE_CASE_PROMPT")
+    elif prompt_type == "business":
+        return _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+    return ""

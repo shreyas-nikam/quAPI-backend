@@ -7,8 +7,8 @@ router = APIRouter()
 # done
 @router.post("/generate_course_outline")
 async def generate_course_outline_api(files: Optional[List[UploadFile]] = File(None),
-                                  instructions: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_course_outline(files, instructions, use_metaprompt) 
+                                  instructions: str = Form(...), prompt: str = Form(...)):
+    return await generate_course_outline(files, instructions, prompt) 
 
 # /clone_course -> takes in the course_id, course_name, course_image, course_description, and clones the course
 @router.post("/clone_course")
@@ -77,6 +77,10 @@ async def delete_resources_from_module_api(course_id: str = Form(...), module_id
 @router.get("/get_course/{course_id}")
 async def get_course_api(course_id: str):
     return await get_course(course_id)
+
+@router.get("/outline_prompt")
+async def course_outline_prompt_api():
+    return await course_outline_prompt()
 
 @router.post("/submit_module_for_outline_generation")
 async def submit_module_for_outline_generation_api(course_id: str = Form(...), module_id: str = Form(...), instructions: str = Form(...)):

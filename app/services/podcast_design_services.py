@@ -128,11 +128,8 @@ def format_podcast_dialogue(response_text):
 
 
 
-async def generate_podcast_outline(files, instructions, use_metaprompt=False):
-    podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
-
-    if use_metaprompt:
-        podcast_prompt = generate_prompt(podcast_prompt)
+async def generate_podcast_outline(files, instructions, prompt):
+    podcast_prompt = prompt
 
     if podcast_prompt == "The request timed out. Please try again.":
         podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
@@ -525,3 +522,7 @@ async def delete_podcast(podcast_id):
     podcast = _convert_object_ids_to_strings(podcast)
 
     return podcast
+
+async def podcast_prompt():
+    podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
+    return podcast_prompt
