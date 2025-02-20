@@ -7,9 +7,9 @@ router = APIRouter()
 @router.post("/generate_podcast_outline")
 async def generate_podcast_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   instructions: str = Form(...), 
-                                  use_metaprompt: Optional[bool] = Form(False)
+                                  prompt: str = Form(...),
                                   ):
-    return await generate_podcast_outline(files, instructions, use_metaprompt) 
+    return await generate_podcast_outline(files, instructions, prompt) 
 
 @router.post("/generate_audio_for_podcast")
 async def generate_audio_for_podcast_api(
@@ -34,3 +34,6 @@ async def get_podcast_api(podcast_id: str):
 async def delete_podcast_api(podcast_id: str = Form(...)):
     return await delete_podcast(podcast_id)
 
+@router.get("/podcast_prompt")
+async def podcast_prompt_api():
+    return await podcast_prompt()
