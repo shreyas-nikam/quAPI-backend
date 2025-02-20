@@ -26,6 +26,7 @@ identifier_mappings = {
     "handout": "Handout",
 }
 
+
 def _get_prompt(prompt_name):
     """
     Get the prompt template
@@ -81,18 +82,19 @@ async def get_writing(writing_id):
         writing = _convert_object_ids_to_strings(writing)
     return writing
 
-async def generate_templates(files, identifier, target_audience, tone, expected_length, use_metaprompt=False):
-    prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
+async def generate_templates(files, identifier, target_audience, tone, expected_length, prompt):
+    print("Prompt received: ", prompt)
+    # prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
     identifier_text = identifier_mappings.get(identifier, "Writing")
-    templates_instructions = _get_prompt(prompt)
-    templates_instructions = templates_instructions.replace("{IDENTIFIER_TEXT}", identifier_text)
+    # templates_instructions = _get_prompt(prompt)
+    templates_instructions = prompt.replace("{IDENTIFIER_TEXT}", identifier_text)
     templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
     
-    if use_metaprompt:
-        templates_instructions = generate_prompt(templates_instructions)
+    # if use_metaprompt:
+    #     templates_instructions = generate_prompt(templates_instructions)
     
     if templates_instructions == "The request timed out. Please try again.":
-        templates_instructions = _get_prompt(prompt)
+        templates_instructions = _get_prompt("GENERATE_TEMPLATES_FOR_WRITING_PROMPT")
         templates_instructions = templates_instructions.replace("{IDENTIFIER_TEXT}", identifier_text)
         templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
 
@@ -169,6 +171,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
                 citations.append(f"[{index}] {cited_file.filename}")
 
         response = message_content.value
+        print("Response: ", response)
         try:
             response = json.loads(response)
         except:
@@ -403,7 +406,8 @@ async def create_writing(username, writing_id, writing_name, writing_description
 
     return writing
 
-async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, use_metaprompt=False):
+async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt):
+    print("Received prompt: ", prompt)
     selected_resources = json.loads(selected_resources)
     client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
@@ -414,13 +418,13 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
     
     writing = writing[0]
 
-    prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
+    # prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
 
     prompt = prompt.replace("{DRAFT}", previous_outline)
     prompt = prompt.replace("{USER_INSTRUCTIONS}", instructions)
 
-    if use_metaprompt:
-        prompt = generate_prompt(prompt)
+    # if use_metaprompt:
+    #     prompt = generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
@@ -722,3 +726,15 @@ async def delete_resources_from_writing(writing_id, resource_id):
     writing = _convert_object_ids_to_strings(writing)
 
     return writing
+
+
+async def writing_prompt(identifier: str):
+    print("identifier", identifier)
+    prompt = ""
+    if (identifier == "regenerate"):
+        prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
+    else:
+        writing_identifier_prompt = _get_prompt("GENERATE_TEMPLATES_FOR_WRITING_PROMPT")
+        identifier_text = identifier_mappings.get(identifier, "Writing")
+        prompt = writing_identifier_prompt.replace("{IDENTIFIER_TEXT}", identifier_text)
+    return prompt
