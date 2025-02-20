@@ -69,16 +69,16 @@ async def get_lab_api(lab_id: str):
     return await get_lab(lab_id)
 
 @router.post("/generate_idea_for_concept_lab")
-async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_idea_for_concept_lab(lab_id, instructions, use_metaprompt)
+async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...), prompt: str = Form(...)):
+    return await generate_idea_for_concept_lab(lab_id, instructions, prompt)
 
 @router.post("/generate_business_use_case_for_lab")
-async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_business_use_case_for_lab(lab_id, use_metaprompt)
+async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), prompt:str = Form(...)):
+    return await generate_business_use_case_for_lab(lab_id, prompt)
 
 @router.post("/generate_technical_specifications_for_lab")
-async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_technical_specifications_for_lab(lab_id, use_metaprompt)
+async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...), prompt: str = Form(...)):
+    return await generate_technical_specifications_for_lab(lab_id, prompt)
 
 @router.post("/regenerate_with_feedback")
 async def regenerate_with_feedback_api(content: str=Form(...), feedback: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
@@ -131,3 +131,6 @@ async def create_github_issue_api(
     return response
 
 
+@router.post("/lab_prompt")
+async def labs_prompt_api(prompt_type: str = Form(...)):
+    return await get_labs_prompt(prompt_type)
