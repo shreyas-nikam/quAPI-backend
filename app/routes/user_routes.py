@@ -29,6 +29,10 @@ async def register_user_api(username: str = Form(...), email: str = Form(...), f
 async def fetch_users_api():
     return await fetch_users()
 
+@router.post("/user")
+async def fetch_user_api(username: str = Form(...)):
+    return await fetch_user(username)
+
 @router.post("/update_category")
 async def update_category_api(username: str = Form(...), category: str = Form(...)):
     return await update_category(username, category)
