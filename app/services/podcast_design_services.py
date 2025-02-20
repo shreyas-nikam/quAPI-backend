@@ -129,7 +129,6 @@ def format_podcast_dialogue(response_text):
 
 
 async def generate_podcast_outline(files, instructions, prompt):
-    print("Prompt received: ", prompt)
     podcast_prompt = prompt
 
     if podcast_prompt == "The request timed out. Please try again.":

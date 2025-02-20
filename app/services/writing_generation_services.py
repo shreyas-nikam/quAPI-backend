@@ -83,7 +83,6 @@ async def get_writing(writing_id):
     return writing
 
 async def generate_templates(files, identifier, target_audience, tone, expected_length, prompt):
-    print("Prompt received: ", prompt)
     # prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
     identifier_text = identifier_mappings.get(identifier, "Writing")
     # templates_instructions = _get_prompt(prompt)
@@ -171,7 +170,6 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
                 citations.append(f"[{index}] {cited_file.filename}")
 
         response = message_content.value
-        print("Response: ", response)
         try:
             response = json.loads(response)
         except:
@@ -407,7 +405,6 @@ async def create_writing(username, writing_id, writing_name, writing_description
     return writing
 
 async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt):
-    print("Received prompt: ", prompt)
     selected_resources = json.loads(selected_resources)
     client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
     atlas_client = AtlasClient()
@@ -729,7 +726,6 @@ async def delete_resources_from_writing(writing_id, resource_id):
 
 
 async def writing_prompt(identifier: str):
-    print("identifier", identifier)
     prompt = ""
     if (identifier == "regenerate"):
         prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")

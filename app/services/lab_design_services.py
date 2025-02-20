@@ -625,7 +625,6 @@ async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_ste
 
 
 async def generate_idea_for_concept_lab(lab_id: str, instructions: str, prompt):
-    print("Received prompt: ", prompt)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -742,7 +741,6 @@ async def generate_business_use_case_for_lab(lab_id: str, prompt):
     return lab
 
 async def generate_technical_specifications_for_lab(lab_id, prompt):
-    print("Prompt received: ", prompt)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -773,7 +771,6 @@ async def generate_technical_specifications_for_lab(lab_id, prompt):
 
     # Do this instead: Append the business use case to the prompt so that at frontend business use case parameters are not visible.
     prompt += "\nBusiness use case:\n\n{BUSINESS_USE_CASE}"
-    print("Prompt post insertion: ", prompt)
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
     llm = LLM("chatgpt")
@@ -1072,12 +1069,9 @@ async def create_github_issue_in_lab(lab_id, issue_title, issue_description, lab
 
 async def get_labs_prompt(prompt_type):
     if prompt_type == "initial":
-        print("Returning CONCEPT_LAB_IDEA_PROMPT")
         return _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
     elif prompt_type == "idea":
-        print("Returning BUSINESS_USE_CASE_PROMPT")
         return _get_prompt("BUSINESS_USE_CASE_PROMPT")
     elif prompt_type == "business":
-        print("Returning TECHNICAL_SPECIFICATION_PROMPT")
         return _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
     return ""

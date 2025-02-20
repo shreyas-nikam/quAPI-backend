@@ -154,7 +154,6 @@ def _get_file_type(file: UploadFile):
 
 
 async def get_courses(username: str):
-    print("Username: ", username)
     atlas_client = AtlasClient()
 
     # Find courses where username matches
