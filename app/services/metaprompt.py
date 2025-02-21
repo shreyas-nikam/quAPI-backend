@@ -28,6 +28,7 @@ Given a task description or existing prompt, produce a detailed system prompt to
 - Output Format: Explicitly the most appropriate output format, in detail. This should include length and syntax (e.g. short sentence, paragraph, JSON, etc.)
     - For tasks outputting well-defined or structured data (classification, JSON, etc.) bias toward outputting a JSON.
     - JSON should never be wrapped in code blocks (```) unless explicitly requested.
+- Make sure to include the variables in the curly braces { } from the user's input prompt in the final prompt as it is. Also ensure the occurrence of the variable is only once in the final prompt.
 
 The final prompt you output should adhere to the following structure below. Do not include any additional commentary, only output the completed system prompt. SPECIFICALLY, do not include any additional messages at the start or end of the prompt. (e.g. no "---")
 
@@ -55,7 +56,7 @@ The final prompt you output should adhere to the following structure below. Do n
 [optional: edge cases, details, and an area to call or repeat out specific important considerations]
 """.strip()
 
-def generate_prompt(task_or_prompt: str):
+async def generate_prompt(task_or_prompt: str):
     logging.info("Generating Metaprompt...")
     try:
         completion = client.chat.completions.create(

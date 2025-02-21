@@ -8,6 +8,10 @@ router = APIRouter()
 async def writings_api(username: str = Form(...)):
     return await get_writings(username)
 
+@router.post("/prompt")
+async def writing_prompt_api(identifier: str = Form(...)):
+    return await writing_prompt(identifier)
+
 @router.get("/get_writing/{writing_id}")
 async def get_writing_api(writing_id: str):
     return await get_writing(writing_id)
@@ -34,9 +38,9 @@ async def generate_templates_api(files: Optional[List[UploadFile]] = File(None),
                                  target_audience: str = Form(...),
                                  tone: str = Form(...),
                                  expected_length: str = Form(...),
-                                 use_metaprompt: Optional[bool] = Form(False)
+                                 prompt: str = Form(...)
                                 ):
-    return await generate_templates(files, identifier, target_audience, tone, expected_length, use_metaprompt)
+    return await generate_templates(files, identifier, target_audience, tone, expected_length, prompt)
 
 @router.post("/create_writing")
 async def create_writing_api(
@@ -67,10 +71,10 @@ async def regenerate_outline_api(
         previous_outline: str = Form(...),
         selected_resources: str = Form(...),
         identifier: str = Form(...),
-        use_metaprompt: Optional[bool] = Form(False)
+        prompt: str = Form(...),
     ):
     #TODO check implementation
-    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, use_metaprompt)
+    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt)
 
 
 # convert file to pdf for selected template
