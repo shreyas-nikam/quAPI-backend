@@ -85,7 +85,6 @@ async def get_writing(writing_id):
 async def generate_templates(files, identifier, target_audience, tone, expected_length, prompt, use_metaprompt):
     templates_instructions = _get_prompt("GENERATE_TEMPLATES_FOR_WRITING_PROMPT")
     if use_metaprompt:
-        print("Enhancing prompt (metaprompting)")
         templates_instructions = await generate_prompt(templates_instructions)
     else:
         templates_instructions = prompt
@@ -410,7 +409,6 @@ async def create_writing(username, writing_id, writing_name, writing_description
 
 async def regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt, use_metaprompt):
     if(use_metaprompt):
-        print("Enhancing prompt (metaprompting)")
         prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")
         prompt = await generate_prompt(prompt)
     

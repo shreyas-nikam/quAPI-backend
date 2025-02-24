@@ -176,7 +176,6 @@ async def get_courses(username: str):
 async def generate_course_outline(files, instructions, prompt, use_metaprompt):
     course_outline_instructions = prompt
     if (use_metaprompt):
-        print("Enhancing prompt with metaprompt")
         course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
         course_outline_instructions = await generate_prompt(course_outline_instructions)
 
@@ -1075,8 +1074,6 @@ async def update_course_info(course_id, course_name, course_description, course_
 
 
 async def update_module_info(course_id, module_id, module_name, module_description):
-    print(f"Received parameters - course_id: {course_id}, module_id: {module_id}, module_name: {module_name}, module_description: {module_description}")
-
     atlas_client = AtlasClient()
     
     # Fetch the course from the database

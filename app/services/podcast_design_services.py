@@ -129,11 +129,8 @@ def format_podcast_dialogue(response_text):
 
 
 async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
-    print("Prompt:", prompt)
-    print("Use Metaprompt:", use_metaprompt)
     podcast_prompt = prompt
     if use_metaprompt:
-        print("Enhancing prompt with metaprompt")
         podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
         podcast_prompt = await generate_prompt(podcast_prompt)
 
