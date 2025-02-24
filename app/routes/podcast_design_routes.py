@@ -37,3 +37,7 @@ async def delete_podcast_api(podcast_id: str = Form(...)):
 @router.get("/podcast_prompt")
 async def podcast_prompt_api():
     return await podcast_prompt()
+
+@router.post("/update_podcast_info")
+async def update_podcast_info_api(podcast_id: str = Form(...), podcast_name: str = Form(...),  podcast_description: str = Form(...)):
+    return await update_podcast_info(podcast_id, podcast_name, podcast_description)
