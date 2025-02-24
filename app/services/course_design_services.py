@@ -173,10 +173,12 @@ async def get_courses(username: str):
 # generate_course_outline -> take in the input as the file and the instructions and generate the course outline
 
 
-async def generate_course_outline(files, instructions, prompt):
-
+async def generate_course_outline(files, instructions, prompt, use_metaprompt):
     course_outline_instructions = prompt
-        
+    if (use_metaprompt):
+        course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
+        course_outline_instructions = await generate_prompt(course_outline_instructions)
+
     client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
     assistant_files_streams = []
     if files:
@@ -1069,8 +1071,65 @@ async def update_course_info(course_id, course_name, course_description, course_
         return "Course information updated successfully"
     else:
         return "Failed to update course information"
-    
 
+
+async def update_module_info(course_id, module_id, module_name, module_description):
+    atlas_client = AtlasClient()
+    
+    # Fetch the course from the database
+    course_data = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+
+    if not course_data:
+        return "Course not found"
+    
+    course = course_data[0]  # Assuming find() returns a list, get the first match
+    
+    # Get the modules array from the course
+    modules = course.get("modules", [])
+
+    # Convert module_id to ObjectId if stored as ObjectId in MongoDB
+    try:
+        module_id = ObjectId(module_id)
+    except Exception:
+        pass  # Keep it as a string if not stored as ObjectId
+
+    # Update the specific module in the list
+    module_found = False
+    for module in modules:
+        if module["module_id"] == module_id:  # Find the module that matches
+            module["module_name"] = module_name
+            module["module_description"] = module_description
+            module_found = True
+            break  # Stop loop after updating the correct module
+
+    if not module_found:
+        return "Module not found in course"
+
+    # Define the update payload for replacing the modules array
+    update_payload = {
+        "$set": {
+            "modules": modules  # Save the updated modules list back to the course
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Collection name
+        filter={"_id": ObjectId(course_id)},  # Identify the correct course
+        update=update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Module information updated successfully"
+    else:
+        return "Failed to update module information"
+
+
+
+
+    
+    
 async def course_outline_prompt():
     course_outline_prompt = _get_prompt("COURSE_OUTLINE_PROMPT")
     return course_outline_prompt
