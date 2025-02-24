@@ -464,9 +464,7 @@ async def add_module(course_id, module_name, module_description):
     modules.append(module)
     course["modules"] = modules
 
-    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": modules
-                                                                                               }
-                                                                                      })
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": modules}})
 
     course = _convert_object_ids_to_strings(course)
     return course
@@ -766,7 +764,8 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
 
     if existing_item:
         # If it exists, update it
-        atlas_client.update(step_directory, {"course_id": course_id, "module_id": module_id}, {"$set": queue_payload})
+        atlas_client.delete(step_directory, {"course_id": course_id, "module_id": module_id})
+        atlas_client.insert(step_directory, queue_payload)
     else:
         # If it does not exist, insert a new document
         atlas_client.insert(step_directory, queue_payload)
@@ -911,7 +910,8 @@ async def submit_module_for_deliverables_step(course_id, module_id, course_desig
 
     if existing_item:
         # If it exists, update it
-        atlas_client.update(step_directory, {"course_id": course_id, "module_id": module_id}, {"$set": queue_payload})
+        atlas_client.delete(step_directory, {"course_id": course_id, "module_id": module_id})
+        atlas_client.insert(step_directory, queue_payload)
     else:
         # If it does not exist, insert a new document
         atlas_client.insert(step_directory, queue_payload)

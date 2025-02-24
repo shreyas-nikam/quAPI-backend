@@ -1002,16 +1002,17 @@ async def submit_lab_for_generation(lab_id, queue_name_suffix):
         lab = lab[0]
 
         # Update the lab status
-        # queue_payload = {
-        #     "lab_id": str(lab_id),
-        #     "status": f"{queue_name_suffix.replace('_', ' ').title()}",
-        # }
-        # atlas_client.update("lab_design", {"_id": ObjectId(lab_id)}, {"$set": {"status": queue_payload["status"]}})
+        queue_payload = {
+            "lab_id": str(lab_id),
+            "status": f"{queue_name_suffix.replace('_', ' ').title()}",
+        }
+        atlas_client.update("lab_design", {"_id": ObjectId(lab_id)}, {"$set": {"status": queue_payload["status"]}})
 
         # Check and update/insert into step directory
         existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
         if existing_item:
-            atlas_client.update(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.delete(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
         else:
             atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
 
@@ -1066,6 +1067,7 @@ async def create_github_issue_in_lab(lab_id, issue_title, issue_description, lab
         return {"status": 400, "message": "Unable to create issue"}
     
     return res
+
 
 async def get_labs_prompt(prompt_type):
     if prompt_type == "initial":

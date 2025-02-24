@@ -38,7 +38,6 @@ st.title("QuCreate Streamlit Lab")
 st.divider()
 
 # Code goes here
-st.write("Hello, Streamlit! You can start building your app here.")
 
 st.divider()
 st.write("© 2025 QuantUniversity. All Rights Reserved.")
