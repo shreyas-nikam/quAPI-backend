@@ -29,6 +29,10 @@ async def create_course_api(username: str = Form(...),course_name: str = Form(..
 async def update_course_info_api(course_id: str = Form(...), course_name: str = Form(...),  course_description: str = Form(...), course_outline: str = Form(...)):
     return await update_course_info(course_id, course_name, course_description, course_outline)
 
+@router.post("/update_module_info")
+async def update_module_info_api(course_id: str = Form(...), module_id: str = Form(...), module_name: str = Form(...),  module_description: str = Form(...),):
+    return await update_module_info(course_id, module_id, module_name, module_description)
+
 # done
 @router.post("/courses")
 async def courses_api(username: str = Form(...)):
