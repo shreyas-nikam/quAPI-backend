@@ -1075,3 +1075,36 @@ async def get_labs_prompt(prompt_type):
     elif prompt_type == "business":
         return _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
     return ""
+
+
+async def update_lab_info(lab_id, lab_name, lab_description):
+    atlas_client = AtlasClient()
+    
+    # Fetch the course from the database
+    lab_data = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab_data:
+        return "Lab not found"
+    
+    lab = lab_data[0]  # Assuming find() returns a list, get the first match
+    
+    update_payload = {
+        "$set": {
+            "lab_name": lab_name,
+            "lab_description": lab_description
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "lab_design",  # Collection name
+        filter = {"_id": ObjectId(lab_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Lab information updated successfully"
+    else:
+        return "Failed to update lab information"
+

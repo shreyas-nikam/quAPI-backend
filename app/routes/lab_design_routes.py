@@ -134,3 +134,7 @@ async def create_github_issue_api(
 @router.post("/lab_prompt")
 async def labs_prompt_api(prompt_type: str = Form(...)):
     return await get_labs_prompt(prompt_type)
+
+@router.post("/update_lab_info")
+async def update_lab_info_api(lab_id: str = Form(...), lab_name: str = Form(...),  lab_description: str = Form(...)):
+    return await update_lab_info(lab_id, lab_name, lab_description)
