@@ -624,7 +624,12 @@ async def convert_to_pdf_for_lab(lab_id, markdown, template_name, lab_design_ste
     return f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
 
 
-async def generate_idea_for_concept_lab(lab_id: str, instructions: str, prompt):
+async def generate_idea_for_concept_lab(lab_id: str, instructions: str, prompt, use_metaprompt=False):
+    if use_metaprompt:
+        print("Enhancing prompt")
+        prompt = _get_prompt("CONCEPT_LAB_IDEA_PROMPT")
+        prompt = await generate_prompt(prompt)
+        
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -679,7 +684,11 @@ async def generate_idea_for_concept_lab(lab_id: str, instructions: str, prompt):
     return lab
 
 
-async def generate_business_use_case_for_lab(lab_id: str, prompt):
+async def generate_business_use_case_for_lab(lab_id: str, prompt, use_metaprompt=False):
+    if use_metaprompt:
+        print("Enhancing prompt")
+        prompt = _get_prompt("BUSINESS_USE_CASE_PROMPT")
+        prompt = await generate_prompt(prompt)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -740,7 +749,11 @@ async def generate_business_use_case_for_lab(lab_id: str, prompt):
     res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
-async def generate_technical_specifications_for_lab(lab_id, prompt):
+async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprompt=False):
+    if use_metaprompt:
+        print("Enhancing prompt")
+        prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+        prompt = await generate_prompt(prompt)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
