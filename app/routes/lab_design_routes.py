@@ -130,6 +130,17 @@ async def create_github_issue_api(
     )
     return response
 
+@router.post("/update_selected_idea")
+async def update_selected_idea_api(lab_id: str = Form(...), index: int = Form(...)):
+    return await update_selected_idea(lab_id, index)
+
+@router.post("/update_lab_ideas")
+async def update_lab_ideas_api(lab_id: str = Form(...), lab_ideas: str = Form(...)):
+    return await update_lab_ideas(lab_id, lab_ideas)
+
+@router.get("/get_lab_ideas/{lab_id}")
+async def get_lab_ideas_api(lab_id: str):
+    return await get_lab_ideas(lab_id)
 
 @router.post("/lab_prompt")
 async def labs_prompt_api(prompt_type: str = Form(...)):

@@ -1,23 +1,29 @@
-from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
+# Standard library imports
 import datetime
-import mimetypes
-import requests
-from fastapi import HTTPException
-from urllib.parse import urlparse
-from app.utils.llm import LLM
-from app.utils.s3_file_manager import S3FileManager
-from app.utils.atlas_client import AtlasClient
-import logging
 import time
 import random
 import json
 import ast
+import os
+import logging
+import shutil
+from pathlib import Path
+from urllib.parse import urlparse, quote, unquote
+import mimetypes
+
+# Third-party library imports
+import requests
+from fastapi import HTTPException, UploadFile
 from bson.objectid import ObjectId
 from openai import OpenAI
-import os
-from fastapi import UploadFile
-from urllib.parse import quote, unquote
 from langchain_core.prompts import PromptTemplate
+from google import genai
+
+# Application-specific imports
+from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
+from app.utils.llm import LLM
+from app.utils.s3_file_manager import S3FileManager
+from app.utils.atlas_client import AtlasClient
 from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
 from app.services.metaprompt import generate_prompt
 
@@ -1077,3 +1083,176 @@ async def get_labs_prompt(prompt_type):
     elif prompt_type == "business":
         return _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
     return ""
+
+async def get_lab_ideas(lab_id):
+    """
+    Retrieve lab ideas by performing the following steps:
+      1. Fetch the lab from the database.
+      2. Download files from the lab's raw_resources using s3_file_manager.
+      3. Retrieve the prompt for generating lab ideas.
+      4. Initialize the Google Gemini client and upload the downloaded files.
+      5. Generate a response using the Gemini model.
+      6. Parse and handle the model's response.
+      7. Clean up the downloaded files.
+      8. Return the parsed lab ideas.
+
+    Args:
+        lab_id (str): The unique identifier for the lab.
+
+    Returns:
+        list or str: A list of lab ideas if parsed successfully, or an error message string.
+    """
+    atlas_client = AtlasClient()
+    s3_file_manager = S3FileManager()
+
+    # 1. Fetch the lab object from the database
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+    if not lab:
+        return "Lab not found"
+    lab = lab[0]
+
+    # 2. Create a directory for downloading files from S3
+    download_path = f"downloads/lab_design/{lab_id}"
+    Path(download_path).mkdir(parents=True, exist_ok=True)
+
+    # 3. Initialize the Google Gemini client for file upload and model inference
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    uploaded_files = []
+
+    # 4. Iterate through raw_resources, download each file from S3, and upload to Gemini
+    raw_resources = lab.get("raw_resources", [])
+    for resource in raw_resources:
+        resource_link = resource.get("resource_link")
+        # Construct the S3 key from the resource link
+        key = f"qu-lab-design/{resource_link.split('qu-lab-design/')[1]}"
+        download_file_path = f"{download_path}/{resource_link.split('/')[-1]}"
+        s3_file_manager.download_file(key, download_file_path)
+        
+        # Upload the file to Gemini and store the resulting file reference
+        uploaded_files.append(client.files.upload(file=download_file_path))
+    
+    # 5. Retrieve the prompt template for generating lab ideas
+    prompt = _get_prompt("GENERATE_LAB_IDEAS")
+
+    # 6. Generate content by combining the prompt with the uploaded files using the Gemini model
+    response = client.models.generate_content(
+        model=os.getenv("GEMINI_MODEL"),
+        contents=[prompt] + uploaded_files
+    )
+    response = response.text
+    logging.info(response)
+    
+    # 7. Attempt to extract and parse the JSON part of the response
+    try:
+        response = response[response.index("```json") + 7:response.rindex("```")].strip()
+        response = json.loads(response)
+        response.append({
+            "name": "Custom",
+            "description": "Describe your custom lab here."
+        })
+    except Exception as e:
+        logging.error(e)
+        # Fallback sample lab ideas in case of an error during parsing
+        response = [
+            {
+                "name": "Stock Market Dashboard",
+                "description": "An interactive one-page application that displays real-time stock market data, historical trends, and portfolio analytics, enabling users to track investments with dynamic charts and key performance metrics."
+            },
+            {
+                "name": "Real-Time Sentiment Analyzer",
+                "description": "A concise dashboard that streams social media data to perform sentiment analysis on trending topics, providing visual insights through word clouds and sentiment score charts."
+            },
+            {
+                "name": "COVID-19 Tracker",
+                "description": "A single-page app that aggregates global and local COVID-19 statistics, displaying interactive maps, trend lines, and critical metrics to help users stay informed about the pandemic."
+            },
+            {
+                "name": "Personal Finance Planner",
+                "description": "A streamlined application for tracking expenses and budgeting, featuring interactive graphs and forecasting tools to help users manage their finances efficiently on one page."
+            },
+            {
+                "name": "Custom",
+                "description": "Describe your custom lab here."
+            }
+        ]
+
+    # 8. Clean up by removing the download directory and its contents
+    shutil.rmtree(download_path)
+
+    # 9. Add the lab ideas to the lab object and update the database
+    lab["lab_ideas"] = response
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={"$set": {"lab_ideas": response}})
+
+    # Return the parsed lab ideas
+    return response
+
+async def update_lab_ideas(lab_id, lab_ideas):
+    """
+    Asynchronously updates the 'lab_ideas' field of a lab design document.
+
+    This function retrieves a lab design document from the database using the provided lab_id.
+    If the lab is found, its 'lab_ideas' field is updated with the given value using an update
+    operation. The function then converts any MongoDB ObjectIds in the document to strings before
+    returning it. If no lab is found with the specified lab_id, a "Lab not found" message is returned.
+
+    Args:
+        lab_id: A unique identifier for the lab document, expected to be convertible to an ObjectId.
+        lab_ideas: The new data to update the 'lab_ideas' field of the lab design.
+
+    Returns:
+        The updated lab design document with ObjectIds converted to strings, or a string message
+        "Lab not found" if the lab document does not exist.
+    """
+    atlas_client = AtlasClient()
+    lab_ideas = json.loads(lab_ideas)
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+    if not lab:
+        return "Lab not found"
+    lab = lab[0]
+    lab["lab_ideas"] = lab_ideas
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={"$set": {"lab_ideas": lab_ideas}})
+
+    lab = _convert_object_ids_to_strings(lab)
+    return lab
+
+async def update_selected_idea(lab_id, index):
+    """
+    Update the selected idea of a lab design entry in the database.
+    This function retrieves a lab design using the provided lab_id, updates its "selected_idea" field by selecting an idea
+    from the lab's "lab_ideas" list based on the given index, and returns the updated lab design. ObjectIds in the lab design
+    are converted to their string representations using a helper function before returning.
+    Parameters:
+        lab_id (str): The unique identifier of the lab design to be updated.
+        index (int): The index of the desired idea in the lab's "lab_ideas" list to set as the selected idea.
+    Returns:
+        dict or str: The updated lab design with ObjectIds converted to strings if the lab is found,
+                     otherwise returns "Lab not found".
+    """
+    # Initialize the AtlasClient for database operations
+    atlas_client = AtlasClient()
+
+    # Retrieve the lab design document using the provided lab_id
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    # If the lab is not found, return an error message
+    if not lab:
+        return "Lab not found"
+    
+    # Extract the first lab design document from the result
+    lab = lab[0]
+    # Get the list of lab ideas; default to an empty list if not present
+    lab_ideas = lab.get("lab_ideas", [])
+
+    # Update the lab design document by setting the selected idea based on the provided index
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "selected_idea": lab_ideas[index]
+        }
+    })
+
+    # Convert any ObjectId fields in the lab document to strings for compatibility
+    lab['selected_idea'] = lab_ideas[index]
+    lab = _convert_object_ids_to_strings(lab)
+
+    # Return the updated lab design document
+    return lab
