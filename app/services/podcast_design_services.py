@@ -128,8 +128,11 @@ def format_podcast_dialogue(response_text):
 
 
 
-async def generate_podcast_outline(files, instructions, prompt):
+async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
     podcast_prompt = prompt
+    if use_metaprompt:
+        podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
+        podcast_prompt = await generate_prompt(podcast_prompt)
 
     if podcast_prompt == "The request timed out. Please try again.":
         podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
@@ -526,3 +529,34 @@ async def delete_podcast(podcast_id):
 async def podcast_prompt():
     podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
     return podcast_prompt
+
+async def update_podcast_info(podcast_id, podcast_name, podcast_description):
+    atlas_client = AtlasClient()
+    
+    # Fetch the course from the database
+    podcast_data = atlas_client.find("podcast_design", filter={"_id": ObjectId(podcast_id)})
+
+    if not podcast_data:
+        return "Podcast not found"
+    
+    podcast = podcast_data[0]  # Assuming find() returns a list, get the first match
+    
+    update_payload = {
+        "$set": {
+            "podcast_name": podcast_name,
+            "podcast_description": podcast_description
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "podcast_design",  # Collection name
+        filter = {"_id": ObjectId(podcast_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Podcast information updated successfully"
+    else:
+        return "Failed to update podcast information"
