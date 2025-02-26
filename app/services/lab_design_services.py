@@ -753,7 +753,7 @@ async def generate_business_use_case_for_lab(lab_id: str, prompt, use_metaprompt
     res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
-async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprompt=False):
+async def generate_technical_specifications_for_lab(lab_id, prompt=_get_prompt("TECHNICAL_SPECIFICATION_PROMPT"), use_metaprompt=False):
     if use_metaprompt:
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
         prompt = await generate_prompt(prompt)
@@ -775,18 +775,21 @@ async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprom
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
 
-    business_use_case_history = lab.get("business_use_case_history")
-    if not business_use_case_history:
-        return "Business use case not found"
+    idea = lab.get("selected_idea")
+    if not idea:
+        return "Selected Idea not found"
     
-    business_use_case = business_use_case_history[-1].get("business_use_case")
+    idea_name = idea.get("name")
+    idea_description = idea.get("description")
+    
     
     inputs = {
-        "BUSINESS_USE_CASE": business_use_case
+        "NAME": idea_name,
+        "DESCRIPTION": idea_description,
+        "INSTRUCTIONS": _get_instructions_string(lab_id)
     }
 
     # Do this instead: Append the business use case to the prompt so that at frontend business use case parameters are not visible.
-    prompt += "\nBusiness use case:\n\n{BUSINESS_USE_CASE}"
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
     llm = LLM("chatgpt")
@@ -1234,7 +1237,7 @@ async def get_lab_ideas(lab_id):
 
     # 9. Add the lab ideas to the lab object and update the database
     lab["lab_ideas"] = response
-    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={"$set": {"lab_ideas": response}})
+    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={"$set": {"lab_ideas": response, "status": "Idea Selection"}})
 
     # Return the parsed lab ideas
     return response
