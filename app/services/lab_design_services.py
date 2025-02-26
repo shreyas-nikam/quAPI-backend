@@ -316,17 +316,11 @@ async def create_lab(username, lab_name, lab_description, lab_outline, files, la
         "lab_outline": lab_outline,
         "status": lab_status,
         "instructions": {
-            "learningOutcomes": "",
-            "responsive": False,
-            "datasetType": "",
-            "links": [],
-            "datasetFile": [],
-            "visualizations": "",
-            "frameworks": "",
-            "accessibility": "",
-            "exportFormats": "",
-            "visualReferences": [],
-            "documentation": False,
+            "learningOutcomes": "### Learning Outcomes\n- Gain a clear understanding of the key insights derived from the uploaded document.\n- Learn how to transform raw data into interactive visualizations using Streamlit.\n- Understand the process of data preprocessing and exploration.\n- Develop an intuitive, user-friendly application that explains the underlying data concepts.",
+            "datasetType": "Synthetic",
+            "datasetDetails": "### Dataset Details\n- **Source**: A synthetic dataset generated to mimic the structure and characteristics of the uploaded document.\n- **Content**: Designed to include realistic data features such as numeric values, categorical variables, and time-series data where applicable.\n- **Purpose**: Serves as a sample dataset for demonstrating data handling and visualization techniques in a controlled environment.",
+            "visualizationDetails": "### Visualizations Details\n- **Interactive Charts**: Incorporate dynamic line charts, bar graphs, and scatter plots to display trends and correlations.\n- **Annotations & Tooltips**: Provide detailed insights and explanations directly on the charts to help interpret the data.",
+            "additionalDetails": "### Additional Details\n- **User Interaction**: Include input forms and widgets to let users experiment with different parameters and see real-time updates in the visualizations.\n- **Documentation**: Built-in inline help and tooltips to guide users through each step of the data exploration process."
         }
     }
     step_directory = LAB_DESIGN_STEPS[0]
@@ -753,7 +747,7 @@ async def generate_business_use_case_for_lab(lab_id: str, prompt, use_metaprompt
     res = upload_file_to_github(lab_id, "business_requirements.md", response, "Add business requirements")
     return lab
 
-async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprompt=False):
+async def generate_technical_specifications_for_lab(lab_id, prompt=_get_prompt("TECHNICAL_SPECIFICATION_PROMPT"), use_metaprompt=False):
     if use_metaprompt:
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
         prompt = await generate_prompt(prompt)
@@ -775,18 +769,21 @@ async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprom
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
 
-    business_use_case_history = lab.get("business_use_case_history")
-    if not business_use_case_history:
-        return "Business use case not found"
+    idea = lab.get("selected_idea")
+    if not idea:
+        return "Selected Idea not found"
     
-    business_use_case = business_use_case_history[-1].get("business_use_case")
+    idea_name = idea.get("name")
+    idea_description = idea.get("description")
+    
     
     inputs = {
-        "BUSINESS_USE_CASE": business_use_case
+        "NAME": idea_name,
+        "DESCRIPTION": idea_description,
+        "INSTRUCTIONS": _get_instructions_string(lab_id)
     }
 
     # Do this instead: Append the business use case to the prompt so that at frontend business use case parameters are not visible.
-    prompt += "\nBusiness use case:\n\n{BUSINESS_USE_CASE}"
     prompt = PromptTemplate(template=prompt, input_variables=inputs)
 
     llm = LLM("chatgpt")
