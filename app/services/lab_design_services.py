@@ -388,7 +388,7 @@ async def add_resources_to_lab(lab_id, resource_type, resource_name, resource_de
     step_directory = LAB_DESIGN_STEPS[lab_design_step]
     resource_id = ObjectId() if not resource_id else ObjectId(resource_id)
 
-    if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video"}:
+    if resource_type in {"File", "Assessment", "Image", "Slide_Generated", "Slide_Content", "Video", "Dataset"}:
         # resource file is the file
         key = f"qu-lab-design/{lab_id}/{step_directory}/{str(resource_id)}."+resource_file.filename.split(".")[-1]
         await s3_file_manager.upload_file_from_frontend(resource_file, key)
