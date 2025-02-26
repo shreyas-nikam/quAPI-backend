@@ -105,6 +105,34 @@ def _create_github_repo(repo_name, description="", private=False):
         return None
 
 
+async def get_repo_issues(repo_name, state="all"):
+    """Get all issues in a GitHub repository."""
+    url = f"{GITHUB_API_URL}/repos/{GITHUB_USERNAME}/{repo_name}/issues"
+    print(url)
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    params = {
+        "state": state,
+    }
+    
+    response = requests.get(url, headers=headers, params=params)
+    modified_response = []
+    if response.status_code == 200:
+        for issue in response.json():
+            modified_response.append({
+                "title": issue["title"],
+                "description": issue["body"],
+                "state": issue["state"],
+                "labels": [label["name"] for label in issue["labels"]],
+            })
+        return modified_response
+    else:
+        logging.info(f"Failed to fetch issues: {response.status_code}, {response.text}")
+        return []       
+
+
 def upload_file_to_github(repo_name, file_path, file_content, commit_message="Add file"):
     """Upload a file to a GitHub repository."""
     url = f"{GITHUB_API_URL}/repos/{GITHUB_USERNAME}/{repo_name}/contents/{file_path}"

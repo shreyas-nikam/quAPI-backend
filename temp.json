@@ -1,0 +1,124 @@
+[
+  {
+    "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1",
+    "repository_url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6",
+    "labels_url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1/labels{/name}",
+    "comments_url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1/comments",
+    "events_url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1/events",
+    "html_url": "https://github.com/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1",
+    "id": 2875681287,
+    "node_id": "I_kwDON9W0EM6rZ2oH",
+    "number": 1,
+    "title": "Wrong graph",
+    "user": {
+      "login": "shreyas-nikam",
+      "id": 158344330,
+      "node_id": "U_kgDOCXAkig",
+      "avatar_url": "https://avatars.githubusercontent.com/u/158344330?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/shreyas-nikam",
+      "html_url": "https://github.com/shreyas-nikam",
+      "followers_url": "https://api.github.com/users/shreyas-nikam/followers",
+      "following_url": "https://api.github.com/users/shreyas-nikam/following{/other_user}",
+      "gists_url": "https://api.github.com/users/shreyas-nikam/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/shreyas-nikam/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/shreyas-nikam/subscriptions",
+      "organizations_url": "https://api.github.com/users/shreyas-nikam/orgs",
+      "repos_url": "https://api.github.com/users/shreyas-nikam/repos",
+      "events_url": "https://api.github.com/users/shreyas-nikam/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/shreyas-nikam/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 8186369386,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVag",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/bug",
+        "name": "bug",
+        "color": "d73a4a",
+        "default": true,
+        "description": "Something isn't working"
+      },
+      {
+        "id": 8186369389,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVbQ",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/documentation",
+        "name": "documentation",
+        "color": "0075ca",
+        "default": true,
+        "description": "Improvements or additions to documentation"
+      },
+      {
+        "id": 8186369394,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVcg",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/enhancement",
+        "name": "enhancement",
+        "color": "a2eeef",
+        "default": true,
+        "description": "New feature or request"
+      },
+      {
+        "id": 8186369400,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVeA",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/help%20wanted",
+        "name": "help wanted",
+        "color": "008672",
+        "default": true,
+        "description": "Extra attention is needed"
+      },
+      {
+        "id": 8186369418,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVig",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/invalid",
+        "name": "invalid",
+        "color": "e4e669",
+        "default": true,
+        "description": "This doesn't seem right"
+      },
+      {
+        "id": 8186369427,
+        "node_id": "LA_kwDON9W0EM8AAAAB5_IVkw",
+        "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/labels/question",
+        "name": "question",
+        "color": "d876e3",
+        "default": true,
+        "description": "Further information is requested"
+      }
+    ],
+    "state": "open",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "milestone": null,
+    "comments": 0,
+    "created_at": "2025-02-24T17:23:14Z",
+    "updated_at": "2025-02-24T17:23:14Z",
+    "closed_at": null,
+    "author_association": "OWNER",
+    "sub_issues_summary": {
+      "total": 0,
+      "completed": 0,
+      "percent_completed": 0
+    },
+    "active_lock_reason": null,
+    "body": "The visualization should not be a pie chart. It should be a bar graph instead.\n\n**Supporting Screenshots:**\n[image-screenshot-0](https://qucoursify.s3.us-east-1.amazonaws.com/qu-lab-design/67b8a6d0c7a1bc950a931fe6/image_0.png)\n[image-screenshot-1](https://qucoursify.s3.us-east-1.amazonaws.com/qu-lab-design/67b8a6d0c7a1bc950a931fe6/image_1.png)\n",
+    "closed_by": null,
+    "reactions": {
+      "url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "timeline_url": "https://api.github.com/repos/shreyas-nikam/67b8a6d0c7a1bc950a931fe6/issues/1/timeline",
+    "performed_via_github_app": null,
+    "state_reason": null
+  }
+]
