@@ -1136,7 +1136,8 @@ def _get_instructions_string(lab_id):
     instructions = lab.get("instructions", {})
     instructions_string = ""
     for key, value in instructions.items():
-        instructions_string += f"**{key}**: {value}\n"
+        if value!="" or value!=[] or value!=False:
+            instructions_string += f"**{key}**: {value}\n"
     return instructions_string
 
 async def get_lab_ideas(lab_id):
