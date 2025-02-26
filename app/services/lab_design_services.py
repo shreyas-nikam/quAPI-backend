@@ -812,9 +812,9 @@ async def generate_technical_specifications_for_lab(lab_id, prompt, use_metaprom
 
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
-            "status": "Technical Specifications Review",
             "technical_specifications_history": lab["technical_specifications_history"],
-            "technical_specifications": response
+            "technical_specifications": response,
+            "status": "Technical Specifications",
         }
     })
 
@@ -877,7 +877,7 @@ async def save_concept_lab_idea(lab_id, idea):
     atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
         "$set": {
             "idea": idea,
-            "idea_history": idea_history
+            "idea_history": idea_history,
         }
     })
 
@@ -1177,6 +1177,7 @@ async def get_lab_ideas(lab_id):
 
     # 4. Iterate through raw_resources, download each file from S3, and upload to Gemini
     raw_resources = lab.get("raw_resources", [])
+    print(raw_resources)
     for resource in raw_resources:
         resource_link = resource.get("resource_link")
         # Construct the S3 key from the resource link
@@ -1234,7 +1235,11 @@ async def get_lab_ideas(lab_id):
 
     # 9. Add the lab ideas to the lab object and update the database
     lab["lab_ideas"] = response
-    atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={"$set": {"lab_ideas": response}})
+    atlas_client.update(
+        "lab_design",
+        filter={"_id": ObjectId(lab_id)},
+        update={"$set": {"lab_ideas": response, "status": "Idea Selection"}}
+    )
 
     # Return the parsed lab ideas
     return response
@@ -1309,3 +1314,32 @@ async def update_selected_idea(lab_id, index):
 
     # Return the updated lab design document
     return lab
+
+
+async def update_lab_design_status(lab_id, lab_design_status):
+    print(lab_id, lab_design_status)
+    atlas_client = AtlasClient()
+
+    # Retrieve the lab design document using the provided lab_id
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    # If the lab is not found, return an error message
+    if not lab:
+        return "Lab not found"
+
+    # Extract the first lab design document from the result
+    lab = lab[0]
+    
+    # Update the lab design document by setting the status based on the provided lab_design_status
+    response = atlas_client.update("lab_design", filter={"_id": ObjectId(lab_id)}, update={
+        "$set": {
+            "status": lab_design_status
+        }
+    })
+    
+    # Check if the update was successful
+    if response:
+        return "Lab status updated successfully"
+    else:
+        return "Failed to update lab status"
+    
