@@ -155,6 +155,10 @@ async def create_github_issue_api(
 async def update_selected_idea_api(lab_id: str = Form(...), index: int = Form(...)):
     return await update_selected_idea(lab_id, index)
 
+@router.post("/update_lab_design_status")
+async def update_lab_design_status_api(lab_id: str = Form(...), lab_design_status: str = Form(...)):
+    return await update_lab_design_status(lab_id, lab_design_status)
+
 # Endpoint to update lab ideas with new ones.
 @router.post("/update_lab_ideas")
 async def update_lab_ideas_api(lab_id: str = Form(...), lab_ideas: str = Form(...)):
