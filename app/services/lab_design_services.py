@@ -1127,6 +1127,17 @@ async def update_lab_info(lab_id, lab_name, lab_description):
         return "Failed to update lab information"
 
 
+def _get_instructions_string(lab_id):
+    atlas_client = AtlasClient()
+    lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+    if not lab:
+        return ""
+    lab = lab[0]
+    instructions = lab.get("instructions", {})
+    instructions_string = ""
+    for key, value in instructions.items():
+        instructions_string += f"**{key}**: {value}\n"
+    return instructions_string
 
 async def get_lab_ideas(lab_id):
     """
@@ -1177,6 +1188,7 @@ async def get_lab_ideas(lab_id):
     
     # 5. Retrieve the prompt template for generating lab ideas
     prompt = _get_prompt("GENERATE_LAB_IDEAS")
+    prompt = prompt.format(INSTRUCTIONS=_get_instructions_string(lab_id))
 
     # 6. Generate content by combining the prompt with the uploaded files using the Gemini model
     response = client.models.generate_content(
@@ -1199,24 +1211,20 @@ async def get_lab_ideas(lab_id):
         # Fallback sample lab ideas in case of an error during parsing
         response = [
             {
-                "name": "Stock Market Dashboard",
-                "description": "An interactive one-page application that displays real-time stock market data, historical trends, and portfolio analytics, enabling users to track investments with dynamic charts and key performance metrics."
+                "name": "Compound Interest Visualizer",
+                "description": "### Overview\nCreate a **one-page** Streamlit app that demonstrates the power of compound interest. Users can input their principal amount, annual interest rate, and investment duration. The app will:\n\n- **Calculate Future Value**: Show how the investment grows over time with monthly or annual compounding.\n- **Interactive Chart**: Display a line chart comparing simple interest vs. compound interest growth.\n\n### How It Explains the Concept\nBy visualizing the differences in growth, users learn how compound interest accumulates earnings not just on the principal but also on previous interest, making it a cornerstone concept in **long-term investing**."
             },
             {
-                "name": "Real-Time Sentiment Analyzer",
-                "description": "A concise dashboard that streams social media data to perform sentiment analysis on trending topics, providing visual insights through word clouds and sentiment score charts."
+                "name": "Mortgage Calculator with Amortization Breakdown",
+                "description": "### Overview\nDesign a **one-page** Streamlit app to calculate monthly mortgage payments and illustrate the amortization schedule. Users input:\n\n- **Loan Amount**\n- **Interest Rate**\n- **Loan Term** (in years)\n\n### Features\n- **Payment Calculation**: Automatically computes monthly payments.\n- **Amortization Chart**: Shows how each payment splits between principal and interest over time.\n\n### How It Explains the Concept\nThe app helps users understand **amortization**—the process of gradually paying off debt through regular payments that cover both interest and principal. Visual cues make it clear how interest is front-loaded in the early years of a mortgage."
             },
             {
-                "name": "COVID-19 Tracker",
-                "description": "A single-page app that aggregates global and local COVID-19 statistics, displaying interactive maps, trend lines, and critical metrics to help users stay informed about the pandemic."
+                "name": "Stock Portfolio Tracker with Risk Assessment",
+                "description": "### Overview\nDevelop a **one-page** Streamlit app that allows users to track their stock holdings and see simple risk metrics. Users can:\n\n- **Add or Remove Stocks**: Enter ticker symbols and the number of shares.\n- **Fetch Real-Time Data**: Pull current prices from a public API.\n- **Portfolio Allocation**: Show a pie chart of holdings by market value.\n\n### Features\n- **Volatility Gauge**: Calculate and display standard deviation or beta for each stock.\n- **Performance Trends**: Display a line chart of portfolio value over time.\n\n### How It Explains the Concept\nBy breaking down **risk assessment** (like volatility) in a user-friendly manner, the app helps users grasp how stock performance fluctuations can impact overall portfolio stability. It provides a practical introduction to risk management concepts in investing."
             },
             {
-                "name": "Personal Finance Planner",
-                "description": "A streamlined application for tracking expenses and budgeting, featuring interactive graphs and forecasting tools to help users manage their finances efficiently on one page."
-            },
-            {
-                "name": "Custom",
-                "description": "Describe your custom lab here."
+                "name": "Budget vs. Actual Spending Dashboard",
+                "description": "### Overview\nCreate a **one-page** Streamlit app that compares a user's budgeted spending to their actual expenses. Users can:\n\n- **Input Budget Categories**: e.g., Rent, Groceries, Entertainment.\n- **Log Actual Expenses**: Enter real spending amounts throughout the month.\n- **View Summaries**: Display a bar chart or gauge showing the difference between budgeted vs. actual amounts.\n\n### Features\n- **Alerts**: Highlight overspending in red.\n- **Trend Analysis**: Show a mini line chart for each category over time.\n\n### How It Explains the Concept\nThis dashboard clarifies **budgeting**—the practice of planning income and expenses in advance. By contrasting expected vs. real spending, users see how well they stick to their financial goals, reinforcing the importance of proactive money management."
             }
         ]
 
