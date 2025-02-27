@@ -10,7 +10,7 @@ async def generate_podcast_outline_api(files: Optional[List[UploadFile]] = File(
                                   prompt: str = Form(...),
                                   use_metaprompt: Optional[bool] = Form(False)
                                   ):
-    return await generate_podcast_outline(files, instructions, prompt, use_metaprompt) 
+    return await generate_podcast_outline(files, instructions, prompt, use_metaprompt=False) 
 
 @router.post("/generate_audio_for_podcast")
 async def generate_audio_for_podcast_api(

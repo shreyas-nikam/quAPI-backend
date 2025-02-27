@@ -11,7 +11,7 @@ async def generate_lab_outline_api(files: List[List[UploadFile]] = File(...),
                                   instructions: str = Form(...),
                                   use_metaprompt: Optional[bool] = Form(False)
                                   ):
-    return await generate_lab_outline(files, instructions, use_metaprompt) 
+    return await generate_lab_outline(files, instructions, use_metaprompt=False) 
 
 # Endpoint to clone an existing lab using the provided lab_id.
 @router.post("/clone_lab")
@@ -75,7 +75,7 @@ async def get_lab_api(lab_id: str):
 @router.post("/generate_idea_for_concept_lab")
 async def generate_idea_for_concept_lab_api(lab_id: str = Form(...), instructions: str = Form(...),
                                             prompt: str = Form(...), use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_idea_for_concept_lab(lab_id, instructions, prompt, use_metaprompt)
+    return await generate_idea_for_concept_lab(lab_id, instructions, prompt, use_metaprompt=False)
 
 # Endpoint to generate a business use case for a lab using lab_id and a prompt.
 @router.post("/generate_business_use_case_for_lab")
@@ -87,13 +87,13 @@ async def generate_business_use_case_for_lab_api(lab_id: str = Form(...), prompt
 @router.post("/generate_technical_specifications_for_lab")
 async def generate_technical_specifications_for_lab_api(lab_id: str = Form(...), prompt: str = Form(...),
                                                         use_metaprompt: Optional[bool] = Form(False)):
-    return await generate_technical_specifications_for_lab(lab_id, prompt, use_metaprompt)
+    return await generate_technical_specifications_for_lab(lab_id, prompt, use_metaprompt=False)
 
 # Endpoint to regenerate content with user provided feedback.
 @router.post("/regenerate_with_feedback")
 async def regenerate_with_feedback_api(content: str = Form(...), feedback: str = Form(...),
                                        use_metaprompt: Optional[bool] = Form(False)):
-    return await regenerate_with_feedback(content, feedback, use_metaprompt)
+    return await regenerate_with_feedback(content, feedback, use_metaprompt=False)
 
 # Endpoint to save a concept lab idea to the lab.
 @router.post("/save_concept_lab_idea")

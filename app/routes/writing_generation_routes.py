@@ -30,7 +30,7 @@ async def writing_outline_api(files: Optional[List[UploadFile]] = File(None),
                                   identifier: str = Form(...),
                                   use_metaprompt: Optional[bool] = Form(False)
                                   ):
-    return await writing_outline(files, instructions, identifier, use_metaprompt) 
+    return await writing_outline(files, instructions, identifier, use_metaprompt=False) 
 
 @router.post("/generate_templates")
 async def generate_templates_api(files: Optional[List[UploadFile]] = File(None), 
@@ -41,7 +41,7 @@ async def generate_templates_api(files: Optional[List[UploadFile]] = File(None),
                                  prompt: str = Form(...),
                                  use_metaprompt: Optional[bool] = Form(False),
                                 ):
-    return await generate_templates(files, identifier, target_audience, tone, expected_length, prompt, use_metaprompt)
+    return await generate_templates(files, identifier, target_audience, tone, expected_length, prompt, use_metaprompt=False)
 
 @router.post("/create_writing")
 async def create_writing_api(
@@ -76,7 +76,7 @@ async def regenerate_outline_api(
         use_metaprompt: Optional[bool] = Form(False)
     ):
     #TODO check implementation
-    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt, use_metaprompt)
+    return await regenerate_outline(writing_id, instructions, previous_outline, selected_resources, identifier, prompt, use_metaprompt=False)
 
 
 # convert file to pdf for selected template

@@ -175,7 +175,7 @@ async def get_courses(username: str):
 
 async def generate_course_outline(files, instructions, prompt, use_metaprompt):
     course_outline_instructions = prompt
-    if (use_metaprompt):
+    if use_metaprompt:
         course_outline_instructions = _get_prompt("COURSE_OUTLINE_PROMPT")
         course_outline_instructions = await generate_prompt(course_outline_instructions)
 
