@@ -320,7 +320,7 @@ async def create_lab(username, lab_name, lab_description, lab_outline, files, la
             "datasetType": "Synthetic",
             "datasetDetails": "### Dataset Details\n- **Source**: A synthetic dataset generated to mimic the structure and characteristics of the uploaded document.\n- **Content**: Designed to include realistic data features such as numeric values, categorical variables, and time-series data where applicable.\n- **Purpose**: Serves as a sample dataset for demonstrating data handling and visualization techniques in a controlled environment.",
             "visualizationDetails": "### Visualizations Details\n- **Interactive Charts**: Incorporate dynamic line charts, bar graphs, and scatter plots to display trends and correlations.\n- **Annotations & Tooltips**: Provide detailed insights and explanations directly on the charts to help interpret the data.",
-            "additionalDetails": "### Additional Details\n- **User Interaction**: Include input forms and widgets to let users experiment with different parameters and see real-time updates in the visualizations.\n- **Documentation**: Built-in inline help and tooltips to guide users through each step of the data exploration process."
+            "additionalDetails": "### Additional Details\n- **User Interaction**: Include input forms and widgets to let users experiment with different parameters and see real-time updates in the visualizations.\n- **Documentation**: Built-in inline help and tooltips to guide users through each step of the data exploration process.\n- **Reference**: Also explain how the lab idea is related to a concept in the document by referencing it."
         }
     }
     step_directory = LAB_DESIGN_STEPS[0]
