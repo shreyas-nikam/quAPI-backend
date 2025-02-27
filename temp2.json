@@ -1,27 +1,5 @@
 [
     {
-        "_id": "67a7896f6c6939eae60bb2a0",
-        "lab_name": "test",
-        "lab_description": "test",
-        "lab_image": "https://qucoursify.s3.us-east-1.amazonaws.com/qu-lab-design/67a7896f6c6939eae60bb2a0/lab_image/qucreate_logo.png",
-        "lab_outline": "# Module 1: **On Machine Lear",
-        "status": "In Design Phase",
-        "instructions": {
-            "learningOutcomes": "",
-            "responsive": false,
-            "datasetType": "",
-            "links": [],
-            "datasetFile": [],
-            "visualizations": "",
-            "frameworks": "",
-            "accessibility": "",
-            "exportFormats": "",
-            "visualReferences": [],
-            "documentation": false
-        },
-        "raw_resources": []
-    },
-    {
         "_id": "67bc9507ae9e6f7013651827",
         "users": [
             "db763da4-306a-44ae-affe-423cdc8810ea"

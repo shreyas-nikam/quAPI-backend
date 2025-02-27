@@ -748,9 +748,9 @@ async def generate_business_use_case_for_lab(lab_id: str, prompt, use_metaprompt
     return lab
 
 async def generate_technical_specifications_for_lab(lab_id, prompt=_get_prompt("TECHNICAL_SPECIFICATION_PROMPT"), use_metaprompt=False):
-    if use_metaprompt:
-        prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
-        prompt = await generate_prompt(prompt)
+    # if use_metaprompt:
+    #     prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+    #     prompt = await generate_prompt(prompt)
     atlas_client = AtlasClient()
 
     lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -760,7 +760,7 @@ async def generate_technical_specifications_for_lab(lab_id, prompt=_get_prompt("
     
     lab = lab[0]
 
-    # prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
+    prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
     # if use_metaprrompt:
     #     prompt = generate_prompt(prompt)
