@@ -82,15 +82,15 @@ async def get_writing(writing_id):
         writing = _convert_object_ids_to_strings(writing)
     return writing
 
-async def generate_templates(files, identifier, target_audience, tone, expected_length, prompt):
+async def generate_templates(files, identifier, target_audience, tone, expected_length, prompt, use_metaprompt):
     # prompt = "GENERATE_TEMPLATES_FOR_WRITING_PROMPT"
     identifier_text = identifier_mappings.get(identifier, "Writing")
     # templates_instructions = _get_prompt(prompt)
     templates_instructions = prompt.replace("{IDENTIFIER_TEXT}", identifier_text)
     templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
     
-    # if use_metaprompt:
-    #     templates_instructions = generate_prompt(templates_instructions)
+    if use_metaprompt:
+        templates_instructions = generate_prompt(templates_instructions)
     
     if templates_instructions == "The request timed out. Please try again.":
         templates_instructions = _get_prompt("GENERATE_TEMPLATES_FOR_WRITING_PROMPT")
