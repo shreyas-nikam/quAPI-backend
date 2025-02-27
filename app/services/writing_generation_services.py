@@ -90,7 +90,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
     templates_instructions += f"\n\nAdditional instructions from user: \n- Target Audience: {target_audience}\n- Tone: {tone}\n- Expected Length: {expected_length}"
     
     if use_metaprompt:
-        templates_instructions = generate_prompt(templates_instructions)
+        templates_instructions = await generate_prompt(templates_instructions)
     
     if templates_instructions == "The request timed out. Please try again.":
         templates_instructions = _get_prompt("GENERATE_TEMPLATES_FOR_WRITING_PROMPT")
@@ -223,7 +223,7 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
     outline_instructions += f"\n\nAdditional instructions from user: \n- {instructions}"
 
     if use_metaprompt:
-        outline_instructions = generate_prompt(outline_instructions)
+        outline_instructions = await generate_prompt(outline_instructions)
 
     if outline_instructions == "The request timed out. Please try again.":
         outline_instructions = _get_prompt(prompt)
@@ -421,7 +421,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
     prompt = prompt.replace("{USER_INSTRUCTIONS}", instructions)
 
     # if use_metaprompt:
-    #     prompt = generate_prompt(prompt)
+    #     prompt = await generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("REGENERATE_DRAFT_PROMPT")

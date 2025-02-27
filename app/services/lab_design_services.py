@@ -157,7 +157,7 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
     lab_outline_instructions += f"\n\nUser's instructions:\n{instructions}"
 
     if use_metaprompt:
-        lab_outline_instructions = generate_prompt(lab_outline_instructions)
+        lab_outline_instructions = await generate_prompt(lab_outline_instructions)
 
     if lab_outline_instructions == "The request timed out. Please try again.":
         lab_outline_instructions = _get_prompt("LAB_OUTLINE_PROMPT")
@@ -763,7 +763,7 @@ async def generate_technical_specifications_for_lab(lab_id, prompt=_get_prompt("
     prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
 
     # if use_metaprrompt:
-    #     prompt = generate_prompt(prompt)
+    #     prompt = await generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("TECHNICAL_SPECIFICATION_PROMPT")
@@ -829,7 +829,7 @@ async def regenerate_with_feedback(content, feedback, use_metaprompt=False):
     }
 
     if use_metaprompt:
-        prompt = generate_prompt(prompt)
+        prompt = await generate_prompt(prompt)
 
     if prompt == "The request timed out. Please try again.":
         prompt = _get_prompt("REGENERATE_WITH_FEEDBACK_PROMPT")
