@@ -37,7 +37,6 @@ def redis_listener():
     pubsub.subscribe("task_updates")  # We'll handle all messages in one channel
 
     for msg in pubsub.listen():
-        print(msg)
         if msg["type"] != "message":
             continue
         if not msg["data"]:
@@ -66,7 +65,6 @@ async def broadcast_message(data_str: str):
         payload = json.loads(data_str)
         username = payload["username"]
     except (ValueError, KeyError):
-        print("Invalid message format:", data_str)
         return
 
     if "module_id" in payload and payload["module_id"]!="":
@@ -110,8 +108,6 @@ async def tasks_websocket(websocket: WebSocket, username: str, task_id: str):
     key = (username, task_id)
     if key not in connected_tasks:
         connected_tasks[key] = websocket
-    print(f"Connected: {key}")
-    print("Connected tasks:", connected_tasks)
     try:
         while True:
             # We don't expect any messages from client side in this scenario,
@@ -133,8 +129,6 @@ async def notifications_websocket(websocket: WebSocket, username: str):
     await websocket.accept()
 
     connected_notifs[username] = websocket
-    print(f"Connected to notifications: {username}")
-    print("Connected notifs:", connected_notifs)    
     
 
     try:
