@@ -1,5 +1,22 @@
-from fastapi import FastAPI
-from app.routes.example import router
+# Standard library imports
+import os
+import logging
+from pathlib import Path
+import tempfile
+from typing import Callable, Coroutine, Optional
+from datetime import datetime
+
+# Third-party imports
+from fastapi import FastAPI, Request, Response, Depends, HTTPException, status, Form
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from starlette.middleware.sessions import SessionMiddleware
+import marimo
+
+# App-specific imports
 from app.routes.course_design_routes import router as course_design_router
 from app.routes.lecture_design_routes import router as lecture_design_router
 from app.routes.lab_design_routes import router as lab_design_router
@@ -8,21 +25,8 @@ from app.routes.user_routes import router as user_router
 from app.routes.writing_generation_routes import router as writing_generation_router
 from app.routes.template_design_routes import router as template_design_router
 from app.routes.metaprompt_routes import router as meta_prompt_router
-from fastapi.middleware.cors import CORSMiddleware
-import logging
-import marimo
-from typing import Callable, Coroutine
-from fastapi import FastAPI, Request, Response, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-from pydantic import BaseModel
-import os
-import logging
-from dotenv import load_dotenv
-from fastapi import Form
-from pathlib import Path
-import tempfile
+from app.websocket_manager import router as ws_router, start_redis_listener, redis_client
+
 
 # Load environment variables
 load_dotenv()
@@ -54,6 +58,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
     )
 
+@app.on_event("startup")
+def startup_event():
+    start_redis_listener()  # Start listening to Redis in a background thread
+
 
 # Add session middleware
 app.add_middleware(
@@ -61,6 +69,17 @@ app.add_middleware(
     secret_key=os.getenv("SECRET_KEY", "your-secret-key")
 )
 
+# Example: Webhook for Airflow
+class TaskCompletePayload(BaseModel):
+    username: str
+    creation_date: datetime
+    type: str
+    message: str
+    read: bool
+    module_id: Optional[str]
+    project_id: str
+    state: str
+    
 
 # Allow CORS for the frontend
 origins = [
@@ -77,13 +96,12 @@ app.add_middleware(
 )
 
 
-app.include_router(router)
+app.include_router(ws_router)
 app.include_router(course_design_router)
 app.include_router(lecture_design_router)
 app.include_router(writing_generation_router)
 app.include_router(user_router)
 app.include_router(lab_design_router)
-app.include_router(router)
 app.include_router(podcast_design_router)
 app.include_router(template_design_router)
 app.include_router(meta_prompt_router)
@@ -91,3 +109,27 @@ app.include_router(meta_prompt_router)
 @app.get("/")
 async def read_root():
     return {"message": f"Hello, World!"}
+
+
+
+@app.post("/task-complete")
+def task_complete(payload: TaskCompletePayload):
+    """
+    Airflow calls this endpoint with JSON like:
+      {
+        "type": "taskUpdate",
+        "userId": "123",
+        "taskId": "abc",
+        "message": "Done"
+      }
+
+      OR for notifications:
+      {
+        "type": "notification",
+        "userId": "123",
+        "message": "Task abc completed successfully!"
+      }
+    """
+    # Publish to Redis, websockets_manager will parse and broadcast
+    redis_client.publish("task_updates", payload.json())
+    return {"detail": "OK"}
