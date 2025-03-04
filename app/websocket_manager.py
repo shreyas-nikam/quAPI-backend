@@ -41,6 +41,7 @@ def redis_listener():
             continue
         if not msg["data"]:
             continue
+        print(f"Received: {msg['data']}")
         data_str = msg["data"].decode("utf-8")
         asyncio.run(broadcast_message(data_str))
 
@@ -64,19 +65,22 @@ async def broadcast_message(data_str: str):
     try:
         payload = json.loads(data_str)
         username = payload["username"]
+        print(f"Broadcasting to {username}: {payload}")
     except (ValueError, KeyError):
         return
 
-    if "module_id" in payload and payload["module_id"]!="":
+    if payload["module_id"]!="":
         task_id = payload["module_id"]
     else:
         task_id = payload.get("project_id", "")
         
     message = payload.get("state", "")
+    print(message)
     key = (username, task_id)
 
     # Send to all websockets subscribed to (username, taskId)
     if key in connected_tasks:
+        print("Key in connected tasks is", key)
         ws = connected_tasks[key]
         try:
             await ws.send_text(message)
@@ -88,6 +92,7 @@ async def broadcast_message(data_str: str):
 
     # Send to all websockets subscribed to username notifications
     if username in connected_notifs:
+        print("Username in connected notifs is", username)
         ws = connected_notifs[username]
         try:
             await ws.send_json(payload)
