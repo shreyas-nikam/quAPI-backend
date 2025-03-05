@@ -21,6 +21,8 @@ __pycache__/
 
 # Streamlit
 .streamlit/
+
+venv/
 """
 
 
