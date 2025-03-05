@@ -24,7 +24,7 @@ from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
 from app.utils.llm import LLM
 from app.utils.s3_file_manager import S3FileManager
 from app.utils.atlas_client import AtlasClient
-from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
+from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue, delete_repo_from_github
 from app.services.metaprompt import generate_prompt
 
 LAB_DESIGN_STEPS = [
@@ -282,6 +282,11 @@ async def delete_lab(lab_id):
         return "Lecture not found"
     
     lab = lab[0]
+    
+    # delete repository from github
+    delete_repo_from_github(lab_id)
+    
+    # TODO: remove lab from ec2 instance and its documentation if the lab is in the final stage
     
     atlas_client.delete("lab_design", filter={"_id": ObjectId(lab_id)})
 
