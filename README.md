@@ -14,6 +14,11 @@ A FastAPI application setup with proper environment configuration and a basic ro
    ```
    pip install -r requirements.txt
    ```
+4. Start a docker container for redis for notification streaming:
+```
+docker run --name local-redis -p 6379:6379 -d redis
+```
+
 
 4. Create .env file and add the following keys:
 OPENAI_KEY=<YOUR_KEY_HERE>
