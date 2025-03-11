@@ -21,6 +21,8 @@ __pycache__/
 
 # Streamlit
 .streamlit/
+
+venv/
 """
 
 
@@ -232,6 +234,21 @@ def create_repo_in_github(repo_name, description, private=False):
     else:
         return "Failed to create repository."
 
+
+def delete_repo_from_github(repo_name):
+    """Delete a GitHub repository."""
+    url = f"{GITHUB_API_URL}/repos/{GITHUB_USERNAME}/{repo_name}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 204:
+        logging.info(f"Repository '{repo_name}' deleted successfully!")
+    else:
+        logging.info(f"Failed to delete repository: {response.status_code}, {response.text}")
+        
+        
 
 # # Example usage
 
