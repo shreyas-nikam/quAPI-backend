@@ -359,7 +359,8 @@ async def create_writing(username, writing_id, writing_name, writing_description
         "writing_outline": writing_outline,
         "writing_image": writing_image_link,
         "status": "In Design Phase",
-        "identifier": identifier
+        "identifier": identifier,
+        "tags": [],
     }
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": writing
@@ -559,6 +560,38 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         os.rmdir("files/temp")
 
     return {"writing_id": str(id), "writing": response}
+
+async def update_writing_tags(writing_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the podcast from the database
+    writing_data = atlas_client.find("writing_design", filter={"_id": ObjectId(writing_id)})
+
+    if not writing_data:
+        return "Writing not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "writing_design",  # Collection name
+        filter = {"_id": ObjectId(writing_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Writing information updated successfully"
+    else:
+        return "Failed to update writing information"
+
 
 async def convert_to_pdf(writing_id, markdown, template_name):
 

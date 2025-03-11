@@ -326,7 +326,8 @@ async def create_lab(username, lab_name, lab_description, lab_outline, files, la
             "datasetDetails": "### Dataset Details\n- **Source**: A synthetic dataset generated to mimic the structure and characteristics of the uploaded document.\n- **Content**: Designed to include realistic data features such as numeric values, categorical variables, and time-series data where applicable.\n- **Purpose**: Serves as a sample dataset for demonstrating data handling and visualization techniques in a controlled environment.",
             "visualizationDetails": "### Visualizations Details\n- **Interactive Charts**: Incorporate dynamic line charts, bar graphs, and scatter plots to display trends and correlations.\n- **Annotations & Tooltips**: Provide detailed insights and explanations directly on the charts to help interpret the data.",
             "additionalDetails": "### Additional Details\n- **User Interaction**: Include input forms and widgets to let users experiment with different parameters and see real-time updates in the visualizations.\n- **Documentation**: Built-in inline help and tooltips to guide users through each step of the data exploration process.\n- **Reference**: Also explain how the lab idea is related to a concept in the document by referencing it."
-        }
+        },
+        "tags": [],
     }
     step_directory = LAB_DESIGN_STEPS[0]
 
@@ -1112,6 +1113,37 @@ async def update_lab_info(lab_id, lab_name, lab_description):
         "$set": {
             "lab_name": lab_name,
             "lab_description": lab_description
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "lab_design",  # Collection name
+        filter = {"_id": ObjectId(lab_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Lab information updated successfully"
+    else:
+        return "Failed to update lab information"
+    
+async def update_lab_tags(lab_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the course from the database
+    lab_data = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab_data:
+        return "Lab not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
         }
     }
 
