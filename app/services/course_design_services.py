@@ -1127,6 +1127,59 @@ async def update_module_info(course_id, module_id, module_name, module_descripti
 
 
 
+async def update_selected_labs_info(course_id, module_id, selected_labs):
+    atlas_client = AtlasClient()
+    
+    # Fetch the course from the database
+    course_data = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+
+    if not course_data:
+        return "Course not found"
+    
+    course = course_data[0]  # Assuming find() returns a list, get the first match
+    
+    # Get the modules array from the course
+    modules = course.get("modules", [])
+
+    # Convert module_id to ObjectId if stored as ObjectId in MongoDB
+    try:
+        module_id = ObjectId(module_id)
+    except Exception:
+        pass  # Keep it as a string if not stored as ObjectId
+
+    # Update the specific module in the list
+    module_found = False
+    for module in modules:
+        if module["module_id"] == module_id:  # Find the module that matches
+            module["selected_labs"] = selected_labs
+            module_found = True
+            break  # Stop loop after updating the correct module
+
+    if not module_found:
+        return "Module not found in course"
+
+    # Define the update payload for replacing the modules array
+    update_payload = {
+        "$set": {
+            "modules": modules  # Save the updated modules list back to the course
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Collection name
+        filter={"_id": ObjectId(course_id)},  # Identify the correct course
+        update=update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Module information updated successfully"
+    else:
+        return "Failed to update module information"
+
+
+
 
     
     

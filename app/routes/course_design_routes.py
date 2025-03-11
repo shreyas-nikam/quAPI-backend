@@ -33,6 +33,10 @@ async def update_course_info_api(course_id: str = Form(...), course_name: str = 
 async def update_module_info_api(course_id: str = Form(...), module_id: str = Form(...), module_name: str = Form(...),  module_description: str = Form(...),):
     return await update_module_info(course_id, module_id, module_name, module_description)
 
+@router.post("/update_selected_labs_info")
+async def update_module_selected_labs_api(course_id: str = Form(...), module_id: str = Form(...), selected_labs: List[str] = Form(...)):
+    return await update_selected_labs_info(course_id, module_id, selected_labs)
+
 # done
 @router.post("/courses")
 async def courses_api(username: str = Form(...)):
