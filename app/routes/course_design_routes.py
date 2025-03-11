@@ -86,6 +86,10 @@ async def delete_resources_from_module_api(course_id: str = Form(...), module_id
 async def get_course_api(course_id: str):
     return await get_course(course_id)
 
+@router.post("/update_course_tags")
+async def update_course_tags_api(course_id: str = Form(...), tags: List[str] = Form(...)):
+    return await update_course_tags(course_id, tags)
+
 @router.get("/outline_prompt")
 async def course_outline_prompt_api():
     return await course_outline_prompt()

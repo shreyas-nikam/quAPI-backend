@@ -450,7 +450,8 @@ async def create_podcast(username, podcast_name, podcast_description, podcast_tr
         "podcast_image": podcast_image_link,
         "podcast_transcript": podcast_transcript,
         "status": podcast_status,
-        "podcast_audio": podcast_audio_link  # Add the audio link here
+        "podcast_audio": podcast_audio_link,  # Add the audio link here
+        "tags": [],
     }
     
     step_directory = PODCAST_DESIGN_STEPS[0]
@@ -494,6 +495,38 @@ async def get_podcast(podcast_id):
     podcast = _convert_object_ids_to_strings(podcast)
     podcast = podcast[0]
     return podcast
+
+async def update_podcast_tags(podcast_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the podcast from the database
+    podcast_data = atlas_client.find("podcast_design", filter={"_id": ObjectId(podcast_id)})
+
+    if not podcast_data:
+        return "Podcast not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "podcast_design",  # Collection name
+        filter = {"_id": ObjectId(podcast_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Podcast information updated successfully"
+    else:
+        return "Failed to update podcast information"
+
 
 async def delete_podcast(podcast_id):
 

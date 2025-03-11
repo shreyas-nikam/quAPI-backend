@@ -180,6 +180,10 @@ async def update_lab_info_api(lab_id: str = Form(...), lab_name: str = Form(...)
                               lab_description: str = Form(...)):
     return await update_lab_info(lab_id, lab_name, lab_description)
 
+@router.post("/update_lab_tags")
+async def update_lab_tags_api(lab_id: str = Form(...), tags: List[str] = Form(...)):
+    return await update_lab_tags(lab_id, tags)
+
 # Endpoint to fetch GitHub issues for a lab.
 @router.get("/get_lab_issues/{lab_id}")
 async def get_lab_issues_api(lab_id: str):

@@ -351,7 +351,8 @@ async def create_course(username, course_name, course_description, course_outlin
         "course_description": course_description,
         "course_image": course_image_link,
         "course_outline": course_outline,
-        "status": course_status
+        "status": course_status,
+        "tags": [],
     }
     step_directory = COURSE_DESIGN_STEPS[0]
 
@@ -417,6 +418,38 @@ def _get_resource_key_from_link(resource_link):
     # unquote the key
     resource_key = unquote(resource_prefix)
     return resource_key
+
+
+async def update_course_tags(course_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the course from the database
+    course_data = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+
+    if not course_data:
+        return "Course not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Collection name
+        filter = {"_id": ObjectId(course_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Course information updated successfully"
+    else:
+        return "Failed to update course information"
 
 
 # add_module -> takes in the course_id, module_name, module_description, and adds a module to the course

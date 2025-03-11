@@ -65,6 +65,10 @@ async def create_writing_api(
         identifier=identifier
     )
 
+@router.post("/update_writing_tags")
+async def update_writing_tags_api(writing_id: str = Form(...), tags: List[str] = Form(...)):
+    return await update_writing_tags(writing_id, tags)
+
 @router.post("/regenerate_outline")
 async def regenerate_outline_api(
         writing_id: str = Form(...),
