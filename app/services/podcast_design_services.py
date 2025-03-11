@@ -127,12 +127,13 @@ def format_podcast_dialogue(response_text):
     return "\n\n".join(formatted_lines)
 
 
+async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, retry_count=0, max_retries=3):
 
-async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
-    podcast_prompt = prompt
     if use_metaprompt:
         podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
         podcast_prompt = await generate_prompt(podcast_prompt)
+    else:
+        podcast_prompt = prompt
 
     if podcast_prompt == "The request timed out. Please try again.":
         podcast_prompt = _get_prompt("GENERATE_PODCAST_PROMPT")
@@ -143,12 +144,12 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
     if files:
         for file in files:
             file_content = file.file.read()
-
             file.file.seek(0)
-
             assistant_files_streams.append((file.filename, file_content))
+            
+        # instructions += " Use the attached files to create the podcast outline."
+        # instructions += " ### Files: " + ", ".join([file.filename for file in files])
 
-    # Track created resources
     created_assistant_id = None
     created_vector_store_id = None
     created_thread_id = None
@@ -160,36 +161,27 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
             model=os.getenv("OPENAI_MODEL"),
             tools=[{"type": "file_search"}]
         )
-        created_assistant_id = assistant.id  # Track the assistant
+        created_assistant_id = assistant.id
 
         vector_store = client.beta.vector_stores.create(
             name="Podcast Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
-        created_vector_store_id = vector_store.id  # Track the vector store
+        created_vector_store_id = vector_store.id
+
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            client.beta.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
-
             assistant = client.beta.assistants.update(
                 assistant_id=assistant.id,
-                tool_resources={"file_search": {
-                    "vector_store_ids": [vector_store.id]}},
-            )
-
-        else:
-            assistant = client.beta.assistants.update(
-                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}}
             )
 
         thread = client.beta.threads.create(
-            messages=[{
-                "role": "user",
-                "content": podcast_prompt
-            }]
+            messages=[{"role": "user", "content": podcast_prompt}]
         )
-        created_thread_id = thread.id  # Track the thread
+        created_thread_id = thread.id
 
         run = client.beta.threads.runs.create_and_poll(
             thread_id=thread.id, assistant_id=assistant.id, poll_interval_ms=10000
@@ -197,24 +189,16 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
 
         messages = list(client.beta.threads.messages.list(
             thread_id=thread.id, run_id=run.id))
+        
+        print("Messages areL", messages)
 
-        message_content = messages[0].content[0].text
-        annotations = message_content.annotations
-        citations = []
+        response = messages[0].content[0].text.value  # Extract text content
 
-        for index, annotation in enumerate(annotations):
-            message_content.value = message_content.value.replace(
-                annotation.text, f"[{index}]")
-            if file_citation := getattr(annotation, "file_citation", None):
-                cited_file = client.files.retrieve(file_citation.file_id)
-                citations.append(f"[{index}] {cited_file.filename}")
-
-        response = message_content.value
     except Exception as e:
-        logging.error(f"Error in generating course outline: {e}")
-        return """The request timed out. Please try again later. However, here's a sample response:\n\n **Alex:** Welcome, everyone, to *Decoding AI: A Revolution in Business and National Security*! I'm your host, Alex Johnson, and today, we're diving into the fascinating world of artificial intelligence with a leading expert, Dr. Anya Sharma. **Anya:** Thanks for having me, Alex. It's exciting to discuss this rapidly evolving field. **Alex:** Absolutely! For those just tuning in, can you give us a quick, jargon-free definition of artificial intelligence and machine learning? **Anya:** Certainly. Artificial intelligence, or AI, is essentially the ability of a computer to mimic human intelligence. That includes problem-solving, decision-making, and learning from experience. Machine learning, or ML, is a subset of AI. It’s where we teach computers to learn from data without explicit programming—they learn patterns and make predictions based on that data. **Alex:** So, essentially, it's like teaching a computer to learn by example, rather than giving it a set of strict rules to follow? **Anya:** Exactly! That’s a huge shift from how computers have worked for the past 75 years. Think about it—before AI, we programmed every single step a computer took. Now, we can train a system to learn and adapt on its own, leading to some pretty amazing capabilities. **Alex:** That’s fascinating. Can you explain this difference using an analogy? **Anya:** Sure. Imagine explaining computers in 1950 to someone using slide rules and manual calculators. You tell them about machines that can do complex calculations instantly, learn, and adapt—they’d be amazed! That’s where we are now with AI—a complete game-changer impacting everything from business to defense. **Alex:** What exactly can AI do these days? And just as importantly, what can’t it do? **Anya:** AI excels at tasks involving massive data sets, like natural language processing, computer vision, and anomaly detection. It’s transforming industries—think self-driving cars, medical diagnoses, and fraud detection. But AI has limitations: it struggles with uncertainty, explaining its reasoning, and handling unexpected situations or genuine creativity. **Alex:** Let’s delve into specific applications. How is AI impacting business? **Anya:** AI is revolutionizing industries. It assists humans in programming and decision-making, streamlines supply chains, optimizes marketing, and enhances customer support. In healthcare, it’s helping with diagnostics, drug discovery, and personalized medicine. Autonomous vehicles and human-machine teaming are other key areas of transformation. **Alex:** And in national security? How is AI reshaping warfare and intelligence? **Anya:** AI is transforming national security with enhanced surveillance, autonomous systems, and efficient data analysis. It plays a crucial role in human-machine teaming, augmenting intelligence while keeping humans at the decision-making helm. However, ethical concerns arise, especially regarding autonomous weapons and AI-driven disinformation. **Alex:** Those are critical points. Let’s talk about the hardware driving these advancements. What’s happening on that front? **Anya:** Hardware is crucial. Specialized AI chips, cloud computing, and robust infrastructure are propelling the field forward. Companies like Nvidia lead the way, with a significant software advantage that creates a competitive edge. However, challenges remain as newer players work to catch up. **Alex:** This field is moving at lightning speed. To wrap things up, what are the key takeaways? **Anya:** AI is a revolutionary force transforming business and national security. While its potential is immense, so are its challenges. Responsible development, ethical considerations, and informed usage are critical. This is a rapidly evolving field, so staying informed is essential. **Alex:** Dr. Sharma, thank you for sharing your expertise. And to our listeners, thank you for tuning in to *Decoding AI*. Until next time, keep exploring and stay curious! """
+        logging.error(f"Error in generating podcast outline: {e}")
+        return "The request timed out. Please try again later."
+
     finally:
-        # Clean up all created resources to avoid charges
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
@@ -222,14 +206,16 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt):
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    match = re.search(r'<podcast_dialogue>(.*?)</podcast_dialogue>', response, re.DOTALL)
+    # Extract dialogue format
+    match = re.search(r'([A-Za-z]+:\s.+)', response, re.DOTALL)
 
     if match:
-        dialogue_content = match.group(1).strip()  # Extract the matched content
-        return dialogue_content
+        return match.group(1).strip()
+    elif retry_count < max_retries:
+        print(f"Attempt {retry_count+1}: Retrying to generate dialogue format...", response)
+        return await generate_podcast_outline(files, instructions, prompt, use_metaprompt, retry_count + 1, max_retries)
     else:
-        return response
-
+        return "Failed to generate a dialogue format after multiple attempts. Please try again later."
 
 
 
@@ -464,7 +450,8 @@ async def create_podcast(username, podcast_name, podcast_description, podcast_tr
         "podcast_image": podcast_image_link,
         "podcast_transcript": podcast_transcript,
         "status": podcast_status,
-        "podcast_audio": podcast_audio_link  # Add the audio link here
+        "podcast_audio": podcast_audio_link,  # Add the audio link here
+        "tags": [],
     }
     
     step_directory = PODCAST_DESIGN_STEPS[0]
@@ -508,6 +495,38 @@ async def get_podcast(podcast_id):
     podcast = _convert_object_ids_to_strings(podcast)
     podcast = podcast[0]
     return podcast
+
+async def update_podcast_tags(podcast_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the podcast from the database
+    podcast_data = atlas_client.find("podcast_design", filter={"_id": ObjectId(podcast_id)})
+
+    if not podcast_data:
+        return "Podcast not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "podcast_design",  # Collection name
+        filter = {"_id": ObjectId(podcast_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Podcast information updated successfully"
+    else:
+        return "Failed to update podcast information"
+
 
 async def delete_podcast(podcast_id):
 
