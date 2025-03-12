@@ -146,10 +146,6 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, 
             file_content = file.file.read()
             file.file.seek(0)
             assistant_files_streams.append((file.filename, file_content))
-            
-        # instructions += " Use the attached files to create the podcast outline."
-        # instructions += " ### Files: " + ", ".join([file.filename for file in files])
-
     created_assistant_id = None
     created_vector_store_id = None
     created_thread_id = None
@@ -190,8 +186,10 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, 
         messages = list(client.beta.threads.messages.list(
             thread_id=thread.id, run_id=run.id))
         
-        print("Messages areL", messages)
+        # Logging the received messages to debug
+        # print("Messages are:", messages)
 
+        # Extracting only the first message's content
         response = messages[0].content[0].text.value  # Extract text content
 
     except Exception as e:
@@ -206,18 +204,16 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, 
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
-    # Extract dialogue format
-    match = re.search(r'([A-Za-z]+:\s.+)', response, re.DOTALL)
+    # Extracting dialogue format using regex
+    match = re.search(r'<podcast_dialogue>(.*?)</podcast_dialogue>', response, re.DOTALL)
 
     if match:
-        return match.group(1).strip()
+        return match.group(1).strip()  # Return the dialogue between <podcast_dialogue> tags
     elif retry_count < max_retries:
-        print(f"Attempt {retry_count+1}: Retrying to generate dialogue format...", response)
+        print(f"Attempt {retry_count + 1}: Retrying to generate dialogue format...", response)
         return await generate_podcast_outline(files, instructions, prompt, use_metaprompt, retry_count + 1, max_retries)
     else:
         return "Failed to generate a dialogue format after multiple attempts. Please try again later."
-
-
 
 async def generate_podcast_dialogue(dialogue, files = None):
     podcast_prompt = _get_prompt("EXTRACT_DIALOGUE_FROM_CONTENT")
