@@ -18,6 +18,7 @@ from bson.objectid import ObjectId
 from openai import OpenAI
 from langchain_core.prompts import PromptTemplate
 from google import genai
+from litellm import check_valid_key
 
 # Application-specific imports
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
@@ -1010,7 +1011,7 @@ async def save_lab_instructions(lab_id, instructions):
     return lab
 
 
-async def submit_lab_for_generation(lab_id, queue_name_suffix):
+async def submit_lab_for_generation(lab_id, model_id, api_key, queue_name_suffix):
     atlas_client = AtlasClient()
 
     try:
@@ -1031,9 +1032,9 @@ async def submit_lab_for_generation(lab_id, queue_name_suffix):
         existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
         if existing_item:
             atlas_client.delete(queue_name_suffix, {"lab_id": str(lab_id)})
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model_id": model_id, "api_key": api_key})
         else:
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model_id": model_id, "api_key": api_key})
 
         # Convert ObjectId fields to strings
         lab = _convert_object_ids_to_strings(lab)
@@ -1376,4 +1377,6 @@ async def update_lab_design_status(lab_id, lab_design_status):
         return "Lab status updated successfully"
     else:
         return "Failed to update lab status"
-    
+
+async def validate_key(model_id, api_key):
+    return check_valid_key(model_id, api_key)

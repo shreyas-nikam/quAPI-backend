@@ -128,8 +128,8 @@ async def save_lab_instructions_api(lab_id: str = Form(...),
 
 # Endpoint to submit a lab for generation processing.
 @router.post("/submit_lab_for_generation")
-async def submit_lab_for_generation_api(lab_id: str = Form(...)):
-    return await submit_lab_for_generation(lab_id, "in_lab_generation_queue")
+async def submit_lab_for_generation_api(lab_id: str = Form(...), model_id: str = Form(...), api_key: str = Form(...)):
+    return await submit_lab_for_generation(lab_id, model_id, api_key, "in_lab_generation_queue")
 
 # Endpoint to create a GitHub issue for lab
 @router.post("/create_github_issue")
@@ -188,3 +188,7 @@ async def update_lab_tags_api(lab_id: str = Form(...), tags: List[str] = Form(..
 @router.get("/get_lab_issues/{lab_id}")
 async def get_lab_issues_api(lab_id: str):
     return await get_repo_issues(lab_id)
+
+@router.post("/validate_key")
+async def validate_key_api(model_id: str = Form(...), api_key: str = Form(...)):
+    return await validate_key(model_id, api_key)
