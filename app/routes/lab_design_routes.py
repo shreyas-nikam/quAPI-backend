@@ -128,8 +128,8 @@ async def save_lab_instructions_api(lab_id: str = Form(...),
 
 # Endpoint to submit a lab for generation processing.
 @router.post("/submit_lab_for_generation")
-async def submit_lab_for_generation_api(lab_id: str = Form(...), model_id: str = Form(...), api_key: str = Form(...)):
-    return await submit_lab_for_generation(lab_id, model_id, api_key, "in_lab_generation_queue")
+async def submit_lab_for_generation_api(username: str = Form(...), lab_id: str = Form(...), company: str = Form(...), model_id: str = Form(...), api_key: str = Form(...), api_key_name: str = Form(...), type: str = Form(...), saveAPIKEY: Optional[bool] = Form(False)):
+    return await submit_lab_for_generation(username, lab_id, company, model_id, api_key, "in_lab_generation_queue", api_key_name, type, saveAPIKEY)
 
 # Endpoint to create a GitHub issue for lab
 @router.post("/create_github_issue")

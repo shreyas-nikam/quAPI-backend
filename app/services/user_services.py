@@ -200,6 +200,12 @@ async def fetch_user(username):
     user = _convert_object_ids_to_strings(user)
     return user
 
+async def fetch_quAPIVault(username):
+    atlas_client = AtlasClient()
+    quAPIVault = atlas_client.find("quAPIVault", filter={"username": username})
+    quAPIVault = _convert_object_ids_to_strings(quAPIVault)
+    return quAPIVault
+
 
 async def update_category(username, category):
     atlas_client = AtlasClient()

@@ -1010,10 +1010,23 @@ async def save_lab_instructions(lab_id, instructions):
 
     return lab
 
-
-async def submit_lab_for_generation(lab_id, model_id, api_key, queue_name_suffix):
+async def _saveApiKey(username, company, model_id, api_key, type, api_key_name):
     atlas_client = AtlasClient()
+    try:
+        atlas_client.insert("quAPIVault", {"username": username, "company": company, "model": model_id, "key": api_key, "type": type, "name": api_key_name})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+async def submit_lab_for_generation(username, lab_id, company, model_id, api_key, queue_name_suffix, api_key_name, type, saveAPIKEY):
+    print(f"username: {username}, lab_id: {lab_id}, model_id: {model_id}, api_key: {api_key}, queue_name_suffix: {queue_name_suffix}, api_key_name: {api_key_name}, saveAPIKEY: {saveAPIKEY}")
+    atlas_client = AtlasClient()
+    
+    if saveAPIKEY:
+            try: 
+                await _saveApiKey(username, company, model_id, api_key, type, api_key_name)
+            except Exception as e:
+                return f"An error occurred while saving API Key: {str(e)}"
+            
     try:
         # Fetch the lab
         lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -1379,4 +1392,5 @@ async def update_lab_design_status(lab_id, lab_design_status):
         return "Failed to update lab status"
 
 async def validate_key(model_id, api_key):
+    print("Response: ", check_valid_key(model_id, api_key))
     return check_valid_key(model_id, api_key)

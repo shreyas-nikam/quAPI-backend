@@ -36,3 +36,7 @@ async def fetch_user_api(username: str = Form(...)):
 @router.post("/update_category")
 async def update_category_api(username: str = Form(...), category: str = Form(...)):
     return await update_category(username, category)
+
+@router.post("/quAPIVault")
+async def fetch_quAPIVault_api(username: str = Form(...)):
+    return await fetch_quAPIVault(username)
