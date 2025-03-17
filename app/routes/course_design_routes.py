@@ -153,3 +153,13 @@ async def fetch_qu_skill_bridge_course_id_api(course_id: str):
 @router.get("/get_templates")
 async def get_templates_api():
     return await get_templates()
+
+@router.post("/validate_template")
+async def validate_template_api(template_file: Optional[UploadFile] = File(None)):
+    res_bool, res_err_msg = await validate_template(template_file)
+    return {"valid": res_bool, "error_message": res_err_msg}
+
+@router.post("/store_custom_template")
+async def store_custom_template_api(course_id: str = Form(...), module_id: str = Form(...), template_file: Optional[UploadFile] = File(None)):
+    return await store_custom_template(course_id, module_id, template_file)
+
