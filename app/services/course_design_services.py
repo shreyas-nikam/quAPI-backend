@@ -742,7 +742,7 @@ async def remove_module_from_step(course_id, module_id, course_design_step, queu
     return True
 
 
-async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
+async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions="", template_url=''):
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
     prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
 
@@ -774,6 +774,7 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
     module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
     if instructions:
         module["instructions"] = instructions
+    
     course["modules"] = [module if m.get(
         "module_id") == module_id else m for m in course.get("modules", [])]
 
@@ -792,6 +793,9 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
 
     if instructions:
         queue_payload["instructions"] = instructions
+
+    if template_url:
+        queue_payload["template_url"] = template_url
 
     # Check if the document already exists
     existing_item = atlas_client.find(
