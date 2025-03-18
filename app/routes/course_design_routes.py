@@ -105,8 +105,8 @@ async def submit_module_for_content_generation_api(course_id: str = Form(...), m
 
 # /submit_module_for_structure_generation -> takes in the course_id, module_id and the reviewed files and submits them for structure generation to the structure_generation_queue
 @router.post("/submit_module_for_structure_generation")
-async def submit_module_for_structure_generation_api(course_id: str = Form(...), module_id: str = Form(...)):
-    return await submit_module_for_step(course_id, module_id, 7, "in_structure_generation_queue")
+async def submit_module_for_structure_generation_api(course_id: str = Form(...), module_id: str = Form(...), template_url: str = Form(...)):
+    return await submit_module_for_step(course_id, module_id, 7, "in_structure_generation_queue", template_url=template_url)
 
 # /submit_module_for_deliverables_generation -> takes in the course_id, module_id and the reviewed files and submits them for final generation to the deliverables_generation_queue
 @router.post("/submit_module_for_deliverables_generation")
@@ -149,3 +149,17 @@ async def add_artifact_to_course_api(course_id: str = Form(...),
 @router.get("/fetch_quskillbridge_course_id/{course_id}")
 async def fetch_qu_skill_bridge_course_id_api(course_id: str):
     return await fetch_qu_skill_bridge_course_id(course_id)
+
+@router.get("/get_templates")
+async def get_templates_api():
+    return await get_templates()
+
+@router.post("/validate_template")
+async def validate_template_api(template_file: Optional[UploadFile] = File(None)):
+    res_bool, res_err_msg = await validate_template(template_file)
+    return {"valid": res_bool, "error_message": res_err_msg}
+
+@router.post("/store_custom_template")
+async def store_custom_template_api(course_id: str = Form(...), module_id: str = Form(...), template_file: Optional[UploadFile] = File(None)):
+    return await store_custom_template(course_id, module_id, template_file)
+
