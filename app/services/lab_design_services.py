@@ -27,6 +27,7 @@ from app.utils.s3_file_manager import S3FileManager
 from app.utils.atlas_client import AtlasClient
 from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue, delete_repo_from_github
 from app.services.metaprompt import generate_prompt
+from app.services.user_services import quAPIVault
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -1010,20 +1011,14 @@ async def save_lab_instructions(lab_id, instructions):
 
     return lab
 
-async def _saveApiKey(username, company, model_id, api_key, type, api_key_name):
-    atlas_client = AtlasClient()
-    try:
-        atlas_client.insert("quAPIVault", {"username": username, "company": company, "model": model_id, "key": api_key, "type": type, "name": api_key_name})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-async def submit_lab_for_generation(username, lab_id, company, model_id, api_key, queue_name_suffix, api_key_name, type, saveAPIKEY):
-    print(f"username: {username}, lab_id: {lab_id}, model_id: {model_id}, api_key: {api_key}, queue_name_suffix: {queue_name_suffix}, api_key_name: {api_key_name}, saveAPIKEY: {saveAPIKEY}")
+async def submit_lab_for_generation(username, lab_id, company, model, key, queue_name_suffix, name, description, type, saveAPIKEY):
+    print(f"username: {username}, lab_id: {lab_id}, model: {model}, key: {key}, queue_name_suffix: {queue_name_suffix}, name: {name}, saveAPIKEY: {saveAPIKEY}")
     atlas_client = AtlasClient()
     
     if saveAPIKEY:
             try: 
-                await _saveApiKey(username, company, model_id, api_key, type, api_key_name)
+                await quAPIVault(username, company, model, key, name, description, type)
+                # await _saveApiKey(username, company, model, key, type, name, description)
             except Exception as e:
                 return f"An error occurred while saving API Key: {str(e)}"
             
@@ -1045,9 +1040,9 @@ async def submit_lab_for_generation(username, lab_id, company, model_id, api_key
         existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
         if existing_item:
             atlas_client.delete(queue_name_suffix, {"lab_id": str(lab_id)})
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model_id": model_id, "api_key": api_key})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model": model, "key": key})
         else:
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model_id": model_id, "api_key": api_key})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model": model, "key": key})
 
         # Convert ObjectId fields to strings
         lab = _convert_object_ids_to_strings(lab)
@@ -1391,6 +1386,8 @@ async def update_lab_design_status(lab_id, lab_design_status):
     else:
         return "Failed to update lab status"
 
-async def validate_key(model_id, api_key):
-    print("Response: ", check_valid_key(model_id, api_key))
-    return check_valid_key(model_id, api_key)
+async def validate_key(model, key):
+    print("Model ID: ", model)
+    print("API Key: ", key)
+    print("Response: ", check_valid_key(model, key))
+    return check_valid_key(model, key)
