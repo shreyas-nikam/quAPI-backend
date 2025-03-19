@@ -13,7 +13,7 @@ client = OpenAI(timeout=120, api_key=os.getenv("OPENAI_KEY"))
 
 assistants = client.beta.assistants.list()
 files = client.files.list()
-vector_stores = client.beta.vector_stores.list()
+vector_stores = client.vector_stores.list()
 
 logging.info("Cleaning Assistants")
 assistant_ids = [assistant.id for assistant in assistants]

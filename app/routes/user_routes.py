@@ -36,3 +36,25 @@ async def fetch_user_api(username: str = Form(...)):
 @router.post("/update_category")
 async def update_category_api(username: str = Form(...), category: str = Form(...)):
     return await update_category(username, category)
+
+@router.post("/clone_entry")
+async def clone_entry_api(collection: str = Form(...), id: str = Form(...)):
+    return await clone_entry(collection, id)
+
+@router.post("/quAPIVault")
+async def fetch_quAPIVault_api(username: str = Form(...)):
+    return await fetch_quAPIVault(username)
+
+@router.post("/create_quAPIVault")
+async def quAPIVault_api(username: str = Form(...), company: str = Form(...), model: str = Form(...), key: str = Form(...), name: str = Form(...), description: str = Form(...), type: str = Form(...), saveAPIKEY: Optional[bool] = Form(False)):
+    return await quAPIVault(username, company, model, key, name, description, type)
+
+@router.post("/edit_quAPIVault")
+async def edit_quAPIVault_api( key_id: str = Form(...), model: str = Form(...), name: str = Form(...), description: str = Form(...), key: str = Form(...)):
+    return await edit_quAPIVault(key_id, model, name, description, key)
+
+
+@router.post("/delete_quAPIVault")
+async def delete_quAPIVault_api(key_id: str = Form(...)):
+    return await delete_quAPIVault(key_id)
+
