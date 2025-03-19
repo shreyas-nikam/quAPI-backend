@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 import base64
 
+
 KEY_FILE = "key.bin"  # File to store the key securely
 
 # Function to generate and store the AES key
