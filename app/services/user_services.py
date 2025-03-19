@@ -6,6 +6,7 @@ from app.utils.atlas_client import AtlasClient
 from pydantic import EmailStr
 from datetime import datetime
 from bson.objectid import ObjectId
+from app.services.clone_helper import clone_entry
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
@@ -241,6 +242,10 @@ async def fetch_users():
     users = atlas_client.find("qucreate_users")
     users = _convert_object_ids_to_strings(users)
     return users
+
+async def clone_artifact(collection, id):
+    cloned_entry = clone_entry(collection=collection, id=id)
+    return cloned_entry
 
 async def fetch_user(username):
     atlas_client = AtlasClient()
