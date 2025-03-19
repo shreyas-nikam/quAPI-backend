@@ -3,6 +3,7 @@ from app.utils.atlas_client import AtlasClient
 import re
 import copy
 from bson import ObjectId
+
 from app.utils.s3_file_manager import S3FileManager
 
 
@@ -13,6 +14,16 @@ S3_LINK_REGEX = re.compile(r'^https?://.*\.amazonaws\.com/.*')
 # Regex to detect 24-hex-character IDs inside the S3 link
 # (typical MongoDB ObjectId shape, e.g. 507f1f77bcf86cd799439011)
 OBJECT_ID_REGEX = re.compile(r'[0-9a-fA-F]{24}')
+
+def _convert_object_ids_to_strings(data):
+    if isinstance(data, dict):
+        return {key: _convert_object_ids_to_strings(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [_convert_object_ids_to_strings(item) for item in data]
+    elif isinstance(data, ObjectId):
+        return str(data)
+    else:
+        return data
 
 def is_s3_link(url: str) -> bool:
     """Return True if the string looks like an S3 link."""
@@ -100,7 +111,7 @@ def clone_mongodb_json_entry(data, id_map=None):
         return data
 
 
-def clone_entry(id, collection):
+async def clone_entry(id, collection):
     atlas_client = AtlasClient()
     entry = atlas_client.find(collection, {"_id": ObjectId(id)})
     if not entry:
@@ -110,4 +121,5 @@ def clone_entry(id, collection):
 
     cloned_entry = clone_mongodb_json_entry(entry)
     atlas_client.insert(collection, cloned_entry)
+    cloned_entry = _convert_object_ids_to_strings(cloned_entry)
     return cloned_entry
