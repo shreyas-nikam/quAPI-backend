@@ -18,7 +18,7 @@ from bson.objectid import ObjectId
 from openai import OpenAI
 from langchain_core.prompts import PromptTemplate
 from google import genai
-# from litellm import check_valid_key
+from litellm import check_valid_key
 
 # Application-specific imports
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
@@ -188,13 +188,13 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="Lecture Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
 
-        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+        file_batch = client.vector_stores.file_batches.upload_and_poll(
             vector_store_id=vector_store.id, files=assistant_files_streams
         )
 
@@ -235,7 +235,7 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -1379,5 +1379,4 @@ async def update_lab_design_status(lab_id, lab_design_status):
         return "Failed to update lab status"
 
 async def validate_key(model_id, api_key):
-    return True
-    # return check_valid_key(model_id, api_key)
+    return check_valid_key(model_id, api_key)

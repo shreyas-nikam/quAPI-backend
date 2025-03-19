@@ -124,7 +124,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
 
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
@@ -132,7 +132,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
         created_vector_store_id = vector_store.id  # Track the vector store
 
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -211,7 +211,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -254,13 +254,13 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -337,7 +337,7 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -456,13 +456,13 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=files
             )
 
@@ -550,7 +550,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
             
