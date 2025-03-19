@@ -159,14 +159,14 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, 
         )
         created_assistant_id = assistant.id
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="Podcast Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id
 
         if files:
-            client.beta.vector_stores.file_batches.upload_and_poll(
+            client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
             assistant = client.beta.assistants.update(
@@ -200,7 +200,7 @@ async def generate_podcast_outline(files, instructions, prompt, use_metaprompt, 
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -244,13 +244,13 @@ async def generate_podcast_dialogue(dialogue, files = None):
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="Podcast Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -300,7 +300,7 @@ async def generate_podcast_dialogue(dialogue, files = None):
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 

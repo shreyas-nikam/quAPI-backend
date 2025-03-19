@@ -37,6 +37,10 @@ async def fetch_user_api(username: str = Form(...)):
 async def update_category_api(username: str = Form(...), category: str = Form(...)):
     return await update_category(username, category)
 
+@router.post("/clone_entry")
+async def clone_entry_api(collection: str = Form(...), id: str = Form(...)):
+    return await clone_entry(collection, id)
+
 @router.post("/quAPIVault")
 async def fetch_quAPIVault_api(username: str = Form(...)):
     return await fetch_quAPIVault(username)
