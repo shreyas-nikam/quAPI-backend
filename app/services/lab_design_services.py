@@ -18,7 +18,7 @@ from bson.objectid import ObjectId
 from openai import OpenAI
 from langchain_core.prompts import PromptTemplate
 from google import genai
-from litellm import check_valid_key
+# from litellm import check_valid_key
 
 # Application-specific imports
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
@@ -1379,4 +1379,5 @@ async def update_lab_design_status(lab_id, lab_design_status):
         return "Failed to update lab status"
 
 async def validate_key(model_id, api_key):
-    return check_valid_key(model_id, api_key)
+    return True
+    # return check_valid_key(model_id, api_key)
