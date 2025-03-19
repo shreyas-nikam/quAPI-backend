@@ -5,6 +5,7 @@ from app.utils.atlas_client import AtlasClient
 from pydantic import EmailStr
 from datetime import datetime
 from bson.objectid import ObjectId
+from app.services.clone_helper import clone_entry
 
 # List of valid project types
 Project_Options = [
@@ -227,3 +228,7 @@ async def update_category(username, category):
         status_code=status.HTTP_200_OK,
         content={"message": "User category updated successfully."}
     )
+    
+async def clone_artifact(collection, id):
+    cloned_entry = clone_entry(collection=collection, id=id)
+    return cloned_entry

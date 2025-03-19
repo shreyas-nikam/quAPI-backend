@@ -36,3 +36,7 @@ async def fetch_user_api(username: str = Form(...)):
 @router.post("/update_category")
 async def update_category_api(username: str = Form(...), category: str = Form(...)):
     return await update_category(username, category)
+
+@router.post("/clone_entry")
+async def clone_entry_api(collection: str = Form(...), id: str = Form(...)):
+    return await clone_entry(collection, id)
