@@ -537,8 +537,11 @@ async def get_course(course_id):
             lab = atlas_client.find("lab_design", filter={"_id": ObjectId(artifact_id)})
             if lab:
                 artifacts.append(lab[0])
+        elif artifact_type == "Podcast":
+            podcast = atlas_client.find("podcast_design", filter={"_id": ObjectId(artifact_id)})
+            if podcast:
+                artifacts.append(podcast[0])
         else:
-
             lecture = atlas_client.find("writing_design", filter={"_id": ObjectId(artifact_id)})
             if lecture:
                 artifacts.append(lecture[0])
