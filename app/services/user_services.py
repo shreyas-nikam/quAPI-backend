@@ -1,3 +1,4 @@
+import os
 import logging
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
@@ -5,6 +6,55 @@ from app.utils.atlas_client import AtlasClient
 from pydantic import EmailStr
 from datetime import datetime
 from bson.objectid import ObjectId
+from app.services.clone_helper import clone_entry
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+import base64
+
+
+KEY_FILE = "key.bin"  # File to store the key securely
+
+# Function to generate and store the AES key
+def generate_and_store_key():
+    if not os.path.exists(KEY_FILE):  # Generate only if not already stored
+        key = os.urandom(32)  # 256-bit key
+        with open(KEY_FILE, "wb") as f:
+            f.write(key)  # Save the key securely
+        print("🔑 AES Key generated and stored in 'key.bin'.")
+    else:
+        print("✅ AES Key already exists.")
+        
+# Function to load the stored key
+def load_key():
+    if os.path.exists(KEY_FILE):
+        with open(KEY_FILE, "rb") as f:
+            return f.read()  # Read the stored key
+    else:
+        raise FileNotFoundError("❌ Key file not found! Generate it first.")
+
+# Encrypt function
+def encrypt(plaintext, key):
+    iv = os.urandom(12)  # Generate a random IV (nonce)
+    cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    
+    ciphertext = encryptor.update(plaintext.encode()) + encryptor.finalize()
+    return base64.b64encode(iv + encryptor.tag + ciphertext).decode()  # Return as base64 string
+
+# Decrypt function
+def decrypt(encrypted_text, key):
+    encrypted_data = base64.b64decode(encrypted_text)
+    
+    iv = encrypted_data[:12]   # Extract IV
+    tag = encrypted_data[12:28]  # Extract GCM Tag
+    ciphertext = encrypted_data[28:]  # Extract Ciphertext
+    
+    cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=default_backend())
+    decryptor = cipher.decryptor()
+    
+    return decryptor.update(ciphertext) + decryptor.finalize()
 
 # List of valid project types
 Project_Options = [
@@ -194,12 +244,74 @@ async def fetch_users():
     users = _convert_object_ids_to_strings(users)
     return users
 
+async def clone_artifact(collection, id):
+    cloned_entry = clone_entry(collection=collection, id=id)
+    return cloned_entry
+
 async def fetch_user(username):
     atlas_client = AtlasClient()
     user = atlas_client.find("qucreate_users", filter={"username": username})
     user = _convert_object_ids_to_strings(user)
     return user
 
+async def fetch_quAPIVault(username):
+    # Call this once to generate and store the key
+    # generate_and_store_key()
+     # Example Usage
+    key = load_key()  # Securely generate a random key    
+    atlas_client = AtlasClient()
+    quAPIVault = atlas_client.find("quAPIVault", filter={"username": username})
+    quAPIVault = _convert_object_ids_to_strings(quAPIVault)
+    for entry in quAPIVault:
+        if "key" in entry:
+            decryptKey = decrypt(entry["key"], key)
+            entry["key"] = decryptKey
+    return quAPIVault
+
+async def quAPIVault(username, company, model, key, name, description, type): 
+    atlas_client = AtlasClient()
+    
+    # Check if the user exists in the database
+    user = atlas_client.find("qucreate_users", filter={"username": username})
+    if not user:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."}
+        )
+
+    private_key = load_key()  # Read the key
+    encrypted = encrypt(key, private_key)  # Use the key for encryption
+
+    key_id = ObjectId()
+
+    # Insert the new API key into the database
+    api_key_entry = {
+        "_id": key_id,
+        "username": username,
+        "company": company,
+        "model": model,
+        "key": encrypted,
+        "name": name,
+        "description": description,
+        "type": type
+    }   
+
+    try:
+        atlas_client.insert("quAPIVault", api_key_entry)
+        api_key_entry["key"] = key  # Return the original key
+        api_key_entry = _convert_object_ids_to_strings(api_key_entry)  # Convert ObjectId to string
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={
+                "message": "API key added successfully.",
+                "response": api_key_entry
+            }
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to insert API key: {str(e)}"
+        )
 
 async def update_category(username, category):
     atlas_client = AtlasClient()
@@ -226,4 +338,58 @@ async def update_category(username, category):
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"message": "User category updated successfully."}
+    )
+
+
+async def edit_quAPIVault(key_id, model, name, description, key):
+    atlas_client = AtlasClient()
+    # Check if the API key exists in the database
+    api_key_entry = atlas_client.find("quAPIVault", filter={"_id": ObjectId(key_id)})
+    if not api_key_entry:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "API key not found."}
+        )
+    
+    private_key = load_key()  # Read the key
+    encrypted = encrypt(key, private_key)  # Use the key for
+    
+    # Update the API key
+    try:
+        atlas_client.update(
+            "quAPIVault",
+            filter={"_id": ObjectId(key_id)},
+            update={"$set": {"key": encrypted, "name": name, "description": description, "model": model}}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update API key: {str(e)}"
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "API key updated successfully."}
+    )
+
+async def delete_quAPIVault(key_id):
+    atlas_client = AtlasClient()
+    # Check if the API key exists in the database
+    api_key_entry = atlas_client.find("quAPIVault", filter={"_id": ObjectId(key_id)})
+    if not api_key_entry:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "API key not found."}
+        )
+    
+    # Delete the API key
+    try:
+        atlas_client.delete("quAPIVault", filter={"_id": ObjectId(key_id)})
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete API key: {str(e)}"
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "API key deleted successfully."}
     )

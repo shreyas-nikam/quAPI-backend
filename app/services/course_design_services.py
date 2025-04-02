@@ -1,26 +1,32 @@
 # generate_course_outline, clone_course, delete_course, create_course, add_module, add_resources_to_module, get_course, submit_module_for_content_generation, save_changes_post_content_generation, submit_module_for_structure_generation, save_changes_post_structure_generation, submit_module_for_deliverables_generation, save_changes_post_deliverables_generation, submit_for_publishing_pipeline
 # the stages of the course design pipeline are: raw_resources, in_content_generation_queue, pre_processed_content, post_processed_content, in_structure_generation_queue, pre_processed_structure, post_processed_structure, in_deliverables_generation_queue, pre_processed_deliverables, post_processed_deliverables, in_publishing_queue, published
-import requests
-from fastapi.responses import StreamingResponse
-from fastapi import FastAPI, HTTPException
-from fastapi import HTTPException
-from urllib.parse import urlparse
+# Python standard libraries
+import ast
+import json
+import logging
 import mimetypes
+import os
+import random
+import tempfile
+import time
+from urllib.parse import quote, unquote, urlparse
+
+# Third-party libraries
+import magic
+import pypandoc
+import requests
+from bson.objectid import ObjectId
+from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
+from langchain_core.prompts import PromptTemplate
+from openai import OpenAI
+from pptx import Presentation
+
+# Local application imports
+from app.services.metaprompt import generate_prompt
+from app.utils.atlas_client import AtlasClient
 from app.utils.llm import LLM
 from app.utils.s3_file_manager import S3FileManager
-from app.utils.atlas_client import AtlasClient
-import logging
-import time
-import random
-import json
-import ast
-from langchain_core.prompts import PromptTemplate
-from bson.objectid import ObjectId
-from openai import OpenAI
-import os
-from fastapi import UploadFile
-from urllib.parse import quote, unquote
-from app.services.metaprompt import generate_prompt
 
 
 COURSE_DESIGN_STEPS = [
@@ -206,13 +212,13 @@ async def generate_course_outline(files, instructions, prompt, use_metaprompt):
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="Course Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -260,7 +266,7 @@ async def generate_course_outline(files, instructions, prompt, use_metaprompt):
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -351,7 +357,8 @@ async def create_course(username, course_name, course_description, course_outlin
         "course_description": course_description,
         "course_image": course_image_link,
         "course_outline": course_outline,
-        "status": course_status
+        "status": course_status,
+        "tags": [],
     }
     step_directory = COURSE_DESIGN_STEPS[0]
 
@@ -417,6 +424,38 @@ def _get_resource_key_from_link(resource_link):
     # unquote the key
     resource_key = unquote(resource_prefix)
     return resource_key
+
+
+async def update_course_tags(course_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the course from the database
+    course_data = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+
+    if not course_data:
+        return "Course not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Collection name
+        filter = {"_id": ObjectId(course_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Course information updated successfully"
+    else:
+        return "Failed to update course information"
 
 
 # add_module -> takes in the course_id, module_name, module_description, and adds a module to the course
@@ -498,8 +537,11 @@ async def get_course(course_id):
             lab = atlas_client.find("lab_design", filter={"_id": ObjectId(artifact_id)})
             if lab:
                 artifacts.append(lab[0])
+        elif artifact_type == "Podcast":
+            podcast = atlas_client.find("podcast_design", filter={"_id": ObjectId(artifact_id)})
+            if podcast:
+                artifacts.append(podcast[0])
         else:
-
             lecture = atlas_client.find("writing_design", filter={"_id": ObjectId(artifact_id)})
             if lecture:
                 artifacts.append(lecture[0])
@@ -709,7 +751,7 @@ async def remove_module_from_step(course_id, module_id, course_design_step, queu
     return True
 
 
-async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions=""):
+async def submit_module_for_step(course_id, module_id, course_design_step, queue_name_suffix, instructions="", template_url=''):
     step_directory = COURSE_DESIGN_STEPS[course_design_step]
     prev_step_directory = COURSE_DESIGN_STEPS[course_design_step - 1]
 
@@ -741,6 +783,7 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
     module["status"] = f"{queue_name_suffix.replace('_', ' ').title()}"
     if instructions:
         module["instructions"] = instructions
+    
     course["modules"] = [module if m.get(
         "module_id") == module_id else m for m in course.get("modules", [])]
 
@@ -759,6 +802,9 @@ async def submit_module_for_step(course_id, module_id, course_design_step, queue
 
     if instructions:
         queue_payload["instructions"] = instructions
+
+    if template_url:
+        queue_payload["template_url"] = template_url
 
     # Check if the document already exists
     existing_item = atlas_client.find(
@@ -1127,9 +1173,153 @@ async def update_module_info(course_id, module_id, module_name, module_descripti
 
 
 
-
+async def update_selected_labs_info(course_id, module_id, selected_labs):
+    atlas_client = AtlasClient()
     
+    # Fetch the course from the database
+    course_data = atlas_client.find("course_design", filter={"_id": ObjectId(course_id)})
+
+    if not course_data:
+        return "Course not found"
+    
+    course = course_data[0]  # Assuming find() returns a list, get the first match
+    
+    # Get the modules array from the course
+    modules = course.get("modules", [])
+
+    # Convert module_id to ObjectId if stored as ObjectId in MongoDB
+    try:
+        module_id = ObjectId(module_id)
+    except Exception:
+        pass  # Keep it as a string if not stored as ObjectId
+
+    # Update the specific module in the list
+    module_found = False
+    for module in modules:
+        if module["module_id"] == module_id:  # Find the module that matches
+            module["selected_labs"] = selected_labs
+            module_found = True
+            break  # Stop loop after updating the correct module
+
+    if not module_found:
+        return "Module not found in course"
+
+    # Define the update payload for replacing the modules array
+    update_payload = {
+        "$set": {
+            "modules": modules  # Save the updated modules list back to the course
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "course_design",  # Collection name
+        filter={"_id": ObjectId(course_id)},  # Identify the correct course
+        update=update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Module information updated successfully"
+    else:
+        return "Failed to update module information"
+
     
 async def course_outline_prompt():
     course_outline_prompt = _get_prompt("COURSE_OUTLINE_PROMPT")
     return course_outline_prompt
+
+
+async def get_templates():
+    atlas_client = AtlasClient()
+    templates = atlas_client.find("qu-create-slide-templates", {})
+    templates = _convert_object_ids_to_strings(templates)
+    return templates
+
+
+async def validate_template(uploaded_file: UploadFile):
+    """
+    Validates whether the given FastAPI UploadFile can be used as
+    a custom PPTX reference doc for pypandoc (Pandoc).
+
+    Steps:
+      1) Read the file contents into memory.
+      2) (Optional) Verify MIME type via python-magic, or parse with python-pptx.
+      3) Save the file to a temporary location.
+      4) Attempt a dummy Pandoc conversion referencing this file.
+      5) Return (is_valid, message).
+    """
+
+    # 1) Read entire file contents (since we need to parse + write to a temp file)
+    file_bytes = await uploaded_file.read()
+
+    # 2) Optional Basic Checks ------------------------------------
+    #    a) MIME check with python-magic
+    mime_type = magic.from_buffer(file_bytes, mime=True)
+    valid_mime_types = [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/zip"
+    ]
+    if mime_type not in valid_mime_types:
+        return (False, f"File does not appear to be a valid PPTX (MIME: {mime_type}).")
+
+    #    b) PPTX structure check with python-pptx
+    from io import BytesIO
+    try:
+        Presentation(BytesIO(file_bytes))
+    except Exception as e:
+        return (False, f"Failed to parse PPTX with python-pptx: {str(e)}")
+
+    # 3) Write bytes to a temporary .pptx file so Pandoc can reference it
+    with tempfile.NamedTemporaryFile(suffix=".pptx", delete=False) as tmp_pptx:
+        tmp_path = tmp_pptx.name
+        tmp_pptx.write(file_bytes)
+        tmp_pptx.flush()
+
+    # 4) Attempt a dummy Pandoc conversion using this reference doc
+    #    We'll create a minimal MD file in a temp directory.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dummy_md = os.path.join(tmpdir, "test.md")
+        dummy_out = os.path.join(tmpdir, "test-output.pptx")
+
+        with open(dummy_md, "w", encoding="utf-8") as f:
+            f.write("# Test Slide\nThis is a dummy slide to verify reference doc.\n")
+
+        try:
+            pypandoc.convert_file(
+                source_file=dummy_md,
+                to="pptx",
+                outputfile=dummy_out,
+                extra_args=[f"--reference-doc={tmp_path}"]
+            )
+        except RuntimeError as e:
+            os.remove(tmp_path)  # clean up
+            return (False, f"Pandoc conversion failed: {str(e)}")
+        except Exception as e:
+            os.remove(tmp_path)
+            return (False, f"Unexpected error during Pandoc conversion: {str(e)}")
+
+        # Remove the temporary PPTX reference doc now that we're done
+        os.remove(tmp_path)
+
+        # If Pandoc produced the 'test-output.pptx', we consider it valid
+        if not os.path.exists(dummy_out):
+            return (False, "No output from Pandoc; unknown error.")
+        
+    # 5) If we made it here, the test conversion worked
+    return (True, "File is a valid PPTX reference doc for Pandoc.")
+
+
+async def store_custom_template(course_id, module_id, template_file: UploadFile):
+    s3 = S3FileManager()
+    atlas_client = AtlasClient()
+    template_id = ObjectId()
+    key = f"qu-course-design/{course_id}/{module_id}/template/{template_id}.pptx"
+    await s3.upload_file_from_frontend(template_file, key)
+    key = quote(key)
+    template_link = f"https://qucoursify.s3.us-east-1.amazonaws.com/{key}"
+    course, module = _get_course_and_module(course_id, module_id)
+    module['template_link'] = template_link
+    course["modules"] = [module if m.get("module_id") == module_id else m for m in course.get("modules", [])]
+    atlas_client.update("course_design", filter={"_id": ObjectId(course_id)}, update={"$set": {"modules": course.get("modules", [])}})
+    return template_link

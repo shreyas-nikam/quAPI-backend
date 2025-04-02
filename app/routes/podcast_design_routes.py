@@ -31,6 +31,10 @@ async def create_podcast_api(username: str = Form(...), podcast_name: str = Form
 async def get_podcast_api(podcast_id: str):
     return await get_podcast(podcast_id)
 
+@router.post("/update_podcast_tags")
+async def update_podcast_tags_api(podcast_id: str = Form(...), tags: List[str] = Form(...)):
+    return await update_podcast_tags(podcast_id, tags)
+
 @router.post("/delete_podcast")
 async def delete_podcast_api(podcast_id: str = Form(...)):
     return await delete_podcast(podcast_id)

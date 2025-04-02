@@ -124,7 +124,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
 
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
@@ -132,7 +132,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
         created_vector_store_id = vector_store.id  # Track the vector store
 
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -211,7 +211,7 @@ async def generate_templates(files, identifier, target_audience, tone, expected_
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -254,13 +254,13 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=assistant_files_streams
             )
 
@@ -337,7 +337,7 @@ async def writing_outline(files, instructions, identifier, use_metaprompt=False)
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -359,7 +359,8 @@ async def create_writing(username, writing_id, writing_name, writing_description
         "writing_outline": writing_outline,
         "writing_image": writing_image_link,
         "status": "In Design Phase",
-        "identifier": identifier
+        "identifier": identifier,
+        "tags": [],
     }
     atlas_client.update("writing_design", filter={"_id": ObjectId(writing_id)}, update={
         "$set": writing
@@ -455,13 +456,13 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="writing Resources",
             expires_after={"days": 7, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
         if files:
-            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+            file_batch = client.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=files
             )
 
@@ -549,7 +550,7 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
             
@@ -559,6 +560,38 @@ async def regenerate_outline(writing_id, instructions, previous_outline, selecte
         os.rmdir("files/temp")
 
     return {"writing_id": str(id), "writing": response}
+
+async def update_writing_tags(writing_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the podcast from the database
+    writing_data = atlas_client.find("writing_design", filter={"_id": ObjectId(writing_id)})
+
+    if not writing_data:
+        return "Writing not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "writing_design",  # Collection name
+        filter = {"_id": ObjectId(writing_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Writing information updated successfully"
+    else:
+        return "Failed to update writing information"
+
 
 async def convert_to_pdf(writing_id, markdown, template_name):
 

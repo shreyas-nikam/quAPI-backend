@@ -18,14 +18,16 @@ from bson.objectid import ObjectId
 from openai import OpenAI
 from langchain_core.prompts import PromptTemplate
 from google import genai
+from litellm import check_valid_key
 
 # Application-specific imports
 from app.services.report_generation.generate_pdf import convert_markdown_to_pdf
 from app.utils.llm import LLM
 from app.utils.s3_file_manager import S3FileManager
 from app.utils.atlas_client import AtlasClient
-from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue
+from app.services.github_helper_functions import create_repo_in_github, upload_file_to_github, update_file_in_github, create_github_issue, delete_repo_from_github
 from app.services.metaprompt import generate_prompt
+from app.services.user_services import quAPIVault
 
 LAB_DESIGN_STEPS = [
     "raw_resources", #automatic
@@ -187,13 +189,13 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
         )
         created_assistant_id = assistant.id  # Track the assistant
 
-        vector_store = client.beta.vector_stores.create(
+        vector_store = client.vector_stores.create(
             name="Lecture Resources",
             expires_after={"days": 1, "anchor": "last_active_at"},
         )
         created_vector_store_id = vector_store.id  # Track the vector store
 
-        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+        file_batch = client.vector_stores.file_batches.upload_and_poll(
             vector_store_id=vector_store.id, files=assistant_files_streams
         )
 
@@ -234,7 +236,7 @@ async def generate_lab_outline(files, instructions, use_metaprompt=False):
         if created_assistant_id:
             client.beta.assistants.delete(created_assistant_id)
         if created_vector_store_id:
-            client.beta.vector_stores.delete(created_vector_store_id)
+            client.vector_stores.delete(created_vector_store_id)
         if created_thread_id:
             client.beta.threads.delete(created_thread_id)
 
@@ -283,6 +285,11 @@ async def delete_lab(lab_id):
     
     lab = lab[0]
     
+    # delete repository from github
+    delete_repo_from_github(lab_id)
+    
+    # TODO: remove lab from ec2 instance and its documentation if the lab is in the final stage
+    
     atlas_client.delete("lab_design", filter={"_id": ObjectId(lab_id)})
 
     lab = _convert_object_ids_to_strings(lab)
@@ -321,7 +328,8 @@ async def create_lab(username, lab_name, lab_description, lab_outline, files, la
             "datasetDetails": "### Dataset Details\n- **Source**: A synthetic dataset generated to mimic the structure and characteristics of the uploaded document.\n- **Content**: Designed to include realistic data features such as numeric values, categorical variables, and time-series data where applicable.\n- **Purpose**: Serves as a sample dataset for demonstrating data handling and visualization techniques in a controlled environment.",
             "visualizationDetails": "### Visualizations Details\n- **Interactive Charts**: Incorporate dynamic line charts, bar graphs, and scatter plots to display trends and correlations.\n- **Annotations & Tooltips**: Provide detailed insights and explanations directly on the charts to help interpret the data.",
             "additionalDetails": "### Additional Details\n- **User Interaction**: Include input forms and widgets to let users experiment with different parameters and see real-time updates in the visualizations.\n- **Documentation**: Built-in inline help and tooltips to guide users through each step of the data exploration process.\n- **Reference**: Also explain how the lab idea is related to a concept in the document by referencing it."
-        }
+        },
+        "tags": [],
     }
     step_directory = LAB_DESIGN_STEPS[0]
 
@@ -1003,10 +1011,17 @@ async def save_lab_instructions(lab_id, instructions):
 
     return lab
 
-
-async def submit_lab_for_generation(lab_id, queue_name_suffix):
+async def submit_lab_for_generation(username, lab_id, company, model, key, queue_name_suffix, name, description, type, saveAPIKEY):
+    print(f"username: {username}, lab_id: {lab_id}, model: {model}, key: {key}, queue_name_suffix: {queue_name_suffix}, name: {name}, saveAPIKEY: {saveAPIKEY}")
     atlas_client = AtlasClient()
-
+    
+    if saveAPIKEY:
+            try: 
+                await quAPIVault(username, company, model, key, name, description, type)
+                # await _saveApiKey(username, company, model, key, type, name, description)
+            except Exception as e:
+                return f"An error occurred while saving API Key: {str(e)}"
+            
     try:
         # Fetch the lab
         lab = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
@@ -1025,9 +1040,9 @@ async def submit_lab_for_generation(lab_id, queue_name_suffix):
         existing_item = atlas_client.find(queue_name_suffix, {"lab_id": str(lab_id)}, limit=1)
         if existing_item:
             atlas_client.delete(queue_name_suffix, {"lab_id": str(lab_id)})
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model": model, "key": key})
         else:
-            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id)})
+            atlas_client.insert(queue_name_suffix, {"lab_id": str(lab_id), "model": model, "key": key})
 
         # Convert ObjectId fields to strings
         lab = _convert_object_ids_to_strings(lab)
@@ -1107,6 +1122,37 @@ async def update_lab_info(lab_id, lab_name, lab_description):
         "$set": {
             "lab_name": lab_name,
             "lab_description": lab_description
+        }
+    }
+
+    # Perform the update operation
+    update_response = atlas_client.update(
+        "lab_design",  # Collection name
+        filter = {"_id": ObjectId(lab_id)},  # Identify the correct lab
+        update = update_payload
+    )
+
+    # Check if the update was successful
+    if update_response:
+        return "Lab information updated successfully"
+    else:
+        return "Failed to update lab information"
+    
+async def update_lab_tags(lab_id, tags):
+    atlas_client = AtlasClient()
+     # Check if tags contain a single empty string and convert it to an empty list
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
+    
+    # Fetch the course from the database
+    lab_data = atlas_client.find("lab_design", filter={"_id": ObjectId(lab_id)})
+
+    if not lab_data:
+        return "Lab not found"
+    
+    update_payload = {
+        "$set": {
+            "tags": tags
         }
     }
 
@@ -1339,4 +1385,9 @@ async def update_lab_design_status(lab_id, lab_design_status):
         return "Lab status updated successfully"
     else:
         return "Failed to update lab status"
-    
+
+async def validate_key(model, key):
+    print("Model ID: ", model)
+    print("API Key: ", key)
+    print("Response: ", check_valid_key(model, key))
+    return check_valid_key(model, key)
