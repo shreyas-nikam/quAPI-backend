@@ -29,4 +29,6 @@ venv/
 # temp test files
 temp.py
 
+key.bin
+
 downloads/
